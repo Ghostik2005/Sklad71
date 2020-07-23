@@ -1,0 +1,140 @@
+.webix_message_area {
+  width: 600px;
+  right: 120px;
+}
+:active,
+:hover,
+:focus {
+  outline: 0 !important;
+  outline-offset: 0 !important;
+}
+button,
+.webix_popup_button {
+  text-transform: uppercase !important;
+  font-size: x-small !important;
+}
+.footer,
+.center_dt .webix_cell {
+  font-size: 11px;
+}
+.center_view {
+  border-width: 1px !important;
+}
+.margin0,
+.center_view {
+  margin: 0 !important;
+}
+.center_dt .webix_hcell,
+.center_dt .webix_cell {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.webix_ss_header td {
+  border-bottom: 0px;
+}
+.label_highlited {
+  color: #1CA1C1;
+}
+.webix_point_top,
+.context_center_dt {
+  margin-left: -15px;
+}
+.table_icon,
+.menubtn {
+  font-family: "Material Design Icons";
+}
+.menubtn {
+  font-size: 14px;
+}
+.table_icon {
+  font-size: 15px;
+}
+.center_text {
+  text-align: center;
+}
+.italic {
+  font-style: italic;
+}
+.webix_modal {
+  /* width: 0; 
+    height: 0; */
+}
+.status_bar .webix_el_box,
+.ordinary_label {
+  font-style: normal;
+  font-weight: normal;
+}
+.menu_filters_margin_top {
+  /* margin-top: 0px !important; */
+  /* margin-bottom: 0px !important; */
+}
+.menu_filters_margin_top input,
+.menu_filters_margin_top label,
+.menu_filters_margin_top button,
+.menu_filters_margin_top .webix_inp_static {
+  height: 28px !important;
+}
+.html_button,
+.custom_menu_button {
+  background-repeat: no-repeat;
+  background-position: center center;
+  vertical-align: bottom;
+  display: inline-block;
+}
+.html_button {
+  padding-top: 5px;
+  /* margin-right: 15px; */
+  line-height: 32px;
+  background-size: 28px 28px;
+  width: 28px;
+  height: 28px;
+}
+.html_button:hover {
+  /* border: 1px solid #0e86fe; */
+  border: 1px solid transparent;
+}
+.side_menu_button,
+.custom_menu_button {
+  background-repeat: no-repeat;
+  background-position: center center;
+  vertical-align: bottom;
+  display: inline-block;
+}
+.side_menu_button {
+  background-size: 30px 30px;
+  width: 30px;
+  height: 30px;
+}
+.side_menu_button:hover {
+  /* border: 1px solid #0e86fe; */
+  border: 1px solid transparent;
+}
+.custom_menu_button {
+  background-size: 20px 20px;
+  margin-left: -10px;
+  padding-left: 5px;
+  margin-top: 5px;
+  width: 20px;
+  height: 20px;
+}
+.changed {
+  color: red;
+}
+.full-size {
+  width: 100% !important;
+}
+.pop-up-menu {
+  background: #f4f5f9 /*!important*/;
+  opacity: 0.9;
+  border: 1px solid #0e86fe;
+  /* border-radius: 10px; */
+}
+.warning {
+  color: red;
+}
+.webix_view > .webix_disabled {
+  background-color: #ebedf0;
+  opacity: 0.2;
+  /* filter: progid:DXImageTransform.Microsoft.Alpha(opacity=60); */
+}
+
