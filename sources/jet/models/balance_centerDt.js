@@ -2,13 +2,13 @@
 
 import {formatNumber, ref_states, ref_translates} from "../views/common";
 
-import {v_names_balance} from "../views/variables"
+import {names_translates} from "../views/variables"
 
 
 const names = function(method) {
     // let ret = ref_translates.getItem(method);
     // console.log(ref_translates);
-    let ret = v_names_balance[method];
+    let ret = names_translates[method];
     return ret    
 }
 

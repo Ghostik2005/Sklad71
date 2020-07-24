@@ -135,9 +135,7 @@ export default class ProductSelectionView extends JetView{
                             on: {
                                 onKeyPress: function(code, event) {
                                     // if (code ===32 || (code>=48 && code<=90)) {
-                                        try {
-                                            this.delay.clearInterval()
-                                        } catch(e) {}
+                                        clearTimeout(this.delay);
                                         this.delay = setTimeout(() => {
                                             this.$scope.getData();
                                         }, 850);

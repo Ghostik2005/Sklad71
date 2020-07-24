@@ -1,11 +1,12 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, ref_states, html_button_template} from "../views/common";
+import {message, ref_states} from "../views/common";
 import {v_states} from "../views/variables";
-import {checkResponse, request} from "../views/common";
+// import {checkResponse, request} from "../views/common";
 // import ProductSelectionView from "../models/product_selection";
-import ProductCardView from "../models/product_card";
+// import ProductCardView from "../models/product_card";
+import TemplateRefreshButton from "../models/template_refresh_button";
 
 
 export default class ShipmentsQuickFilters extends JetView{
@@ -16,8 +17,6 @@ export default class ShipmentsQuickFilters extends JetView{
             return "<span class='table_icon " + button.picture + "', style='color: " + button.color + " '></span><span class='ordinary_label'>" + button.value.toLowerCase() + "</span>"
         }
         
-        // const genId = function()
-
         let filters = {
             borderless: true,
             cols: [
@@ -51,21 +50,7 @@ export default class ShipmentsQuickFilters extends JetView{
                         }
                     }
                 },
-                {view:"button", type: 'htmlbutton',
-                    width: 35,
-                    height: 35, 
-                    longPress: false,
-                    label: "",
-                    localId: "__refresh",
-                    template: () => {
-                        return html_button_template('./library/img/refresh_1.svg', 'Обновить таблицу')
-                    },
-                    on: {
-                        onItemClick:  (id, event) => {
-                            this.app.commonWidgets.shipments.center_table.getData()
-                        },
-                    }
-                },
+                new TemplateRefreshButton(this.app, 'arrivals'),
                 {width: 10},
             ],
 

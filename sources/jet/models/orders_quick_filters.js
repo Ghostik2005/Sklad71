@@ -1,9 +1,10 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, ref_states, html_button_template} from "../views/common";
+import {message, ref_states} from "../views/common";
 import {v_states} from "../views/variables";
-import {getTest} from "../models/data_processing"
+import {getTest} from "../models/data_processing";
+import TemplateRefreshButton from "../models/template_refresh_button";
 
 
 export default class OrdersQuickFilters extends JetView{
@@ -63,21 +64,7 @@ export default class OrdersQuickFilters extends JetView{
                         }
                     }
                 },
-                {view:"button", type: 'htmlbutton',
-                    width: 35,
-                    height: 35, 
-                    longPress: false,
-                    label: "",
-                    localId: "__refresh",
-                    template: () => {
-                        return html_button_template('./library/img/refresh_1.svg', 'Обновить таблицу')
-                    },
-                    on: {
-                        onItemClick:  (id, event) => {
-                            this.app.commonWidgets.orders.center_table.getData()
-                        },
-                    }
-                },
+                new TemplateRefreshButton(this.app, 'arrivals'),
                 {width: 10},
             ],
 

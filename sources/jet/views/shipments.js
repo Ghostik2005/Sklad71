@@ -4,7 +4,13 @@ import ShipmentsHeaderView from "../models/shipments_header";
 import ShipmentsCenterView from "../models/shipments_center";
 
 export default class ShipmentsView extends JetView{
+
+    constructor(app) {
+        super(app)
+    }
+
     config() {
+
         let app = this.app;
         var ui = {
             type:"line",

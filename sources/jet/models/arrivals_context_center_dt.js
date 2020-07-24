@@ -2,7 +2,8 @@
 
 import {JetView} from "webix-jet";
 import {message, holdDocument, unHoldDocument, deleteDocument, unDeleteDocument} from "../views/common";
-import {arrivals_context_center_dt_optoins, arrivals_excludeColumns} from "../views/variables";
+import {tables_excludeColumns} from "../views/variables";
+import {menu_options, arrivals_menu_options_excludes} from "../views/variables";
 import {newDocument} from "../views/common";
 
 
@@ -13,7 +14,7 @@ export default class ArrivalsContextCenterDt extends JetView{
         let c_menu = {
             view:'contextmenu', 
             autowidth: true,
-            id:"arrivals_cmenu",
+            localId:"__arrivals_cmenu",
             css: "context_center_dt",
             point: true,
             on:{
@@ -123,10 +124,11 @@ export default class ArrivalsContextCenterDt extends JetView{
 
     show(e, position){
         let context = this.getRoot().getContext();
-        // console.log('c', context);
         this.clearAll();
-        this.parse(arrivals_context_center_dt_optoins);
+        this.parse(menu_options);
         let id_hide = []
+        id_hide = id_hide.concat(arrivals_menu_options_excludes)
+
         if(context.position) {
             let item = context.table.getItem(context.position.row);
             if (item.n_state == 2) {
@@ -137,13 +139,13 @@ export default class ArrivalsContextCenterDt extends JetView{
                 id_hide = id_hide.concat([3, 4, 5, 6, 100, 200, 1003])
             }
             context.table.select(context.position, false);
-            if (arrivals_excludeColumns.includes(context.position.column)) {
+            if (tables_excludeColumns.includes(context.position.column)) {
                 id_hide = id_hide.concat([1, 1000]);
             }
         } else {//empty area is clicked
             id_hide = id_hide.concat([1, 1000, 3, 4, 5, 6, 7, 1001, 1002, 1003, 100, 200, 300, 1004, 10])
         }
-        
+        id_hide = Array.from(new Set(id_hide));
         id_hide.forEach( (id)=> {
             this.getRoot().hideItem(id);
 

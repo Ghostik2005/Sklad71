@@ -20,7 +20,8 @@ export default class CenterView extends JetView{
             multiview: true,
             on: {
                 onOptionRemove: (id) => {
-                    $$("__multiview").removeView(id);
+                    // $$("__multiview").removeView(id);
+                    $$(id).destructor();
                     delete $$("_sideMenu").$scope.screens[id];
                 },
                 onChange: (i, ii) => {                    

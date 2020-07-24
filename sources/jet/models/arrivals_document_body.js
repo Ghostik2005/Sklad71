@@ -151,11 +151,12 @@ export default class ArrivalBody extends JetView{
                                             console.log('r_data', r_data);
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
                                             if (r_data.data) {
-                                                
-                                                if (!this.flag_new) {
-                                                    this.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0]);
-                                                } else {
-                                                    message("ищем позицию и апдейтим ее")
+                                                if (this.table) {
+                                                    if (!this.flag_new) {
+                                                        this.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0]);
+                                                    } else {
+                                                        message("ищем позицию и апдейтим ее")
+                                                    }
                                                 }
                                                 this.hide();
                                                 let q = this.ui(new ChargesView(this.app, this, r_data.data1))
@@ -251,11 +252,13 @@ export default class ArrivalBody extends JetView{
         let r_data = saveArrivalsDocument(data, th.doc.id);
         // console.log('r_d', r_data);
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
-        if (!this.flag_new) {
-            this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
-        } else {
-            this.table.add(r_data.data[0], 0);
-            // message("добавляем позицию наверх")
+        if (this.table) {
+            if (!this.flag_new) {
+                this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
+            } else {
+                this.table.add(r_data.data[0], 0);
+                // message("добавляем позицию наверх")
+            }
         }
         return result
 

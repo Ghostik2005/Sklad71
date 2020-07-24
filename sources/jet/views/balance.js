@@ -4,6 +4,11 @@ import BalanceHeaderView from "../models/balance_header";
 import BalanceCenterView from "../models/balance_center";
 
 export default class BalanceView extends JetView{
+
+    constructor(app) {
+        super(app)
+    }
+
     config() {
         let app = this.app;
         var ui = {

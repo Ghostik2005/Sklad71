@@ -2,11 +2,11 @@
 
 import {formatNumber, ref_states, ref_translates} from "../views/common";
 
-import {v_names_orders} from "../views/variables"
+import {names_translates} from "../views/variables"
 
 
 const names = function(method) {
-    let ret = v_names_orders[method];
+    let ret = names_translates[method];
     return ret    
 }
 

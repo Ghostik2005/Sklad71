@@ -5,6 +5,11 @@ import ArrivalsHeaderView from "../models/arrivals_header";
 import ArrivalsCenterView from "../models/arrivals_center";
 
 export default class ArrivalsView extends JetView{
+    
+    constructor(app) {
+        super(app)
+    }
+
     config() {
         let app = this.app;
         var ui = {

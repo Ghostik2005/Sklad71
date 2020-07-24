@@ -53,26 +53,6 @@ export default class ShipmentsCenterView extends JetView{
     }
 
 
-    newShipment(th, gr) {
-        console.log("gr", gr);
-        let app = this.app;
-        let focus = webix.UIManager.getFocus();
-        let doc = this.ui(ShipmentsBody);
-        let blank_item = {
-            flag_new: true,
-            n_dt_invoice: new Date(),
-            n_executor: app.config.user,
-            n_paid: "Нет",
-            n_state: 1,
-            n_supplier_id: app.config.home_org_id,
-            order_id: (gr) ? gr.n_id : undefined,
-            n_recipient_id: (gr) ? gr.n_recipient_id : undefined,
-        }
-        doc.show(blank_item, focus, this.__table);
-
-    }
-
-
     getHeaders(){
 
         let configs = []

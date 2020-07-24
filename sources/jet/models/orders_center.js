@@ -52,25 +52,6 @@ export default class OrdersCenterView extends JetView{
         })
     }
 
-
-    newOrder() {
-        let app = this.app;
-        let focus = webix.UIManager.getFocus();
-        let doc = this.ui(OrderBody);
-        let blank_item = {
-            flag_new: true,
-            n_dt_invoice: new Date(),
-            n_executor: app.config.user,
-            n_paid: "Нет",
-            n_state: 1,
-            n_recipient_id: app.config.home_org_id,
-            _block: "recipient"
-        }
-        doc.show(blank_item, focus, this.__table);
-
-    }
-
-
     getHeaders(){
 
         let configs = []

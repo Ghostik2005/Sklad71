@@ -183,10 +183,12 @@ export default class ShipmentsBody extends JetView{
                                             let r_data = holdDocument('shipment', this.doc.n_id, this.doc.id);
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
                                             if (r_data.data) {
-                                                if (!this.flag_new) {
-                                                    this.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0]);
-                                                } else {
-                                                    message("ищем позицию и апдейтим ее")
+                                                if (this.table) {
+                                                    if (!this.flag_new) {
+                                                        this.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0]);
+                                                    } else {
+                                                        message("ищем позицию и апдейтим ее")
+                                                    }
                                                 }
                                                 this.hide();
                                             } else {
@@ -281,11 +283,13 @@ export default class ShipmentsBody extends JetView{
         let result = false
         let r_data = saveShipmentsDocument(data, th.doc.id);
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
-        if (!this.flag_new) {
-            this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
-        } else {
-            this.table.add(r_data.data[0], 0);
-            // message("добавляем позицию наверх")
+        if (this.table) {
+            if (!this.flag_new) {
+                this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
+            } else {
+                this.table.add(r_data.data[0], 0);
+                // message("добавляем позицию наверх")
+            }
         }
         return result
 

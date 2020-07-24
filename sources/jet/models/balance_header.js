@@ -5,6 +5,7 @@ import {emptyWidth} from "../views/variables";
 import BalanceStatusBar from "../models/balance_status_bar";
 import {html_button_template, message} from "../views/common";
 import {createPrice} from "../models/data_processing";
+import TemplateRefreshButton from "../models/template_refresh_button";
 // import SearchBar from "../models/search_bar";
 // import { message } from "../views/common";
 // import {request, checkResponse} from "../views/common";
@@ -30,9 +31,7 @@ export default class BalanceHeaderView extends JetView{
                     on: {
                         onKeyPress: function(code, event) {
                             // if (code ===32 || (code>=48 && code<=90)) {
-                                try {
-                                    this.delay.clearInterval()
-                                } catch(e) {}
+                                clearTimeout(this.delay);
                                 this.delay = setTimeout(() => {
                                     this.$scope.app.commonWidgets.balance.center_table.getData();
                                     
@@ -43,28 +42,14 @@ export default class BalanceHeaderView extends JetView{
                 },
                 // {$subview: SearchBar, name: "search_bar"},
                 {},
-                {view:"button", type: 'htmlbutton',
-                    width: 35,
-                    height: 35, 
-                    longPress: false,
-                    label: "",
-                    localId: "__refresh",
-                    template: () => {
-                        return html_button_template('./library/img/refresh_1.svg', 'Обновить')
-                    },
-                    on: {
-                        onItemClick:  (id, event) => {
-                            this.app.commonWidgets.balance.center_table.getData();
-                        },
-                    }
-                },
+                new TemplateRefreshButton(this.app, 'arrivals'),
                 {width: emptyWidth},
                 {view:"button", type: 'htmlbutton',
                     width: 35,
                     height: 35, 
                     longPress: false,
                     label: "",
-                    localId: "__refresh",
+                    localId: "__price_upl",
                     template: () => {
                         return html_button_template('./library/img/price.svg', 'Выгрузить прайс')
                     },

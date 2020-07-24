@@ -10,13 +10,6 @@ import ShipmentsView from "../views/shipments";
 import BalanceView from "../views/balance";
 import PopMenuView from "../models/template_pop_menu";
 import NewDocContextCenterDt from "../models/new_doc_context_center_dt";
-
-
-// import MovingsView from "../models/movings";
-// import TransfersView from "../models/transfers";
-// import analiticView from "../views/analitics";
-// import sView from "../views/setting-view";
-// import uView from "../views/users-view";
 import {button_template} from "../views/common";
 
 export default class SideButtonsBar extends JetView{
@@ -225,22 +218,20 @@ export default class SideButtonsBar extends JetView{
                     (view === BalanceView) ? screens.balance:
                     (view === OrdersView) ? screens.orders:
                     screens.info
-        let uid = options.id
+        let uid = options.id;
         if (!this.screens[uid]) {
             let header = options.name
             if (!header) return false;
             var tabConfig = {
                 id: uid,
                 value: header, width: options.width,
-                close: !true
-                };
+                close: true
+            };
             let formConfig = {
                 $scope: parent.$scope,
                 id: uid,
-                $subview: view
-                };
-            // console.log("formConfig", formConfig);
-            // console.log("tabConfig", tabConfig);
+                $subview: new view(this.app)
+            };
             $$("__multiview").addView(formConfig);
             $$("__tabbar").addOption(tabConfig, true);
             this.screens[uid] = true;
@@ -254,8 +245,9 @@ export default class SideButtonsBar extends JetView{
             this.$$("__arrivals").callEvent('onItemClick')
         } else if (name === 'shipments') {
             this.$$("__shipments").callEvent('onItemClick')
+        } else if (name === 'orders') {
+            this.$$("__orders").callEvent('onItemClick')
         }
-
     }
 
     ready() {

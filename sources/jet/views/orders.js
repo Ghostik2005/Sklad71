@@ -4,6 +4,11 @@ import OrdersHeaderView from "../models/orders_header";
 import OrdersCenterView from "../models/orders_center";
 
 export default class OrdersView extends JetView{
+
+    constructor(app) {
+        super(app)
+    }
+
     config() {
         let app = this.app;
         var ui = {
