@@ -1,17 +1,22 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {emptyWidth} from "../views/variables";
-import BalanceStatusBar from "../models/balance_status_bar";
-import {message} from "../views/common";
+import {emptyWidth} from "../variables/variables";
 import {createPrice} from "../models/data_processing";
 import TemplateRefreshButton from "../models/template_refresh_button";
-// import SearchBar from "../models/search_bar";
-// import { message } from "../views/common";
-// import {request, checkResponse} from "../views/common";
+import TemplateStatusBar from "../models/template_status_bar";
 
 export default class BalanceHeaderView extends JetView{
+
+    constructor(app, name) {
+        super(app);
+        this.view_name = name;
+        this.app.commonWidgets[name]['header'] = this;
+    }
+
     config(){
+        let l_this = this;
+        console.log('dd', l_this.view_name);
         let app = this.app;
         let toolbar = {view: 'toolbar',
             borderless: true,
@@ -33,7 +38,7 @@ export default class BalanceHeaderView extends JetView{
                             // if (code ===32 || (code>=48 && code<=90)) {
                                 clearTimeout(this.delay);
                                 this.delay = setTimeout(() => {
-                                    this.$scope.app.commonWidgets.balance.center_table.getData();
+                                    app.commonWidgets.balance.center_table.getData();
                                     
                                 }, 850);
                             // }
@@ -56,7 +61,7 @@ export default class BalanceHeaderView extends JetView{
                     on: {
                         onItemClick:  (id, event) => {
                             createPrice();
-                            message('Выгрузка прайса');
+                            document.message('Выгрузка прайса');
                         },
                     }
                 },
@@ -71,7 +76,7 @@ export default class BalanceHeaderView extends JetView{
                 {width: emptyWidth},
                 {width: emptyWidth},
                 {width: emptyWidth},
-                {$subview: BalanceStatusBar, name: "status_bar"}
+                new TemplateStatusBar(app, l_this.view_name),
             ]            
         }
 
@@ -94,9 +99,10 @@ export default class BalanceHeaderView extends JetView{
     }
 
     ready() {
-        this.app.commonWidgets.balance['header'] = this;
+        
     }
 
     init() {
+        
     }
 }

@@ -1,7 +1,6 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import TemplateRefreshButton from "../models/template_refresh_button";
 
 let states = document.app.states;

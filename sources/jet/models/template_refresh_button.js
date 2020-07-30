@@ -1,14 +1,12 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 
 export default class TemplateRefreshButton extends JetView{
 
     constructor(app, widget) {
         super(app);
         this.widget = widget;
-        console.log('w', widget);
     }
 
     config(){

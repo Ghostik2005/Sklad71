@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {getCookie, setCookie, deleteCookie, message} from "../views/common";
+import {getCookie, setCookie, deleteCookie} from "../views/common";
 import md5 from "../views/md5";
 import {getLogin} from "../models/data_processing"
 
@@ -28,7 +28,7 @@ export default class login extends JetView{
                                 this.$scope.show("/start");
 
                             } else {
-                                message('не авторизованно', "error");
+                                document.message('не авторизованно', "error");
                                 deleteCookie(app.config.sklad_cook);
                                 }
                         }

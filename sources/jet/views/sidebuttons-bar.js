@@ -1,15 +1,10 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-
-import {message} from "../views/common";
-
-import ArrivalsView from "../views/arrivals";
-import OrdersView from "../views/orders";
-import ShipmentsView from "../views/shipments";
 import BalanceView from "../views/balance";
 import PopMenuView from "../models/template_pop_menu";
-import {screens} from "../views/variables";
+import {screens} from "../variables/variables";
+import TemplateMainTableView from  "../models/template_main_table";
 
 
 export default class SideButtonsBar extends JetView{
@@ -62,8 +57,7 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function () {
-                            this.$scope.add_bar(this, BalanceView);
-                            // webix.message('Остатки/Движение товаров')
+                            this.$scope.add_bar(this, BalanceView, "balances");
                         },
                     }
                 },
@@ -79,7 +73,7 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function (id, event) {
-                            this.$scope.add_bar(this, ArrivalsView);
+                            this.$scope.add_bar(this, TemplateMainTableView, "arrivals");
                         },
                     }
                 },
@@ -95,7 +89,7 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function (id, event) {
-                            this.$scope.add_bar(this, OrdersView);
+                            this.$scope.add_bar(this, TemplateMainTableView, "orders");
                         },
                     }
                 },
@@ -111,7 +105,7 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function (id, event) {
-                            this.$scope.add_bar(this, ShipmentsView);
+                            this.$scope.add_bar(this, TemplateMainTableView, "shipments");
                         },
                     }
                 },
@@ -128,7 +122,7 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function (id, event) {
-                            // this.$scope.add_bar(this, MovingsView);
+                            // this.$scope.add_bar(this, MovingsView, "movings");
                         },
                     }
                 },
@@ -144,7 +138,7 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function (id, event) {
-                            // this.$scope.add_bar(this, TransfersView);
+                            // this.$scope.add_bar(this, TransfersView, "transfers");
                         },
                     }
                 },
@@ -159,9 +153,8 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function () {
-                            webix.message('Аналитика')
-                            // this.$scope.add_bar(this, analiticView);
-                            // this.$scope.add_bar(this);
+                            document.message('Аналитика')
+                            // this.$scope.add_bar(this, analiticView, "anlitics");
                         }
                     }
                 },
@@ -176,7 +169,7 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function () {
-                            webix.message('Отчеты')
+                            document.message('Отчеты')
                         },
                     }
                 },
@@ -191,9 +184,8 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function () {
-                            // this.$scope.add_bar(this, sView);
-                            webix.message('Настройки интерфейса и т.п.')
-                            // this.$scope.add_bar(this);
+                            document.message('Настройки интерфейса и т.п.')
+                            // this.$scope.add_bar(this, oView, "options");
                         },
                     }
                 },
@@ -209,9 +201,8 @@ export default class SideButtonsBar extends JetView{
                     },
                     on: {
                         onItemClick: function () {
-                            webix.message('Права доступа пользователей')
-                            // this.$scope.add_bar(this, uView);
-                            // this.$scope.add_bar(this);
+                            document.message('Права доступа пользователей')
+                            // this.$scope.add_bar(this, uView, "users");
                         },
                     }
                 },
@@ -223,11 +214,11 @@ export default class SideButtonsBar extends JetView{
 
 
 
-    add_bar(parent, view) {
-        let options = (view === ArrivalsView) ? screens.arrivals :
-                    (view === ShipmentsView) ? screens.shipments:
-                    (view === BalanceView) ? screens.balance:
-                    (view === OrdersView) ? screens.orders:
+    add_bar(parent, view, view_name) {
+        let options = (view_name === "arrivals") ? screens.arrivals :
+                    (view_name === "shipments") ? screens.shipments:
+                    (view_name === "balances") ? screens.balances:
+                    (view_name === "orders") ? screens.orders:
                     screens.info
         let uid = options.id;
         if (!this.screens[uid]) {
@@ -241,7 +232,7 @@ export default class SideButtonsBar extends JetView{
             let formConfig = {
                 $scope: parent.$scope,
                 id: uid,
-                $subview: new view(this.app)
+                $subview: new view(this.app, view_name)
             };
             if (this.app.commonWidgets.centerbar.addBar(formConfig, tabConfig)) this.screens[uid] = true;
             

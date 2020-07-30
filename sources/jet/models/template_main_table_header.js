@@ -1,28 +1,37 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {emptyWidth} from "../views/variables";
-import ArrivalsButtonFilters from "../models/arrivals_button_filters"
-import ArrivalsStatusBar from "../models/arrivals_status_bar";
+import {emptyWidth} from "../variables/variables";
 import SearchBar from "../models/search_bar";
-import { message } from "../views/common";
 import TemplateQuickFilters from "../models/template_quick_filters";
+import TemplateButtonFilters from "../models/template_button_filters"
+import TemplateStatusBar from "../models/template_status_bar";
 
-export default class ArrivalsHeaderView extends JetView{
+export default class TemplateMainHeaderView extends JetView{
+    
+    constructor(app, name, title) {
+        super(app);
+        this.p_name = name;
+        this.p_title = title;
+    }
+
     config(){
-
+        let local_this = this;
+        let app = this.app;
         let toolbar = {view: 'toolbar',
             borderless: true,
             margin: 0,
             cols: [
-                {view: "label", label: "<span class='label_highlited'>Поступления</span>", autowidth: true,
+                {view: "label", 
+                    label: "<span class='label_highlited'>" + local_this.p_title + "</span>", 
+                    autowidth: true,
                     css: "label_highlited", hidden: true
                 },
                 {width: emptyWidth},
                 // {$subview: SearchBar, name: "search_bar"},
                 {},
-                new TemplateQuickFilters(this.app, 'arrivals'),
-                ArrivalsButtonFilters,
+                new TemplateQuickFilters(app, local_this.p_name),
+                new TemplateButtonFilters(app, local_this.p_name),
             ]
     
         }
@@ -55,7 +64,7 @@ export default class ArrivalsHeaderView extends JetView{
                 },
                 {width: emptyWidth},
                 {width: emptyWidth},
-                {$subview: ArrivalsStatusBar, name: "status_bar"}
+                new TemplateStatusBar(app, local_this.p_name),
             ]            
         }
 
@@ -70,13 +79,11 @@ export default class ArrivalsHeaderView extends JetView{
     }
 
     changeOrganization(id, event) {
-        message('Смена организации');
-        console.log('commonWidg', this.app.commonWidgets);
-
+        document.message('Смена организации');
     }
 
     ready() {
-        this.app.commonWidgets.arrivals['header'] = this;
+        this.app.commonWidgets[this.p_name]['header'] = this;
     }
 
     init() {

@@ -1,13 +1,16 @@
 "use strict";
 import {JetView} from "webix-jet";
-import BalanceHeaderView from "../models/balance_header";
 import TemplateCenterView from "../models/template_main_table_center";
+import TemplateMainHeaderView from "../models/template_main_table_header";
 
-export default class BalanceView extends JetView{
 
+export default class TemplateMainTableView extends JetView{
+    
     constructor(app, name) {
         super(app);
-        this.widget_name = name;
+        this.p_name = name;
+        console.log('name', name);
+
     }
 
     config() {
@@ -16,9 +19,9 @@ export default class BalanceView extends JetView{
         var ui = {
             type:"line",
             rows: [
-                new BalanceHeaderView(app, local_this.widget_name),
+                new TemplateMainHeaderView(app, local_this.p_name),
                 {height: 2},
-                new TemplateCenterView(app, local_this.widget_name),
+                new TemplateCenterView(app, local_this.p_name),
             ],
         };
         return ui;
@@ -26,10 +29,10 @@ export default class BalanceView extends JetView{
 
 
     init(){
+
     }
 
     ready() {
-        
     }
 
 }

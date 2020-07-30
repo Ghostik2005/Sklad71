@@ -4,7 +4,7 @@ import {formatNumber, names} from "../views/common";
 
 let states = document.app.states;
 
-export const dtColumns = [
+export const OrddtColumns = [
     {id: "n_id", hidden: true,
         headermenu: false,
         width: 50,

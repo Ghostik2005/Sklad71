@@ -1,9 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import {getOrdersDocument, saveOrdersDocument, checkOpened} from "../models/data_processing";
-import {dtColumns} from "../models/orders_document_dt";
+import {dtColumns} from "../variables/orders_document_dt";
 import DocumentHeader from "../models/document_header"
 
 let states = document.app.states;
@@ -127,7 +126,7 @@ export default class OrderBody extends JetView{
                                             this.setUnchange();
                                             this.hide();
                                         } else {
-                                            message(not_saved,"error", 3)
+                                            document.message(not_saved,"error", 3)
                                         }
                                         return not_saved
                                     }
@@ -152,12 +151,12 @@ export default class OrderBody extends JetView{
                                                     if (!this.flag_new) {
                                                         this.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0]);
                                                     } else {
-                                                        message("ищем позицию и апдейтим ее")
+                                                        document.message("ищем позицию и апдейтим ее")
                                                     }
                                                 }
                                                 this.hide();
                                             } else {
-                                                message("Ошибка проведения транзакции","error", 3)
+                                                document.message("Ошибка проведения транзакции","error", 3)
                                             }
                                             
                                         }   
@@ -193,13 +192,14 @@ export default class OrderBody extends JetView{
         }).then(function(result){
             switch(result){
                 case "0": 
-                webix.message("Good!");
+                    document.message("Good!");
                     break;
                 case "1":
-                webix.message("Why?..");
+                    document.message("Why?..");
                     break;
                 case "2":
-                webix.message("Come back later");
+                    document.message("Come back later");
+                    break;
             }   
         });
     }
@@ -250,7 +250,6 @@ export default class OrderBody extends JetView{
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
-                // message("добавляем позицию наверх")
             }
         }
         return result

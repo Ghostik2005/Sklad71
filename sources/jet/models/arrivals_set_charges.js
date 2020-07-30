@@ -1,11 +1,10 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import {emptyWidth} from "../views/variables"
+import {emptyWidth} from "../variables/variables"
 import {setCharge, getBalances} from "../models/data_processing";
 import {formatText} from "../views/common";
-import {dtColumns} from "../models/arrivals_charge_price_dt"
+import {dtColumns} from "../variables/arrivals_charge_price_dt"
 
 
 
@@ -172,7 +171,7 @@ export default class ChargesView extends JetView{
                                             let r = setCharge({table: this.$$("__table").serialize(), doc_id:this.$$("__n_id").getValue()});
                                             if (r) this.hide();
                                         } else {
-                                            message('Устанвите наценки, иначе товар не попадет в прайс', 'error', 5)
+                                            document.message('Устанвите наценки, иначе товар не попадет в прайс', 'error', 5)
                                         }
                                     }
                                 }

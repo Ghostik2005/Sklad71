@@ -1,10 +1,11 @@
 "use strict";
 
-import {formatNumber, names} from "../views/common";
+import {names} from "../views/common";
 
 let states = document.app.states;
 
-export const dtColumns = [
+
+export const ArrivdtColumns = [
     {id: "n_id", hidden: true,
         headermenu: false,
         width: 50,
@@ -81,14 +82,6 @@ export const dtColumns = [
     {id: "n_recipient_id", width: 0, 
         hidden: true,
         headermenu:false,
-    },
-    {id: "n_charge", width: 140, 
-        // sort: "server", 
-        header: [{text: names('n_charge').value},
-        ],
-        // format: webix.Number.formatNumber,
-        headermenu:false,
-        filter_type: "text"
     },
     {id: "n_summ", width: 140, 
         sort: "server", 

@@ -1,7 +1,5 @@
 "use strict";
 
-// import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import {request, checkResponse, getUser} from "../views/common";
 
 
@@ -307,11 +305,11 @@ export function shipmentProductSelectionGetData(params, table) {
 
 export function balanceGetData(params, table) {
     let widgs = table.$scope.app.commonWidgets;
-    let filters = (widgs && widgs.balance.menu_filters) ? widgs.balance.menu_filters.getFilters() : {};
+    let filters = (widgs && widgs.balances.menu_filters) ? widgs.balances.menu_filters.getFilters() : {};
     if (!params) {
         params = {sort:table.config.sorting};
     };
-    filters = Object.assign(filters, (widgs.balance.header) ? widgs.balance.header.getSearch(): {})
+    filters = Object.assign(filters, (widgs.balances.header) ? widgs.balances.header.getSearch(): {})
     params = Object.assign(params, {filters: filters});
     table.config.sorting = params.sort;
     let params_to = {method:"balance.get_data", kwargs: {"user": getUser(), filters: params}}

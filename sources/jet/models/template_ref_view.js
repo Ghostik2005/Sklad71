@@ -1,7 +1,6 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import TemplateProductsView from "../models/template_products_dt"
 import TemplateRefCardView from "../models/template_ref_card";
 import RefPartnerCardView from "../models/ref_partner_card";

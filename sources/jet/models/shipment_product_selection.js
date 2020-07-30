@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import {sipmentsProdSelColumns} from "../models/shipment_product_selection_dt";
+import {sipmentsProdSelColumns} from "../variables/shipment_product_selection_dt";
 import {shipmentProductSelectionGetData} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 

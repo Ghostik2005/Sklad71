@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import { emptyWidth } from "../views/variables";
+import { emptyWidth } from "../variables/variables";
 import TemplateComboCard from "../models/template_combo_p_card";
 import {getProduct, setProduct, getId, checkCode} from "../models/data_processing";
 
@@ -300,7 +299,7 @@ export default class ProductCardView extends JetView{
                                 onItemClick: ()=>{
                                     let res = this.saveCard();
                                     if (res) {
-                                        message(res, 'error', 3)
+                                        document.message(res, 'error', 3)
                                     } else {
                                         this.setUnChange();
                                         this.hide();

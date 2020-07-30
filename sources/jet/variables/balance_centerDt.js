@@ -3,7 +3,7 @@
 import {formatNumber, names} from "../views/common";
 
 
-export const dtColumns = [
+export const BaldtColumns = [
     {id: "n_id", hidden: true,
         headermenu: false,
         width: 50,

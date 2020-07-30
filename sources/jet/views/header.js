@@ -1,9 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {emptyWidth} from "../views/variables";
-
-import { message } from "../views/common";
+import {emptyWidth} from "../variables/variables";
 import {getUser} from "../views/common";
 
 export default class HeaderView extends JetView{
@@ -89,8 +87,7 @@ export default class HeaderView extends JetView{
     }
 
     changeOrganization(id, event) {
-        message('Смена организации');
-        console.log('commonWidg', this.app.commonWidgets);
+        document.message('Смена организации');
 
     }
 

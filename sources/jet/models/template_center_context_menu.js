@@ -1,56 +1,37 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import {tables_excludeColumns} from "../views/variables";
-import {newDocument} from "../models/common_functions";
-import {menu_options, balance_menu_options_excludes} from "../views/variables";
+import {tables_excludeColumns} from "../variables/variables";
+import {menu_options, context_menu_excludes} from "../variables/variables";
+
+import {handle_context} from "../models/context_menu_handler";
 
 
-export default class BalanceContextCenterDt extends JetView{
+export default class TemplateCenterContextMenu extends JetView{
+
+    constructor(app, name){
+        super(app);
+        this.p_name = name;
+        this.single_name = name.slice(0, -1);
+    }
+
     config(){
-        let th = this;
-
+        let g_this = this;
         let c_menu = {
             view:'contextmenu', 
             autowidth: true,
-            localId:"__balance_cmenu",
+            localId: `__${g_this.p_name}_cmenu`,
             css: "context_center_dt",
             point: true,
             on:{
                 onMenuItemClick: function(id, e, html){
                     var context = this.getContext();
-                    // console.log("id", id)
-                    switch(id) {
-                        case "1":
-                            let row = context.table.getItem(context.position.row);
-                            let copied = row[context.position.column];
-                            if (navigator.clipboard) {
-                                navigator.clipboard.writeText(copied).then(() => {
-                                    message('Скопировано в буфер');
-                                })
-                            } else {
-                                message('Браузер устарел, скопировать в буфер невозможно', 'error', 3);
-                            };
-                            break;
-                        // case "2":
-                        //     message('Загрузить');
-                        //     break;
-                        case "901":
-                            newDocument.arrival(th);
-                            break;
-                        case "902":
-                            newDocument.shipment(th);
-                            break;
-                        default:
-                            message(this.getMenuItem(id).value);
-                            break
-
-                    }
+                    let row = (context.position) ? context.table.getItem(context.position.row) : undefined;
+                    let cfg = {local_this: this, context: context, row: row, id: id, doc_type: g_this.single_name}
+                    handle_context(cfg)
                 },
             }
         }
-
 
         return c_menu
     }
@@ -86,7 +67,7 @@ export default class BalanceContextCenterDt extends JetView{
         this.clearAll();
         this.parse(menu_options);
         let id_hide = []
-        id_hide = id_hide.concat(balance_menu_options_excludes);
+        id_hide = id_hide.concat(context_menu_excludes[this.p_name]);
         if(context.position) {
             let item = context.table.getItem(context.position.row);
             if (item.n_state == 2) {
@@ -106,6 +87,7 @@ export default class BalanceContextCenterDt extends JetView{
         id_hide = Array.from(new Set(id_hide));
         id_hide.forEach( (id)=> {
             this.getRoot().hideItem(id);
+
         })
 
         this.getRoot().show(e);

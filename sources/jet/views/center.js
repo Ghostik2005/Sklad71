@@ -2,7 +2,6 @@
 
 import {JetView} from "webix-jet";
 import infoView from "../models/info_view";
-import { message } from "./common";
 
 export default class CenterView extends JetView{
     config(){
@@ -25,7 +24,7 @@ export default class CenterView extends JetView{
                 },
                 onBeforeTabClose: (id) => {
                     if (Object.keys(app.commonWidgets.sidebar.screens).length <= 1) {
-                        message('Для работы нужна хотя бы одна вкладка', 'error');
+                        document.message('Для работы нужна хотя бы одна вкладка', 'error');
                         return false;
                     }
                 },

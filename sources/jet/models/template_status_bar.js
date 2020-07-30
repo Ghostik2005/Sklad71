@@ -1,25 +1,35 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import {bSpace} from "../views/variables";
+import {bSpace} from "../variables/variables";
 
 
 
-export default class ArrivalsStatusBar extends JetView{
+export default class TemplateStatusBar extends JetView{
+
+    constructor(app, name) {
+        super(app);
+        this.p_name = name;
+        this.app.commonWidgets[this.p_name]['status_bar'] = this;
+    }
+
     config(){
-
+        let local_this = this;
+        let app = this.app;
         let statusbar = { 
-            // id: "_arrivalsstatusbar",
             borderless: true,
             cols: [
                 {view: "label", 
                     autowidth: true,
-                    // css: "status_bar",
                     label: "Фильтры: ",
                     on: {
                         onItemClick: ()=> {
-                            this.app.commonWidgets.arrivals.button_filter.buttonClick()
+                            if (app.commonWidgets[local_this.p_name] && 
+                                app.commonWidgets[local_this.p_name].button_filter &&
+                                app.commonWidgets[local_this.p_name].button_filter.buttonClick) 
+                            {
+                                app.commonWidgets[local_this.p_name].button_filter.buttonClick()
+                            }
                         }
                     }
                 },
@@ -31,7 +41,12 @@ export default class ArrivalsStatusBar extends JetView{
                     label: "нет",
                     on: {
                         onItemClick: ()=> {
-                            this.app.commonWidgets.arrivals.button_filter.buttonClick()
+                            if (app.commonWidgets[local_this.p_name] && 
+                                app.commonWidgets[local_this.p_name].button_filter &&
+                                app.commonWidgets[local_this.p_name].button_filter.buttonClick) 
+                            {
+                                app.commonWidgets[local_this.p_name].button_filter.buttonClick()
+                            }
                         }
                     }
 
@@ -42,9 +57,8 @@ export default class ArrivalsStatusBar extends JetView{
         return statusbar
     }
 
-
     setStatus() {
-        let filters = this.app.commonWidgets.arrivals.menu_filters.getFiltersValue();
+        let filters = this.app.commonWidgets[this.p_name].menu_filters.getFiltersValue();
         let new_label = [];
         for (var elem in filters) {
             let text = filters[elem];
@@ -61,7 +75,6 @@ export default class ArrivalsStatusBar extends JetView{
 
     ready() {
         this.$$("__status").resize();
-        this.app.commonWidgets.arrivals['status_bar'] = this;
     }
 
     init() {

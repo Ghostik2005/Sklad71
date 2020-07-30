@@ -1,7 +1,6 @@
 "use strict";
 
-import {message} from "../views/common";
-import * as refColumns from "../models/refs_columns_dt";
+import * as refColumns from "../variables/refs_columns_dt";
 import {refGetData} from "../models/data_processing";
 import RefProductsView from "../models/ref_products";
 import RefView from "../models/template_ref_view";

@@ -1,11 +1,10 @@
 import "./styles/styles.css";
 
-import {bSpace} from "./views/variables";
-import {extendWebix, getRefs} from "./views/common";
-import {common} from "./views/common";
+import {getRefs} from "./views/common";
 import {JetApp, JetView} from "webix-jet";
 import {EmptyRouter} from "webix-jet";
 import "./locales/ru";
+import { app_common } from "./common";
 
 
 export default class app extends JetApp{
@@ -44,12 +43,22 @@ export default class app extends JetApp{
 			window.console.error(error);
 		});
         var app = this;
-        app.use(common);
+        
+        app.use(app_common);
         document.app = app;
+        document.message = (msg, type="success", expires=1) => {
+            webix.message({
+                type: type, 
+                text: msg,
+                expire: expires*1000
+            })
+        };
+
+        getRefs(app);
         app['commonWidgets'] = {
             "arrivals": {},
             "shipments": {},
-            // "balance": {},
+            "balances": {},
             // "sidebar": {},
             "orders": {},
         },
@@ -70,12 +79,10 @@ export default class app extends JetApp{
             window.console.error(error);
             });
 
-        getRefs(app);
+        
     }
     
 }
-
-extendWebix();
 
 webix.i18n.setLocale("ru-RU");
 if (!BUILD_AS_MODULE){

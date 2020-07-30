@@ -1,8 +1,6 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import { emptyWidth } from "../views/variables";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
 import {getRef, setRef} from "../models/data_processing";
 
@@ -62,7 +60,7 @@ export default class TemplateRefCardView extends JetView{
                                 onItemClick: ()=>{
                                     let res = th.saveCard();
                                     if (res) {
-                                        message(res, 'error', 3)
+                                        document.message(res, 'error', 3)
                                     } else {
                                         th.setUnChange();
                                         th.hide();

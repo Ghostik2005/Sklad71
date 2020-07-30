@@ -1,9 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import {getShipmentsDocument, saveShipmentsDocument, getOrdersDocumentShip, checkOpened} from "../models/data_processing";
-import {dtColumns} from "../models/shipments_document_dt";
+import {dtColumns} from "../variables/shipments_document_dt";
 import ShipmentSelectionView from "../models/shipment_product_selection";
 import DocumentHeader from "../models/document_header"
 
@@ -167,7 +166,7 @@ export default class ShipmentsBody extends JetView{
                                             this.setUnChange();
                                             // this.hide();
                                         } else {
-                                            message(not_saved,"error", 3)
+                                            document.message(not_saved,"error", 3)
                                         }
                                         return not_saved
                                     }
@@ -188,12 +187,12 @@ export default class ShipmentsBody extends JetView{
                                                     if (!this.flag_new) {
                                                         this.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0]);
                                                     } else {
-                                                        message("ищем позицию и апдейтим ее")
+                                                        document.message("ищем позицию и апдейтим ее")
                                                     }
                                                 }
                                                 this.hide();
                                             } else {
-                                                message("Ошибка проведения транзакции","error", 3)
+                                                document.message("Ошибка проведения транзакции","error", 3)
                                             }
                                             
                                         }   
@@ -229,13 +228,14 @@ export default class ShipmentsBody extends JetView{
         }).then(function(result){
             switch(result){
                 case "0": 
-                webix.message("Good!");
+                    document.message("Good!");
                     break;
                 case "1":
-                webix.message("Why?..");
+                    document.message("Why?..");
                     break;
                 case "2":
-                webix.message("Come back later");
+                    document.message("Come back later");
+                    break;
             }   
         });
     }
@@ -289,7 +289,6 @@ export default class ShipmentsBody extends JetView{
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
-                // message("добавляем позицию наверх")
             }
         }
         return result

@@ -1,11 +1,10 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import {productSelectionGetData} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 import TemplateProductsView from "../models/template_products_dt"
-import {refProdSelColumns} from "../models/ref_product_selection_dt";
+import {refProdSelColumns} from "../variables/ref_product_selection_dt";
 
 export default class RefProductsView extends JetView{
 

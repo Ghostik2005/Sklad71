@@ -1,35 +1,22 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {dtColumns} from "../models/orders_centerDt";
-import ContextCenterDt from "../models/orders_context_center_dt";
-import {ordersGetData, ordersSaveData} from "../models/data_processing";
-import OrderBody from "../models/orders_document_body";
 import TemplateCenterTable from "../models/template_table"
+import {main_tables_cfg} from "../models/tables_configs";
+import TemplateCenterContextMenu from "../models/template_center_context_menu";
 
-export default class OrdersCenterView extends JetView{
+
+export default class TemplateCenterView extends JetView{
     
     constructor(app, view_name) {
-
         super(app);
         this.view_name = view_name;
-
+        this.app.commonWidgets[this.view_name]['center_table'] = this;
     }
 
-
     config(){
-
-        // let th = this;
-
-        let cfg = {
-            loadData: ordersGetData,
-            sorting: {id: "n_dt_send", dir: "desc"},
-            docBody: OrderBody,
-            columns: dtColumns,
-            parent: this,
-            id: "_orders_main"
-        }
-
+        let cfg = main_tables_cfg[this.view_name];
+        cfg['parent'] = this;
         return new TemplateCenterTable(this.app, cfg);
     }
 
@@ -41,7 +28,6 @@ export default class OrdersCenterView extends JetView{
     }
 
     getData(){
-
         this.__table.clearAll(true);
         this.__table.loadNext(0, 0, 0, 0, true).then((data)=> {
             if (data) {
@@ -53,12 +39,10 @@ export default class OrdersCenterView extends JetView{
     }
 
     getHeaders(){
-
         let configs = []
         this.__table.eachColumn((colId) => {
             let col = this.__table.getColumnConfig(colId);
             configs.push(col)
-
         }, true)
         return configs
 
@@ -66,16 +50,11 @@ export default class OrdersCenterView extends JetView{
 
 
     ready() {
-
-        this.__table = $$("_orders_main");
-        this.app.commonWidgets.orders['center_table'] = this;
-        
+        this.__table = $$(main_tables_cfg[this.view_name].id);
     }
-
+    
     
     init() {
-
-        this.contextDt = this.ui(ContextCenterDt);
-
+        this.contextDt = this.ui(new TemplateCenterContextMenu(this.app, this.view_name));
     }
 }

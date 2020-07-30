@@ -1,16 +1,22 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import {bSpace} from "../views/variables";
 import {filtersGetData} from "../models/data_processing";
 import ButtonUnFilter from "../models/button_unfilter";
 
-export default class ArrivalsMenuFilters extends JetView{
+export default class TemplateMenuFilters extends JetView{
+
+    constructor(app, name) {
+        super(app);
+        this.p_name = name;
+    }
+
+
     config(){
+        let local_this = this;
+        let app = this.app;
 
         let popup = {
-            //view: "popup",
             view: "cWindow",
             loclalId: "_pop",
             width: 420,
@@ -61,12 +67,12 @@ export default class ArrivalsMenuFilters extends JetView{
                                             let b = this.$$("__body").getValues().n_state;
                                             // console.log('b', b);
                                             if (b) {
-                                                this.app.commonWidgets.arrivals.quick_filters.checkTag("__" + b, b, false) ;
+                                                app.commonWidgets[local_this.p_name].quick_filters.checkTag("__" + b, b, false) ;
                                             } else {
-                                                this.app.commonWidgets.arrivals.quick_filters.uncheckAll()
+                                                app.commonWidgets[local_this.p_name].quick_filters.uncheckAll()
                                             };
                                         };
-                                        this.app.commonWidgets.arrivals.center_table.getData();
+                                        app.commonWidgets[local_this.p_name].center_table.getData();
                                         this.saveValues();
                                         this.hide();
                                     }
@@ -90,7 +96,7 @@ export default class ArrivalsMenuFilters extends JetView{
     saveValues() {
         // console.log('setValues');
         this.values = this.$$("__body").getValues();
-        this.app.commonWidgets.arrivals.status_bar.setStatus(this.values);
+        this.app.commonWidgets[this.p_name].status_bar.setStatus(this.values);
     }
 
     loadValues() {
@@ -118,10 +124,10 @@ export default class ArrivalsMenuFilters extends JetView{
     ready() {
         this.values = {}
         let global_this = this;
-        this.app.commonWidgets.arrivals['menu_filters'] = this;
+        this.app.commonWidgets[this.p_name]['menu_filters'] = this;
         // console.log('0', this.app.commonWidgets);
         setTimeout( ()=> {
-        let columns = this.app.commonWidgets.arrivals.center_table.getHeaders()
+        let columns = this.app.commonWidgets[this.p_name].center_table.getHeaders()
         columns.forEach((col)=>{
             let gen_id = `_${col.id}_field`;
             switch (col.filter_type) {

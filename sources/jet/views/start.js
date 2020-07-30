@@ -4,7 +4,7 @@ import HeaderView from "../views/header";
 import FooterView from "../views/footer";
 import CenterView from "../views/center";
 import SideButtonsBar from "../views/sidebuttons-bar";
-import {getCookie, message} from "../views/common";
+import {getCookie} from "../views/common";
 import {getCredentionals} from "../models/data_processing"
 
 export default class StartView extends JetView{

@@ -1,9 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import {getArrivalsDocument, saveArrivalsDocument, checkOpened} from "../models/data_processing";
-import {dtColumns} from "../models/arrivals_document_dt";
+import {dtColumns} from "../variables/arrivals_document_dt";
 import DocumentHeader from "../models/document_header"
 import ChargesView from "../models/arrivals_set_charges";
 import ProductSelectionView from "../models/product_selection";
@@ -138,7 +137,7 @@ export default class ArrivalBody extends JetView{
                                             this.setUnchange();
                                             // this.hide();
                                         } else {
-                                            message(not_saved,"error", 3)
+                                            document.message(not_saved,"error", 3)
                                         }
                                         return not_saved
                                     }
@@ -160,7 +159,7 @@ export default class ArrivalBody extends JetView{
                                                     if (!this.flag_new) {
                                                         this.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0]);
                                                     } else {
-                                                        message("ищем позицию и апдейтим ее")
+                                                        document.message("ищем позицию и апдейтим ее")
                                                     }
                                                 }
                                                 this.hide();
@@ -168,7 +167,7 @@ export default class ArrivalBody extends JetView{
                                                 q.show('Установка наценок для прайса')
                                                 console.log('ss1')
                                             } else {
-                                                message("Ошибка транзакции при проведении документа","error", 3)
+                                                document.message("Ошибка транзакции при проведении документа","error", 3)
                                             }
                                             
                                         }   
@@ -204,13 +203,14 @@ export default class ArrivalBody extends JetView{
         }).then(function(result){
             switch(result){
                 case "0": 
-                webix.message("Good!");
+                    document.message("Good!");
                     break;
                 case "1":
-                webix.message("Why?..");
+                    document.message("Why?..");
                     break;
                 case "2":
-                webix.message("Come back later");
+                    document.message("Come back later");
+                    break;
             }   
         });
     }
@@ -262,7 +262,7 @@ export default class ArrivalBody extends JetView{
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
-                // message("добавляем позицию наверх")
+                // document.message("добавляем позицию наверх")
             }
         }
         return result

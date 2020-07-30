@@ -1,8 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
-import {emptyWidth} from "../views/variables"
+import {emptyWidth} from "../variables/variables"
 import {filtersGetData} from "../models/data_processing";
 import {formatText} from "../views/common";
 

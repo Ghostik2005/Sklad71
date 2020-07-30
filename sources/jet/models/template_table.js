@@ -1,7 +1,6 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message} from "../views/common";
 import {checkOpened} from "../models/data_processing";
 
 export default class TemplateCenterTable extends JetView{
@@ -72,15 +71,17 @@ export default class TemplateCenterTable extends JetView{
                     }
                 },
                 onItemDblClick: function(id) {
-                    if (id) {
-                        let permission = checkOpened(this.getItem(id).n_id);
-                        console.log('perm', permission);
-                        if (permission) {
-                            let focus = webix.UIManager.getFocus();
-                            let doc = this.$scope.ui(this.$scope.cfg.docBody);
-                            doc.show(this.getItem(id), focus, this.$scope.$$("__table"));
-                        } else {
-                            message("Этот документ уже открыт", 'debug', 3);
+                    if (this.$scope.cfg.docBody) {
+                        if (id) {
+                            let permission = checkOpened(this.getItem(id).n_id);
+                            console.log('perm', permission);
+                            if (permission) {
+                                let focus = webix.UIManager.getFocus();
+                                let doc = this.$scope.ui(this.$scope.cfg.docBody);
+                                doc.show(this.getItem(id), focus, this.$scope.$$("__table"));
+                            } else {
+                                document.message("Этот документ уже открыт", 'debug', 3);
+                            }
                         }
                     }
                 }

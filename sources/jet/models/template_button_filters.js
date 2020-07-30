@@ -1,10 +1,17 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import OrdersMenuFilters from "../models/orders_menu_filters";
+import TemplateMenuFilters from "../models/template_menu_filters";
 
 
-export default class OrdersButtonFilters extends JetView{
+export default class TemplateButtonFilters extends JetView{
+
+    constructor(app, name){
+        super(app);
+        this.p_name = name;
+    }
+
+
     config(){
 
         let button = {view:"button",
@@ -30,10 +37,10 @@ export default class OrdersButtonFilters extends JetView{
     }
 
     ready() {
-        this.app.commonWidgets.orders['button_filter'] = this;
+        this.app.commonWidgets[this.p_name]['button_filter'] = this;
     }
 
     init() {
-        this.menuFilters = this.ui(OrdersMenuFilters)
+        this.menuFilters = this.ui(new TemplateMenuFilters(this.app, this.p_name))
     }
 }
