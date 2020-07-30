@@ -44,20 +44,7 @@ export default class BalanceStatusBar extends JetView{
 
 
     setStatus() {
-        return
-        let filters = this.app.commonWidgets.balance.menu_filters.getFiltersValue();
-        let new_label = [];
-        for (var elem in filters) {
-            let text = filters[elem];
-            if (text) {
-                let title = $$('translates_dc').getItem(elem).value;
-                new_label.push(`${title}: ${text}`);
-            }
-        }
-        new_label = (new_label.length > 0) ? new_label.join('; ') : 'нет'
-        this.$$("__status").define({label: new_label, tooltip: new_label});
-        this.$$("__status").refresh();
-        this.$$("__status").resize();
+
     }
 
     ready() {

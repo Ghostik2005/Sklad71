@@ -2,16 +2,16 @@
 
 import {JetView} from "webix-jet";
 import infoView from "../models/info_view";
+import { message } from "./common";
 
 export default class CenterView extends JetView{
     config(){
-
+        let app = this.app;
 
         var tabbar = {
             view: "tabbar",
             tabMargin: 8,
-            localId: "_tabbar",
-            id: "__tabbar",
+            localId: "__tabbar",
             borderless: true,
             popupWidth:170,
             tabMinWidth:170,
@@ -20,21 +20,24 @@ export default class CenterView extends JetView{
             multiview: true,
             on: {
                 onOptionRemove: (id) => {
-                    // $$("__multiview").removeView(id);
                     $$(id).destructor();
-                    delete $$("_sideMenu").$scope.screens[id];
+                    delete  app.commonWidgets.sidebar.screens[id];
                 },
-                onChange: (i, ii) => {                    
-                }
+                onBeforeTabClose: (id) => {
+                    if (Object.keys(app.commonWidgets.sidebar.screens).length <= 1) {
+                        message('Для работы нужна хотя бы одна вкладка', 'error');
+                        return false;
+                    }
+                },
             },
             options: [
-                {value: "Информация", id: "_mView", close: false, width: 120},
+                {value: "Информация", id: "_mView", close: !false, width: 130},
                 ]
             };
         var tabmain = {
             width: document.documentElement.clientWidth-46,
             view: "multiview",
-            id: "__multiview",
+            localId: "__multiview",
             animate: false,
             keepViews:true,
             cells: [
@@ -45,27 +48,37 @@ export default class CenterView extends JetView{
 
         return {
             view: "layout",
-            // css: "full-size",
-            // css: 'center_view',
-            cols: [
-                {width: 1}, 
-                {rows: [
-                    tabbar,
-                    tabmain,
-
-                ]},
-                {width: 1},
+            id: "__bar__main_center",
+            rows: [
+                tabbar,
+                tabmain,
             ]
         }
+    }
 
+    setValue(id){
+        this.$$("__tabbar").setValue(id);
+    }
+
+    addBar(formConfig, tabConfig) {
+        let result = true;
+        try {
+            this.$$("__multiview").addView(formConfig);
+            this.$$("__tabbar").addOption(tabConfig, true);
+        } catch(e) {
+            result = false
+        }
+        return result
     }
 
 
     ready() {
+        this.app.commonWidgets[this.widget_name] = this;
         
     }
     
     init() {
+        this.widget_name = "centerbar";
         
     }
 }

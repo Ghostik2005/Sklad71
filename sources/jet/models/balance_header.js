@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {emptyWidth} from "../views/variables";
 import BalanceStatusBar from "../models/balance_status_bar";
-import {html_button_template, message} from "../views/common";
+import {message} from "../views/common";
 import {createPrice} from "../models/data_processing";
 import TemplateRefreshButton from "../models/template_refresh_button";
 // import SearchBar from "../models/search_bar";
@@ -12,7 +12,7 @@ import TemplateRefreshButton from "../models/template_refresh_button";
 
 export default class BalanceHeaderView extends JetView{
     config(){
-
+        let app = this.app;
         let toolbar = {view: 'toolbar',
             borderless: true,
             margin: 0,
@@ -42,7 +42,7 @@ export default class BalanceHeaderView extends JetView{
                 },
                 // {$subview: SearchBar, name: "search_bar"},
                 {},
-                new TemplateRefreshButton(this.app, 'arrivals'),
+                new TemplateRefreshButton(this.app, 'balance'),
                 {width: emptyWidth},
                 {view:"button", type: 'htmlbutton',
                     width: 35,
@@ -51,7 +51,7 @@ export default class BalanceHeaderView extends JetView{
                     label: "",
                     localId: "__price_upl",
                     template: () => {
-                        return html_button_template('./library/img/price.svg', 'Выгрузить прайс')
+                        return  app.getService("common").html_button_template('./library/img/price.svg', 'Выгрузить прайс')
                     },
                     on: {
                         onItemClick:  (id, event) => {
@@ -85,7 +85,12 @@ export default class BalanceHeaderView extends JetView{
     }
 
     getSearch() {
-        return {"n_product": this.$$("__search").getValue()};
+        try {
+            return {"n_product": this.$$("__search").getValue()}
+        } catch(e){
+            return {}
+        }
+        
     }
 
     ready() {

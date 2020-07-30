@@ -1,17 +1,7 @@
 "use strict";
 
-// import {formatNumber, ref_states, ref_translates} from "../views/common";
 
-// import {v_names} from "../views/variables"
-
-
-// const names = function(method) {
-//     let ret = ref_translates.data.getItem(method);
-//     ret = ret || v_names[method];
-//     return ret    
-// }
-
-export const prodSelColumns = [
+export const sipmentsProdSelColumns = [
     {id: "n_id", hidden: true,
         headermenu: false,
         width: 5,

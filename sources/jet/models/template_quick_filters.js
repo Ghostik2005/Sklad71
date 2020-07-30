@@ -1,29 +1,29 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, ref_states} from "../views/common";
-import {v_states} from "../views/variables";
-import {getTest} from "../models/data_processing";
+import {message} from "../views/common";
 import TemplateRefreshButton from "../models/template_refresh_button";
 
+let states = document.app.states;
 
-export default class OrdersQuickFilters extends JetView{
+
+export default class TemplateQuickFilters extends JetView{
+    constructor(app, parent_name) {
+        super(app);
+        this.parent_name = parent_name;
+    }
+
     config(){
-
-        const genLabel = function(method) {
-            let button = ref_states.data.getItem(method) || v_states[method];
-            return "<span class='table_icon " + button.picture + "', style='color: " + button.color + " '></span><span class='ordinary_label'>" + button.value.toLowerCase() + "</span>"
-        }
         
-        // const genId = function()
+        let local_this = this;
+        let app = this.app;
 
         let filters = {
-            hidden: !true,
             borderless: true,
             cols: [
                 {view: "label", 
                     localId: "__1",
-                    label: genLabel(1),
+                    label: app.getService("common").genLabel(1),
                     width: 70,
                     on: {
                         onItemClick: function() {
@@ -33,7 +33,7 @@ export default class OrdersQuickFilters extends JetView{
                 },
                 {view: "label", 
                     localId: "__2",
-                    label: genLabel(2),
+                    label: app.getService("common").genLabel(2),
                     width: 100,
                     on: {
                         onItemClick: function() {
@@ -43,7 +43,7 @@ export default class OrdersQuickFilters extends JetView{
                 },
                 {view: "label", 
                     localId: "__3",
-                    label: genLabel(3),
+                    label: app.getService("common").genLabel(3),
                     width: 100,
                     on: {
                         onItemClick: function() {
@@ -51,20 +51,7 @@ export default class OrdersQuickFilters extends JetView{
                         }
                     }
                 },
-
-                {view: "label", 
-                    // localId: "__",
-                    label: "UF",
-                    hidden: true,
-                    width: 25,
-                    on: {
-                        onItemClick: function() {
-                            let t = getTest();
-                            console.log('tt', t)
-                        }
-                    }
-                },
-                new TemplateRefreshButton(this.app, 'arrivals'),
+                new TemplateRefreshButton(app, local_this.parent_name),
                 {width: 10},
             ],
 
@@ -84,12 +71,13 @@ export default class OrdersQuickFilters extends JetView{
 
     setFilter(state) {
         if (this.state !== state) {
-            this.app.commonWidgets.orders.menu_filters.setState(state)
+            this.app.commonWidgets[this.parent_name].menu_filters.setState(state)
             this.state = state
         }
     }
 
     checkTag(name, state, setF=true) {
+        // this.app.commonWidgets.shipments.menu_filters.hide();
         //выделяем выбранное слово, остальные сбрасываем
         // console.log('name', name);
         let label = this.$$(name).$view.children[0].children[1];
@@ -111,7 +99,7 @@ export default class OrdersQuickFilters extends JetView{
     }
     
     ready() {
-        this.app.commonWidgets.orders['quick_filters'] = this;
+        this.app.commonWidgets[this.parent_name]['quick_filters'] = this;
         this.tags = [
             "__1", "__2", "__3"
         ]

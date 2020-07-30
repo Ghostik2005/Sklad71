@@ -1,16 +1,9 @@
 "use strict";
 
-import {formatNumber, ref_states, ref_translates} from "../views/common";
+import {names} from "../views/common";
 
-import {names_translates} from "../views/variables"
+let states = document.app.states;
 
-
-const names = function(method) {
-    let ret = ref_translates.getItem(method);
-    // console.log(ref_translates);
-    ret = ret || names_translates[method];
-    return ret    
-}
 
 export const dtColumns = [
     {id: "n_id", hidden: true,
@@ -38,10 +31,10 @@ export const dtColumns = [
     {id: "n_state", width: 40, 
         sort: false,
         tooltip: function(obj) {
-            return ref_states.data.getItem(obj.n_state).value
+            return states[obj.n_state].value
         },
         template: function (obj) {
-            return "<span class='table_icon " + ref_states.data.getItem(obj.n_state).picture + "', style='color: " + ref_states.data.getItem(obj.n_state).color  +"'></span>";
+            return "<span class='table_icon " + states[obj.n_state].picture + "', style='color: " + states[obj.n_state].color  +"'></span>";
         },
         css: "center_text",
         header: [{text: ""},

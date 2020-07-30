@@ -2,10 +2,10 @@
 
 import {JetView} from "webix-jet";
 import {message} from "../views/common";
-import {prodSelColumns} from "../models/product_selection_dt";
 import {productSelectionGetData} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 import TemplateProductsView from "../models/template_products_dt"
+import {prodSelColumns} from "../models/product_selection_dt";
 
 
 export default class ProductSelectionView extends JetView{
@@ -13,13 +13,10 @@ export default class ProductSelectionView extends JetView{
     constructor(app, parent, single_selection) {
         super(app);
         this.parent = parent;
-        console.log('this', this);
         this.s_sel = single_selection;
-        // console.log('p', this.parent)
     }
 
     config(){
-
         let th = this;
         this.table_id = webix.uid();
         let dt = new TemplateProductsView(th.app, {

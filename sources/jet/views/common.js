@@ -1,11 +1,108 @@
 "use strict";
 
-// import FooterView from "../views/footer";
-// import {JetApp} from "webix-jet";
+export function common(app) {
+    const s = {
 
-import ArrivalBody from "../models/arrivals_document_body";
-import ShipmentsBody from "../models/shipments_document_body";
-import OrderBody from "../models/orders_document_body"
+        genLabel(method) {
+            let states = document.app.states
+            let button = states[method]
+            return "<span class='table_icon " + button.picture + "', style='color: " + button.color + " '></span><span class='ordinary_label'>" + button.value.toLowerCase() + "</span>"
+        },
+
+        html_button_template(picture, tooltip, img_class) {
+            img_class = img_class || 'html_button'
+            let img = "<div class='" + img_class + "', title='" + tooltip + "', style='background-image:url(" + picture + ");'></div>";
+            let but = "<div class='webix_el_button'><button class='webix_img_btn_abs', style='background:transparent'>" + img + "</button> </div>";
+            return but
+        },
+
+        saveDocument(th){
+            let not_saved = false;
+            let header =  (th.$$("__charge")) ? {charge:  th.$$("__charge").getValue()} : {};
+            let data = {header: Object.assign(header, th.getHeader().getData()), table: th.$$("__table").serialize()}
+            //проверка документа на валидность введенных данных
+            let valid = th.validateDocument(th, data);
+            if (valid) return valid
+            //отправляем данные на сервер для записи
+            let saved = th.saveDocumentServer(th, data);
+            if (saved) return saved
+            return not_saved
+        },
+
+        holdDocument(doc_type, doc_id, intable_id) {
+            let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
+            let params_to = {method:"hold_document", kwargs: {"user": getUser(), filters: params}}
+            return checkResponse(request(params_to, !0).response, 's');
+        },
+        
+        unDeleteDocument(doc_type, doc_id, intable_id) {
+            let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
+            let params_to = {method:"undelete_document", kwargs: {"user": getUser(), filters: params}}
+            return checkResponse(request(params_to, !0).response, 's');
+        },
+        
+        deleteDocument(doc_type, doc_id, intable_id) {
+            let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
+            let params_to = {method:"delete_document", kwargs: {"user": getUser(), filters: params}}
+            return checkResponse(request(params_to, !0).response, 's');
+        },
+        
+        unHoldDocument(doc_type, doc_id, intable_id) {
+            let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
+            let params_to = {method:"unhold_document", kwargs: {"user": getUser(), filters: params}}
+            return checkResponse(request(params_to, !0).response, 's');
+        },
+
+        logout() {
+            deleteCookie(app.config.sklad_cook);
+            location.href = document.location.href;
+        },
+
+        search_key(o, name) {
+            let keys = Object.keys(o);
+            let k;
+            keys.forEach( (key) => {
+                if (key.indexOf(name) !== -1) k = key
+            })
+            return k
+        },
+        
+
+        
+
+    }
+    
+    app.setService("common", s);
+}
+
+function getTranslates() {
+    let params_to = {method:"get_translates", kwargs: {"user": "XXX"}}
+    return checkResponse(request(params_to, !0).response, 's');
+}
+
+function getRefStates(params) {
+    let params_to = {method:"get_states", kwargs: {"user": "XXX"}}
+    let result = checkResponse(request(params_to, !0).response, 's');
+    return result
+}
+
+export function getRefs(app) {
+    app['translates'] = getTranslates().data;
+    app['states'] = getRefStates().data;
+}
+
+export function names(method) {
+    let app = document.app;
+    let ret;
+
+    if (app && app.translates) {
+        ret = app.translates[method];
+    } else {
+        console.log('gg1', new Date())
+        ret = 'undefined'
+    }
+    return ret
+}
 
 export function message(msg, type="success", expires=1) {
     webix.message({
@@ -15,21 +112,12 @@ export function message(msg, type="success", expires=1) {
     })
 }
 
-export function saveDocument(th){
-    let not_saved = false;
-    let header =  (th.$$("__charge")) ? {charge:  th.$$("__charge").getValue()} : {};
-    let data = {header: Object.assign(header, th.getHeader().getData()), table: th.$$("__table").serialize()}
-    //проверка документа на валидность введенных данных
-    let valid = th.validateDocument(th, data);
-    if (valid) return valid
-    //отправляем данные на сервер для записи
-    let saved = th.saveDocumentServer(th, data);
-    if (saved) return saved
-    return not_saved
-}
 
-
-export function after_call(text, data, XmlHttpRequest) {
+function after_call(text, data, XmlHttpRequest) {
+    console.log('loading error');
+    console.log(text);
+    console.log(data);
+    console.log(XmlHttpRequest);
     if (XmlHttpRequest.status == 403) {
         // deleteCookie("sorbent-app");
         // location.href = document.location.href;
@@ -38,16 +126,12 @@ export function after_call(text, data, XmlHttpRequest) {
 
 export function request(params, mode) {
     let url = (PRODUCTION) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/RPC/';
-    // let url = 'https://online365.pro/RPC/'; 
+    // url = document.rpc_url;
     var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
                     : webix.ajax().timeout(90000).headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
     return req
 }
 
-export function logout(app) {
-    deleteCookie(app.config.sklad_cook);
-    location.href = document.location.href;
-}
 
 export function checkResponse(result, mode) {
     
@@ -55,11 +139,8 @@ export function checkResponse(result, mode) {
     var r;
     if (mode === 's') r = JSON.parse(result);
     else if (mode === 'a') r = result.json();
-    // else return ret_value;
-    // console.log('r', r);
     if (r && r.result && r.result[0] && r.result[0].data) ret_value = r.result[0]
-    // {pos: r.result[0].pos, total_count: r.result[0].total_count , data: r.result[0].data}
-    // else ret_value = [];
+
     return ret_value
 }
 
@@ -99,91 +180,8 @@ export function deleteCookie (name) {
     })
 }
 
-export function getRefStates(params) {
-    let params_to = {method:"get_states", kwargs: {"user": "XXX"}}
-    let result = checkResponse(request(params_to, !0).response, 's');
-    return result
-}
-
-export function getRefTranslates(params, th) {
-    let params_to = {method:"get_translates", kwargs: {"user": "XXX"}}
-    let result = checkResponse(request(params_to, !0).response, 's');
-    return result
-}
-
-
-export function search_key (o, name) {
-    let keys = Object.keys(o);
-    let k;
-    keys.forEach( (key) => {
-        if (key.indexOf(name) !== -1) k = key
-    })
-    return k
-}
-
 export function getUser() {
     return $$("sklad_main_ui").$scope.app.config.user;
-}
-
-
-export const ref_translates = new webix.DataCollection({
-    // url: function(params) {
-
-    //     return getRefTranslates(params);
-    // },
-    url: getRefTranslates,
-    id: "translates_dc",
-})    
-
-export const ref_states = new webix.DataCollection({
-    // url: function(params) {
-    //     return getRefStates(params);
-    // },
-    url: getRefStates,
-    id: "states_dc",
-});
-
-
-export function holdDocument(doc_type, doc_id, intable_id) {
-    let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
-    let params_to = {method:"hold_document", kwargs: {"user": getUser(), filters: params}}
-    return checkResponse(request(params_to, !0).response, 's');
-}
-
-export function unDeleteDocument(doc_type, doc_id, intable_id) {
-    let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
-    let params_to = {method:"undelete_document", kwargs: {"user": getUser(), filters: params}}
-    return checkResponse(request(params_to, !0).response, 's');
-}
-
-export function deleteDocument(doc_type, doc_id, intable_id) {
-    let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
-    let params_to = {method:"delete_document", kwargs: {"user": getUser(), filters: params}}
-    return checkResponse(request(params_to, !0).response, 's');
-}
-
-
-export function unHoldDocument(doc_type, doc_id, intable_id) {
-    let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
-    let params_to = {method:"unhold_document", kwargs: {"user": getUser(), filters: params}}
-    return checkResponse(request(params_to, !0).response, 's');
-}
-
-export function getRefs() {
-    // $$("translates_dc").loadNext(0,0,0,0,true);
-
-}
-
-export function html_button_template(picture, tooltip) {
-    let img = "<div class='html_button', title='" + tooltip + "', style='background-image:url(" + picture + ");'></div>";
-    let but = "<div class='webix_el_button'><button class='webix_img_btn_abs', style='background:transparent'>" + img + "</button> </div>";
-    return but
-}
-
-export function button_template(picture, tooltip) {
-    let img = "<div class='side_menu_button', title='" + tooltip + "', style='background-image:url(" + picture + ");'></div>";
-    let but = "<div class='webix_el_button'><button class='webix_img_btn_abs', style='background:transparent'>" + img + "</button> </div>";
-    return but
 }
 
 function init_suggest(editor, input) {
@@ -210,61 +208,6 @@ function create_suggest(config) {
 
     var obj = ui(config);
     return obj.config.id;
-}
-
-export const newDocument = {
-
-    arrival: () => {
-        let master = $$("sklad_main_ui").$scope;
-        let table = (master.app.commonWidgets.sidebar.screens._arrivals) ? $$("_arrivals_main") : undefined;
-        let new_doc = master.ui(ArrivalBody);
-        let blank_item = {
-            flag_new: true,
-            n_dt_invoice: new Date(),
-            n_executor: master.app.config.user,
-            n_paid: "Нет",
-            n_state: 1,
-            n_recipient_id: master.app.config.home_org_id,
-            _block: "recipient"
-        }
-        new_doc.show(blank_item, webix.UIManager.getFocus(), table);
-    },
-
-    shipment: (th, gr) => {
-        let master = $$("sklad_main_ui").$scope;
-        let table = (master.app.commonWidgets.sidebar.screens._shipments) ? $$("_shipments_main") : undefined;
-        console.log('sh_t', table);
-        let new_doc = master.ui(ShipmentsBody);
-        let blank_item = {
-            flag_new: true,
-            n_dt_invoice: new Date(),
-            n_executor: master.app.config.user,
-            n_paid: "Нет",
-            n_state: 1,
-            n_supplier_id: master.app.config.home_org_id,
-            order_id: (gr) ? gr.n_id : undefined,
-            n_recipient_id: (gr) ? gr.n_recipient_id : undefined,
-        }
-        new_doc.show(blank_item, webix.UIManager.getFocus(), table);
-    },
-
-    order: () => {
-        let master = $$("sklad_main_ui").$scope;
-        let table = (master.app.commonWidgets.sidebar.screens._orders) ? $$("_orders_main") : undefined;
-        let doc = master.ui(OrderBody);
-        let blank_item = {
-            flag_new: true,
-            n_dt_invoice: new Date(),
-            n_executor: master.app.config.user,
-            n_paid: "Нет",
-            n_state: 1,
-            n_recipient_id: master.app.config.home_org_id,
-            _block: "recipient"
-        }
-        doc.show(blank_item, webix.UIManager.getFocus(), table);
-    },
-
-
 }
 
 export const formatText = {
@@ -345,14 +288,11 @@ export function extendWebix() {
     webix.ui.datafilter.totalVisibleColumn = webix.extend({
         refresh:function(master, node, value){
             let data = master.data.pull;
-            console.log('data_m', data);
-            console.log('value', value);
             var result = 0;
             for (var c in data) {
                 let v = +data[c][value.columnId];
                 if (!isNaN(v)) result+=v;
             }
-            console.log('res', result);
             node.firstChild.innerHTML = webix.Number.formatNumber(result);
         }
     }, webix.ui.datafilter.summColumn);
@@ -360,7 +300,6 @@ export function extendWebix() {
     webix.ui.datafilter.totalColumn = webix.extend({
         refresh:function(master, node, value){
             var result = 0;
-            // console.log('master', master);
             master.mapCells(null, value.columnId, null, 1, function(value){
                 let v = +value
                 if (!isNaN(v))
@@ -389,7 +328,7 @@ export function extendWebix() {
                         {view: "button",
                             type: "icon",
                             icon: "mdi-close",
-                            css: "times",
+                            // css: "times warning",
                             height: 26,
                             width:26,
                             on: {
@@ -397,7 +336,7 @@ export function extendWebix() {
                                     this.getTopParentView().hide();
                                 },
                             },
-                        }
+                        },
                     ]
                 }
             })

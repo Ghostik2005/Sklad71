@@ -1,19 +1,18 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, holdDocument, saveDocument} from "../views/common";
+import {message} from "../views/common";
 import {getOrdersDocument, saveOrdersDocument, checkOpened} from "../models/data_processing";
 import {dtColumns} from "../models/orders_document_dt";
-import {ref_states} from "../views/common";
-import ProductSelectionView from "../models/product_selection";
 import DocumentHeader from "../models/document_header"
 
-
+let states = document.app.states;
 
 export default class OrderBody extends JetView{
 
     config(){
         let th = this;
+        let app = this.app;
         let ret_view = {
             view:"cWindow",
             localId: "__orderbody",
@@ -87,20 +86,15 @@ export default class OrderBody extends JetView{
                                 }
                             },
                             onAfterDelete: function() {
-                                this.$scope.setChange();
+                                th.setChange();
                             },
                             onLiveEdit: function() {
                                 // console.log('edit');
                             },
                             onDataUpdate: function() {
-                                this.$scope.setChange();
+                                th.setChange();
                             },
                             onItemDblClick: function(item) {
-                                return
-                                if (this.$scope.doc.n_state == 1) {
-                                    let prod_select = this.$scope.ui( new ProductSelectionView(this.$scope.app, this, item));
-                                    prod_select.show('Приходный документ. Подбор товара');
-                                }
                             },
                         }
                     },
@@ -114,11 +108,6 @@ export default class OrderBody extends JetView{
                                 hidden: true,
                                 on: {
                                     onItemClick: function() {
-                                        return
-                                        if (this.$scope.doc.n_state == 1) {
-                                            let prod_select = this.$scope.ui( new ProductSelectionView(this.$scope.app, this.$scope.$$("__table")));
-                                            prod_select.show('Приходный документ. Подбор товара');
-                                        }
                                     }
                                 }
                             },
@@ -132,7 +121,7 @@ export default class OrderBody extends JetView{
                                     onItemClick: ()=>{
                                         return
                                         //проверка цены, количества, ставки ндс
-                                        let not_saved = saveDocument(this);
+                                        let not_saved = app.getService("common").saveDocument(this);
                                         if (!not_saved) {
                                             //обновляем данные в таблице
                                             this.setUnchange();
@@ -154,7 +143,7 @@ export default class OrderBody extends JetView{
                                         return
                                         let not_saved = this.$$("__save").callEvent('onItemClick');
                                         if (!not_saved) {
-                                            let r_data = holdDocument('arrival', this.doc.n_id, this.doc.id);
+                                            let r_data = app.getService("common").holdDocument('arrival', this.doc.n_id, this.doc.id);
                                             console.log('r_data', r_data);
                                             // return
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
@@ -224,7 +213,7 @@ export default class OrderBody extends JetView{
         this.table = table;
         this.doc = doc;
         if (doc) {
-            let state_item = ref_states.data.getItem(doc.n_state);
+            let state_item = states[doc.n_state];
             this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` + 
             ` Заказ покупателя от ${webix.i18n.dateFormatStr(doc.n_dt_invoice)}, ${doc.n_recipient || ''}`);
             this.getRoot().show();

@@ -1,15 +1,16 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, holdDocument, unHoldDocument, deleteDocument, unDeleteDocument} from "../views/common";
+import {message} from "../views/common";
 import {tables_excludeColumns} from "../views/variables";
 import {menu_options, arrivals_menu_options_excludes} from "../views/variables";
-import {newDocument} from "../views/common";
+import {newDocument} from "../models/common_functions";
 
 
 export default class ArrivalsContextCenterDt extends JetView{
     config(){
         let th = this;
+        let app = this.app;
 
         let c_menu = {
             view:'contextmenu', 
@@ -41,7 +42,7 @@ export default class ArrivalsContextCenterDt extends JetView{
                         //     message('Загрузить');
                         //     break;
                         case "3":
-                            r_data = holdDocument('arrival', gr().n_id, gr().id);
+                            r_data = app.getService("common").holdDocument('arrival', gr().n_id, gr().id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])
@@ -49,21 +50,21 @@ export default class ArrivalsContextCenterDt extends JetView{
 
                             break;
                         case "4":
-                            r_data = unHoldDocument('arrival', gr().n_id, gr().id);
+                            r_data = app.getService("common").unHoldDocument('arrival', gr().n_id, gr().id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])
                             }
                             break;
                         case "6":
-                            r_data = deleteDocument('arrival', gr().n_id, gr().id);
+                            r_data = app.getService("common").deleteDocument('arrival', gr().n_id, gr().id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])
                             }
                             break;
                         case "7":
-                            r_data = unDeleteDocument('arrival', gr().n_id, gr().id);
+                            r_data = app.getService("common").unDeleteDocument('arrival', gr().n_id, gr().id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])

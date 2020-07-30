@@ -1,20 +1,20 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, holdDocument, unHoldDocument, deleteDocument, unDeleteDocument} from "../views/common";
+import {message} from "../views/common";
 import {tables_excludeColumns} from "../views/variables";
-import {newDocument} from "../views/common";
+import {newDocument} from "../models/common_functions";
 import {menu_options, shipments_menu_options_excludes} from "../views/variables";
 
 
 export default class ShipmentsContextCenterDt extends JetView{
     config(){
         let th = this;
-
+        let app = this.app;
         let c_menu = {
             view:'contextmenu', 
             autowidth: true,
-            id:"shipments_cmenu",
+            localId:"__shipments_cmenu",
             css: "context_center_dt",
             point: true,
             on:{
@@ -39,7 +39,7 @@ export default class ShipmentsContextCenterDt extends JetView{
                         //     message('Загрузить');
                         //     break;
                         case "3":
-                            r_data = holdDocument('shipment', row.n_id, row.id);
+                            r_data = app.getService("common").holdDocument('shipment', row.n_id, row.id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])
@@ -47,21 +47,21 @@ export default class ShipmentsContextCenterDt extends JetView{
 
                             break;
                         case "4":
-                            r_data = unHoldDocument('shipment', row.n_id, row.id);
+                            r_data = app.getService("common").unHoldDocument('shipment', row.n_id, row.id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])
                             }
                             break;
                         case "6":
-                            r_data = deleteDocument('shipment', row.n_id, row.id);
+                            r_data = app.getService("common").deleteDocument('shipment', row.n_id, row.id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])
                             }
                             break;
                         case "7":
-                            r_data = unDeleteDocument('shipment', row.n_id, row.id);
+                            r_data = app.getService("common").unDeleteDocument('shipment', row.n_id, row.id);
                             //делаем изменения в таблице
                             if (r_data.data) {
                                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])

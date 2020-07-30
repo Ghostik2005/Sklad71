@@ -5,9 +5,8 @@ import {emptyWidth} from "../views/variables";
 import ShipmentsButtonFilters from "../models/shipments_button_filters"
 import ShipmentsStatusBar from "../models/shipments_status_bar";
 import SearchBar from "../models/search_bar";
-import ShipmentsQuickFilters from "../models/shipments_quick_filters";
 import { message } from "../views/common";
-import {request, checkResponse} from "../views/common";
+import TemplateQuickFilters from "../models/template_quick_filters";
 
 export default class ShipmentsHeaderView extends JetView{
     config(){
@@ -22,8 +21,9 @@ export default class ShipmentsHeaderView extends JetView{
                 {width: emptyWidth},
                 // {$subview: SearchBar, name: "search_bar"},
                 {},
-                {$subview: ShipmentsQuickFilters, name: "quick_filters"},
-                {$subview: ShipmentsButtonFilters, name: "button_filter"}
+                new TemplateQuickFilters(this.app, 'shipments'),
+
+                ShipmentsButtonFilters,
             ]
     
         }

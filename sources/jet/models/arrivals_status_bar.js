@@ -49,7 +49,7 @@ export default class ArrivalsStatusBar extends JetView{
         for (var elem in filters) {
             let text = filters[elem];
             if (text) {
-                let title = $$('translates_dc').getItem(elem).value;
+                let title = document.app.translates[elem].value;
                 new_label.push(`${title}: ${text}`);
             }
         }

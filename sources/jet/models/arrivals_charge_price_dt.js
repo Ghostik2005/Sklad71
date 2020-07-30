@@ -1,7 +1,6 @@
 "use strict";
 
 
-// import {formatNumber, ref_states} from "../views/common";
 
 
 export const dtColumns = [

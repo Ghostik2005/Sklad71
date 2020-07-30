@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {message} from "../views/common";
-import {prodSelColumns} from "../models/shipment_product_selection_dt";
+import {sipmentsProdSelColumns} from "../models/shipment_product_selection_dt";
 import {shipmentProductSelectionGetData} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 
@@ -14,11 +14,9 @@ export default class ShipmentSelectionView extends JetView{
         super(app);
         this.parent = parent;
         this.s_sel = single_selection;
-        // console.log('p', this.parent)
     }
 
     config(){
-
         let popup = {
             //view: "popup",
             view: "cWindow",
@@ -127,7 +125,7 @@ export default class ShipmentSelectionView extends JetView{
                         css:"webix_header_border center_dt",
                         scroll: 'xy',
                         tooltip: true,
-                        columns: prodSelColumns,
+                        columns: sipmentsProdSelColumns,
                         // leftSplit: 1,
                         sorting: {id: "n_product", dir: "asc"},
                         onClick: {

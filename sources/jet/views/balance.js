@@ -14,10 +14,8 @@ export default class BalanceView extends JetView{
         var ui = {
             type:"line",
             rows: [
-                // {template: "balance"},
                 { $subview: BalanceHeaderView },
                 {height: 2},
-                // {},
                 new BalanceCenterView(app, 'balance'),
             ],
         };
@@ -26,10 +24,12 @@ export default class BalanceView extends JetView{
 
 
     init(){
-
+        this.widget_name = "balance";
+        this.app.commonWidgets[this.widget_name] = this;
     }
 
     ready() {
+        
     }
 
 }

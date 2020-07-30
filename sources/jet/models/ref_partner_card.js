@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, search_key} from "../views/common";
+import {message} from "../views/common";
 import { emptyWidth } from "../views/variables";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
 import {getPartner, setPartner} from "../models/data_processing";
@@ -96,8 +96,7 @@ export default class RefPartnerCardView extends JetView{
         if (!this.edited) {
             header += "Новый элемент";
         } else {
-
-            header += this.edited[search_key(this.edited, '_name')];
+            header += this.edited[this.app.getService("common").search_key(this.edited, '_name')];
         }
         this.getRoot().getHead().getChildViews()[0].setValue(header);
         return this.getRoot().show();
@@ -149,7 +148,7 @@ export default class RefPartnerCardView extends JetView{
 
     validateCard(data){
         let result = false;
-        let n = data[search_key(data, '_name')];
+        // let n = data[this.search_key(data, '_name')];
         if (!data.n_name || data.n_name.length < 2) return "Укажите название"
         if (!data.n_namefull || data.n_namefull.length < 2) return "Укажите полное название"
         if (!data.n_address || data.n_address.length < 2) return "Укажите юридический адрес"
@@ -206,7 +205,7 @@ export default class RefPartnerCardView extends JetView{
             this.$$("__ref_partners_form").addView(
                 {cols: [
                 {view: "text", name: "n_id", width: 1, hidden: true, localId: "__n_id_field"},
-                new TemplateComboRefCard(this.app, {width: 140, labelName: "Тип партнера", 
+                new TemplateComboRefCard(this.app, {width: 140, labelName: "Тип контрагента", 
                     name: "n_type", reference: this.parent.cfg.name,
                     cancel: th.$$("__cancel"),
                     fitMaster: true}

@@ -1,16 +1,7 @@
 "use strict";
 
-import {formatNumber, ref_states, ref_translates} from "../views/common";
+import {formatNumber, names} from "../views/common";
 
-import {names_translates} from "../views/variables"
-
-
-const names = function(method) {
-    // let ret = ref_translates.getItem(method);
-    // console.log(ref_translates);
-    let ret = names_translates[method];
-    return ret    
-}
 
 export const dtColumns = [
     {id: "n_id", hidden: true,

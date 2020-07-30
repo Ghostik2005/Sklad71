@@ -21,7 +21,6 @@ export default class BalanceCenterView extends JetView{
         let sprv = {view: "datatable",
             borderless: true,
             clipboard: true,
-            id: "_balance_main",
             localId: "__table",
             navigation: "row",
             select: "row",
@@ -135,7 +134,7 @@ export default class BalanceCenterView extends JetView{
 
     ready() {
 
-        this.__table = $$("_balance_main");
+        this.__table = this.$$("__table");
         this.app.commonWidgets.balance['center_table'] = this;
         
     }

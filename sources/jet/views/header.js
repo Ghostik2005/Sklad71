@@ -3,12 +3,12 @@
 import {JetView} from "webix-jet";
 import {emptyWidth} from "../views/variables";
 
-import { message, logout } from "../views/common";
+import { message } from "../views/common";
 import {getUser} from "../views/common";
 
 export default class HeaderView extends JetView{
     config(){
-
+        let app = this.app;
         let toolbar = {view: 'toolbar',
             borderless: true,
             margin: 0,
@@ -68,7 +68,7 @@ export default class HeaderView extends JetView{
                     width: 80,
                     on: {
                         onItemClick: () => {
-                            logout(this.app);
+                            app.getService("common").logout();
                         }
                     }
                 }
@@ -78,7 +78,8 @@ export default class HeaderView extends JetView{
     
         }
 
-        return { 
+        return {
+            id: "__bar__main_header",
             borderless: true,
             rows: [
                 toolbar,
@@ -104,9 +105,10 @@ export default class HeaderView extends JetView{
     }
 
     ready() {
-        this.app.commonWidgets['header'] = this;
+        this.app.commonWidgets[this.widget_name] = this;
     }
 
     init() {
+        this.widget_name = "header";
     }
 }

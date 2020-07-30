@@ -1,17 +1,16 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-// import CompaniesView from "../views/companies_window";
-// import UsersView from "../views/users_edit";
 import ButtonTemplate from "../models/template_menu_button";
+import {menus} from "../models/refs_variables";
 
 export default class PopMenuView extends JetView{
+
     constructor(app, cfg) {
         super(app);
         this.cfg = cfg;
     }
     config(){
-        let app = this.app;
         return {view: "popup",
             head: "sub-menu",
             loclalId: "_pop",
@@ -53,7 +52,9 @@ export default class PopMenuView extends JetView{
 
     ready() {
         // console.log("cfg", this.cfg);
-        let buttons = this.cfg.buttons;
+        // let buttons = this.cfg.buttons;
+        // console.log('menus', menus);
+        let buttons = menus[this.cfg.name];
         let s1, s2;
         if (buttons.length > 10) {
             s1 = buttons.slice(0,10);

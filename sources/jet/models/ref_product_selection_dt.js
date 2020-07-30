@@ -2,7 +2,7 @@
 
 import {names} from "../views/common";
 
-export const prodSelColumns = [
+export const refProdSelColumns = [
     {id: "c_id", hidden: true,
         headermenu: false,
         width: 5,

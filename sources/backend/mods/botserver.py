@@ -1,0 +1,514 @@
+# coding: utf-8
+from __future__ import absolute_import, with_statement, print_function, unicode_literals
+
+__version__ = '20.022.0414'
+#__version__ = '19.347.1606'
+
+import sys
+PY2 = sys.version_info[0] < 3
+PY3 = sys.version_info[0] > 2
+if __name__ == '__main__':
+    # env PYTHONIOENCODING="UTF-8"
+    if PY2:
+        reload(sys); sys.setdefaultencoding('UTF-8')
+    else:
+        if sys.stdout.encoding != 'UTF-8':
+            sys.stdout = open(sys.stdout.fileno(), mode='w', buffering=1, encoding='UTF-8')
+        #if sys.stderr.encoding != 'UTF-8':
+        #    sys.stderr = open(sys.stderr.fileno(), mode='w', buffering=1, encoding='UTF-8')
+    sys.stderr.close()
+    sys.stderr = sys.stdout
+import socket
+try:
+    __hostname__ = sys.__hostname__
+except:
+    __hostname__ = socket.gethostname().lower()
+    sys.__hostname__ = __hostname__
+if PY2:
+    import ConfigParser as configparser
+    input = raw_input
+    from urllib import quote_plus, unquote_plus, urlencode
+    from urlparse import urlparse
+    BrokenPipeError = socket.error
+    ConnectionRefusedError = socket.error
+    from xmlrpclib import gzip_decode, gzip_encode
+else:
+    import configparser
+    raw_input = input
+    from urllib.parse import quote_plus, unquote_plus, urlencode, urlparse
+    from xmlrpc.client import gzip_decode, gzip_encode
+
+import os, time, json, pickle
+from threading import Thread, RLock
+
+import pydoc
+import threading, types, traceback
+import uuid, hashlib, base64
+import random
+
+import decimal, datetime
+class ExtJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        #if isinstance(obj, Binary):
+        #    return {'__binary__': obj.encode()}
+        if isinstance(obj, decimal.Decimal):
+            return float(obj)
+        elif isinstance(obj, datetime.datetime):
+            return str(obj)
+        elif isinstance(obj, datetime.date):
+            return str(obj)
+        elif isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
+
+class BOTServer(object):
+    def __init__(self, name, address=None, authkey=None):
+        self._info = {}
+        self._sock = None
+        self._w_lck = RLock()
+        self._fg_serve_forever = False
+        self._functions = {}
+        self._botname = name
+        self.bot_id = 'bot.%s' % urn5(name)
+        if address is None:
+            address = ('nats1.tgbot.ms', 4222)
+        self._address = address
+        self._authkey = authkey
+        self.register_function(self._system_list_methods, 'system.listMethods')
+        self.register_function(self._system_method_help, 'system.methodHelp')
+        self.register_function(self._http, '.http')
+
+    def __repr__(self):
+        return (
+            "<%s for %s %s>" % (self.__class__.__name__, self._botname, self._address)
+        )
+
+    __str__ = __repr__
+
+    def _system_list_methods(self, func_name=None):
+        if func_name:
+            func = None
+            if func_name in self._functions:
+                func = self._functions[func_name]
+            else:
+                for fn in func_name.split('.'):
+                    func = getattr(func, fn) if func else self._functions[fn]
+            if func:
+                return list(sorted('%s.' % k if isinstance(getattr(func, k), sys.__class__) or hasattr(getattr(func, k), '_system_list_methods') else k for k in dir(func) if '_' != k[:1]))
+            else:
+                return RuntimeError('%s not found' % func_name)
+        else:
+            return list(sorted('%s.' % k if isinstance(v, sys.__class__) or hasattr(v, '_system_list_methods') else k for k, v in self._functions.items()))
+
+    def _system_method_help(self, func_name):
+        func = None
+        if func_name in self._functions:
+            func = self._functions[func_name]
+        else:
+            for fn in func_name.split('.'):
+                func = getattr(func, fn) if func else self._functions[fn]
+        if func:
+            return pydoc.getdoc(func)
+        else:
+            return ''
+
+    def _http(self, head, body):
+        status = '200 OK'
+        headers = [('Content-Type', 'text/plain; charset=utf-8'),]
+        return status, headers, ('Это я: %s' % __hostname__).encode()
+
+    def register_function(self, func, name=None):
+        if name:
+            self._functions[name] = func
+        else:
+            self._functions[func.__name__] = func
+
+    def close(self):
+        self._fg_serve_forever = False
+
+    def serve_forever(self):
+        self.close()
+        #try:
+        #    self._serve_forever()
+        #finally:
+        #    self.close()
+        _defer = []
+        defer = _defer.append
+        _err_old = ''
+        _fg_loop = True
+        while _fg_loop:
+            _fg_loop = False
+            try:
+                self._serve_forever(defer)
+                #except (KeyboardInterrupt, SystemExit) as e:
+                #    log('stop', begin='\r')
+            except (ConnectionRefusedError, RuntimeError) as e:
+                #traceback.print_exc()
+                _fg_loop = True  # self._fg_serve_forever
+                _err = str(e)
+                if _err_old != _err:
+                    _err_old = _err
+                    log(_err, kind='error1')
+                try:
+                    time.sleep(1 + random.random())
+                except:
+                    _fg_loop = False
+                    pass
+                    #log('stop', begin='\r')
+            except Exception as e:
+                _fg_loop = self._fg_serve_forever
+                #traceback.print_exc()
+                _err = str(e)
+                if _err_old != _err:
+                    _err_old = _err
+                    log(_err, kind='error2')
+                    #log(None)
+            finally:
+                while _defer:
+                    func = _defer.pop(-1)
+                    try:
+                        func()
+                    except:
+                        #log(None)
+                        pass
+
+    def notify(self, subject, data=None):
+        if not self._fg_serve_forever:
+            return
+        if data is None:
+            data = ('PUB %s 0\r\n\r\n' % subject).encode('utf8')
+        else:
+            data = json.dumps(data, ensure_ascii=False, cls=ExtJSONEncoder).encode('utf8')
+            #data = pickle.dumps(data, protocol=2)
+            if len(data) > 1400:
+                data = gzip_encode(data)
+            data = ('PUB %s %s\r\n' % (subject, len(data))).encode('utf8') + data + b'\r\n'
+        #print('data:', data)
+        with self._w_lck:
+            try:
+                self._sock.sendall(data)
+                return True
+            except:
+                traceback.print_exc()
+
+    def _send(self, inbox_id, obj, fg_http=False):
+        if fg_http:
+            if len(obj[2]) > 1400 and b'\x1f\x8b\x08\x00' != obj[2][:4]:
+                data = b''.join([b'HTTP', json.dumps(obj[:2], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', gzip_encode(obj[2])])
+            else:
+                data = b''.join([b'HTTP', json.dumps(obj[:2], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', obj[2]])
+        else:
+            data = json.dumps(obj, ensure_ascii=False, cls=ExtJSONEncoder).encode('utf8')
+            if len(data) > 1400:
+                data = gzip_encode(data)
+
+        data = b'PUB %s %s\r\n%s\r\n' % (inbox_id.encode(), ('%s' % len(data)).encode(), data)
+        with self._w_lck:
+            log(repr(data), 'send2')
+            self._sock.sendall(data)
+        return len(data)
+
+    def _serve_forever(self, defer):
+        #while True:
+        #    client_c = self.accept()
+        #    t = Thread(target=self.handle_client, args=(client_c,))
+        #    t.daemon = True
+        #    t.start()
+        sock = socket.create_connection(self._address, 2)
+        self._sock = sock
+        defer(sock.close)
+
+        def w(data):
+            with self._w_lck:
+                #log(repr(data), 'send1')
+                sock.sendall(data)
+
+        bot_name = self._botname
+        bot_id = self.bot_id  # 'bot.%s' % urn5(bot_name)
+
+        w(('CONNECT {"name":"%s","verbose":false,"pedantic":false}\r\n' % bot_name).encode('utf8') + ('SUB bot.info 2\r\nSUB %s %s 3\r\n' % (bot_id, bot_id)).encode('utf8'))
+
+        #r = sock.makefile('rb', 0)
+        #defer(r.close)
+
+        #print('start')
+        #print(dir(sock))
+        self._fg_serve_forever = True
+        c = 0
+        while self._fg_serve_forever:
+            cmd = ''
+            data = ''
+            try:
+                data = recvline(sock)
+                cmd, data = data[:3], data[3:]
+            except socket.timeout:
+                c += 1
+                #log('%s) timeout' % c, 'socket0')
+                if c > 3:
+                    c = 0
+                    #log('pong) timeout', 'socket0')
+                    w(b'PONG\r\n')
+                continue
+            if not cmd:
+                raise RuntimeError('[ Socket ] cmd is empty')
+            if not data:
+                raise RuntimeError('[ Socket ] data is empty')
+
+            #log('>%s<' % data, '<%s>' % cmd)
+            if 'MSG' == cmd:
+                #MSG <subject> <sid> [reply-to] <#bytes>\r\n[payload]\r\n
+                data = data.split()
+                #print('data:', data)
+                if 3 == len(data):
+                    subj, sid, reply_id, size = data[0], data[1], '', int(data[2])
+                else:
+                    subj, sid, reply_id, size = data[0], data[1], data[2], int(data[3])
+                payload = recvall(sock, size) if size > 0 else b''
+                sock.recv(1)
+                sock.recv(1)
+                #print(cmd, subj, sid, reply_id, repr(payload)[:32], '...', len(payload), size)
+                if sid == '2' and reply_id and not payload:
+                    print('sid 2 subj:', subj)
+                    sys.stdout.flush()
+                    #MSG bot.info 2 cli.a1f9d72027a9455496efc3947fc4ea8c b''
+                    #w(('PUB %s %s %s\r\n%s\r\n' % (reply_id, bot_id, len(bot_name), bot_name)).encode('utf8'))
+                elif sid == '3' and reply_id:
+                    #obj = {"result": [__hostname__, time.strftime("%Y-%m-%d %H:%M:%S"), pickle.loads(payload)]}
+                    #_len = self._send(reply_id, obj)
+                    #print('send:', _len)
+                    data = ('PUB %s 0\r\n\r\n' % reply_id).encode('utf8')  # ask
+                    #print('data:', data)
+                    with self._w_lck:
+                        try:
+                            self._sock.sendall(data)
+                        except:
+                            traceback.print_exc()
+                    _t = Thread(target=self.handle_client, args=(reply_id, payload))
+                    _t.daemon = True
+                    _t.start()
+                #sys.stdout.flush()
+            elif 'PIN' == cmd:
+                w(b'PONG\r\n')
+            elif 'PON' == cmd:
+                pass
+            elif 'INF' == cmd:
+                self._info = json.loads(data[2:])
+                #self._info = json.loads(data[5:])
+                #cid = self._info['client_id']
+                #w(('SUB bot.info 2\r\nSUB %s %s 3\r\n' % (bot_id, bot_id)).encode('utf8'))
+            elif cmd in ('+OK', '-ER'):
+                pass
+
+    def handle_client(self, reply_id, payload):
+        #threading.current_thread().conn = client_c
+        _fg = True
+        while _fg:
+            fg_http = False
+            _fg = False
+            try:
+                if b'HTTP' == payload[:4]:
+                    head, payload = payload.split(b'\r\n', 1)
+                    head = json.loads(head[4:])
+                    if b'\x1f\x8b\x08\x00' == payload[:4]:
+                        payload = gzip_decode(payload, -1)
+                    #print(head)
+                    #print(payload)
+                    func_name = '.http'
+                    args = (head, payload)
+                    kwargs = {}
+                    fg_http = True
+                else:
+                    if b'\x1f\x8b\x08\x00' == payload[:4]:
+                        payload = gzip_decode(payload, -1)
+                    payload = json.loads(payload)
+                    func_name = payload.get('method', '')
+                    args = payload.pop('args', [])
+                    kwargs = payload.pop('kwargs', {})
+            #except EOFError:
+            #    #print('close:', client_c)
+            #    #sys.stdout.flush()
+            #    break
+            except Exception as e:
+                print('recv:', type(e), str(e))
+                traceback.print_exc()
+                sys.stdout.flush()
+                break
+            #print(111)
+            try:
+                func = None
+                if func_name in self._functions:
+                    func = self._functions[func_name]
+                else:
+                    for fn in func_name.split('.'):
+                        func = getattr(func, fn) if func else self._functions[fn]
+                #print(222, func)
+                if func:
+                    if callable(func):
+                        r = func(*args, **kwargs)
+                        """
+                        if isinstance(r, types.GeneratorType):
+                            self._send(reply_id, {'result': list})  # types.ListType)
+                            #client_c.send('types.GeneratorType')
+                            for v in r:
+                                self._send(reply_id, {'result': v})
+                            self._send(reply_id, {'result': StopIteration})
+                            continue
+                        """
+                    else:
+                        r = func
+                    if fg_http:
+                        _len = self._send(reply_id, r, fg_http=True)
+                    else:
+                        _len = self._send(reply_id, {'result': r})
+                else:
+                    r = RuntimeError('%s not found' % func_name)
+                    _len = self._send(reply_id, {'error': str(r)})
+                #print('send >>', _len)
+            except Exception as e:
+                try:
+                    self._send(reply_id, {'error': str(e)})
+                except IOError:
+                    break
+                except Exception as e:
+                    print('send:', type(e), str(e))
+                    sys.stdout.flush()
+                    break
+
+def recvline(s):
+    data = []
+    while True:
+        ch2 = s.recv(2)
+        if ch2:
+            data.append(ch2)
+            if ch2[-1:] == b'\r':
+                data.append(s.recv(1))
+                break
+            elif ch2[-1:] == b'\n':
+                break
+        else:
+            break
+    return b''.join(data).decode()
+
+def recvall(r, n):
+    data = []
+    c = 0
+    while c < n:
+        packet = r.recv(n - c)
+        if not packet:
+            break
+        c += len(packet)
+        data.append(packet)
+    return b''.join(data)
+
+"""
+def readall(r, n):
+    data = []
+    c = 0
+    while c < n:
+        #log(c, n)
+        packet = r.read(n - c)
+        if not packet:
+            return b''
+        c += len(packet)
+        data.append(packet)
+    return b''.join(data)
+"""
+
+def urn1(name):
+    h1 = hashlib.sha1(uuid.NAMESPACE_DNS.bytes)
+    h1.update(name.encode())
+    return base64.b32encode(h1.digest()).decode('utf8')
+    #return 'urn:sha1:%s' % base64.b32encode(h1.digest()).decode('utf8')
+
+def urn5(name):
+    h5 = hashlib.md5(uuid.NAMESPACE_DNS.bytes)
+    h5.update(name.encode())
+    return base64.b16encode(h5.digest()).decode('utf8').lower()
+    #return 'urn:md5:%s' % base64.b16encode(h5.digest()).decode('utf8').lower()
+
+class BOTApi(object):
+
+    def _system_list_methods(self, func_name=None):
+        return list(sorted(k for k in dir(self) if '_' != k[:1]))
+
+    def add2(self, x, y):
+        """ help add2 """
+        return x + y
+
+    def sub2(self, x, y):
+        return x - y
+
+    #def ping(self, name, port):
+    #    client_c = threading.current_thread().conn
+    #    s = socket.fromfd(client_c.fileno(), socket.AF_INET, socket.SOCK_STREAM)
+    #    #print(s, dir(s), s.getpeername()[0], s.getsockname(), s.gettimeout())
+    #    client_ip = s.getpeername()[0]
+    #    s.close()
+    #    return client_ip, port
+
+_ts = "%Y-%m-%d %H:%M:%S"
+__appname__ = 'bot'
+__profile__ = 'test'
+__index__   = os.getpid()
+def log(msg, kind='info', begin='', end='\n'):
+    global _ts, __hostname__, __appname__, __profile__, __version__, __index__
+    try:
+        try: ts = time.strftime(_ts)
+        except: ts = time.strftime(_ts)
+        if msg is None:
+            data = ''.join(
+                ('%s %s %s.%s %s %s:%s %s\n' % (ts, __hostname__, __appname__,__profile__,__version__,__index__,'traceback', msg)
+                if i else '%s %s %s.%s %s %s:%s\n' % (ts, __hostname__, __appname__,__profile__,__version__,__index__,msg)
+                ) for i, msg in enumerate(traceback.format_exc().splitlines())
+            )
+        else:
+            data = '%s%s %s %s.%s %s %s:%s %s%s' % (begin,ts, __hostname__, __appname__,__profile__,__version__,__index__,kind, msg,end)
+        sys.stdout.write(data)
+        sys.stdout.flush()
+    except:
+        pass
+        #traceback.print_exc()
+try:
+    if sys.log:
+        log = sys.log
+except:
+    pass
+
+def run_api(name, object_function=None, func_name=None):
+    # Create and run the server
+    #serv = BOTServer(name)
+    #serv = BOTServer(name, ('nats0.tgbot.ms', 4222))
+    serv = BOTServer(name, ('127.0.0.1', 4222))
+    #serv = BOTServer(name, ('nats1.tgbot.ms', 4222))
+    # api = BOTApi()
+    # serv.register_function(api, 'api')
+    print(serv)
+    if object_function:
+        serv.register_function(object_function, func_name)
+
+    serv.register_function(sys)
+    serv.register_function(time)
+    serv.register_function(time.sleep)
+    _th = Thread(target=serv.serve_forever)
+    _th.daemon = True
+    _th.start()
+    try:
+        #serv.serve_forever()
+        while True:
+            s = input('>> ').strip()
+            if not s:
+                print(serv.notify('SUBJ.' + serv.bot_id, {1:2, 'k2': 'v4'}))
+            else:
+                raise KeyboardInterrupt
+    except (KeyboardInterrupt, SystemExit) as e:
+        print('stoped server')
+        sys.stdout.flush()
+
+
+if __name__ == '__main__':
+    try:
+        s = sys.argv[1]
+    except:
+        s = ''
+    run_api('mybot.conf1')
+    #run_api('price-bot.test' + s)

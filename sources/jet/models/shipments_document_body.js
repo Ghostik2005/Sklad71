@@ -1,19 +1,20 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, holdDocument, saveDocument} from "../views/common";
+import {message} from "../views/common";
 import {getShipmentsDocument, saveShipmentsDocument, getOrdersDocumentShip, checkOpened} from "../models/data_processing";
 import {dtColumns} from "../models/shipments_document_dt";
-import {ref_states} from "../views/common";
 import ShipmentSelectionView from "../models/shipment_product_selection";
 import DocumentHeader from "../models/document_header"
 
+let states = document.app.states;
 
 
 export default class ShipmentsBody extends JetView{
 
     config(){
         let th = this;
+        let app = this.app;
         let ret_view = {
             view:"cWindow",
             localId: "__shipmentbody",
@@ -72,7 +73,7 @@ export default class ShipmentsBody extends JetView{
                         {}
                     ]},
                     {
-                        $subview: new DocumentHeader(th.app, th),
+                        $subview: new DocumentHeader(app, th),
                         localId: "__header",
                     },
                     {
@@ -111,14 +112,14 @@ export default class ShipmentsBody extends JetView{
                                 }
                             },
                             onAfterDelete: function() {
-                                this.$scope.setChange();
+                                th.setChange();
                             },
                             onLiveEdit: function() {
                             },
                             onAfterLoad: function () {
                                 let c = this.count();
                                 if (c > 1 ) {
-                                    this.$scope.recalcTable();
+                                    th.recalcTable();
                                 }
                             },
                             onAfterAdd: () => {
@@ -126,11 +127,11 @@ export default class ShipmentsBody extends JetView{
                             onAfterDelete: () => {
                             },
                             onDataUpdate: function() {
-                                this.$scope.setChange();
+                                th.setChange();
                             },
                             onItemDblClick: function(item) {
-                                if (this.$scope.doc.n_state == 1) {
-                                    let prod_select = this.$scope.ui( new ShipmentSelectionView(this.$scope.app, this, item));
+                                if (th.doc.n_state == 1) {
+                                    let prod_select = th.ui( new ShipmentSelectionView(app, this, item));
                                     prod_select.show('Приходный документ. Подбор товара');
                                 }
                             },
@@ -145,8 +146,8 @@ export default class ShipmentsBody extends JetView{
                                 label: "подобрать товар",
                                 on: {
                                     onItemClick: function() {
-                                        if (this.$scope.doc.n_state == 1) {
-                                            let prod_select = this.$scope.ui( new ShipmentSelectionView(this.$scope.app, this.$scope.$$("__table")));
+                                        if (th.doc.n_state == 1) {
+                                            let prod_select = th.ui( new ShipmentSelectionView(app, th.$$("__table")));
                                             prod_select.show('Приходный документ. Подбор товара');
                                         }
                                     }
@@ -160,7 +161,7 @@ export default class ShipmentsBody extends JetView{
                                 on: {
                                     onItemClick: ()=>{
                                         //проверка цены, количества, ставки ндс
-                                        let not_saved = saveDocument(this);
+                                        let not_saved = app.getService("common").saveDocument(this);
                                         if (!not_saved) {
                                             //обновляем данные в таблице
                                             this.setUnChange();
@@ -180,7 +181,7 @@ export default class ShipmentsBody extends JetView{
                                     onItemClick: ()=>{
                                         let not_saved = this.$$("__save").callEvent('onItemClick');
                                         if (!not_saved) {
-                                            let r_data = holdDocument('shipment', this.doc.n_id, this.doc.id);
+                                            let r_data = app.getService("common").holdDocument('shipment', this.doc.n_id, this.doc.id);
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
                                             if (r_data.data) {
                                                 if (this.table) {
@@ -247,7 +248,7 @@ export default class ShipmentsBody extends JetView{
         this.table = table;
         this.doc = doc;
         if (doc) {
-            let state_item = ref_states.data.getItem(doc.n_state);
+            let state_item = states[doc.n_state];
             this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` + 
             ` Отгрузка №${doc.n_number || ''} от ${webix.i18n.dateFormatStr(doc.n_dt_invoice)}, ${doc.n_supplier || ''}`);
             this.getRoot().show();

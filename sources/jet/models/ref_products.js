@@ -2,11 +2,10 @@
 
 import {JetView} from "webix-jet";
 import {message} from "../views/common";
-import {prodSelColumns} from "../models/product_selection_dt";
 import {productSelectionGetData} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 import TemplateProductsView from "../models/template_products_dt"
-
+import {refProdSelColumns} from "../models/ref_product_selection_dt";
 
 export default class RefProductsView extends JetView{
 
@@ -16,11 +15,10 @@ export default class RefProductsView extends JetView{
     }
 
     config(){
-
         let th = this;
         this.table_id = webix.uid();
         let dt = new TemplateProductsView(th.app, {
-            columns: prodSelColumns,
+            columns: refProdSelColumns,
             loadFunction: productSelectionGetData,
             sorting: {id: "c_name", dir: "asc"},
             topParent: th,

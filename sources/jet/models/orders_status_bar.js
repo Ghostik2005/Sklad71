@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {message} from "../views/common";
-import {bSpace, names_translates} from "../views/variables";
+import {bSpace} from "../views/variables";
 
 
 
@@ -49,7 +49,7 @@ export default class OrdersStatusBar extends JetView{
         for (var elem in filters) {
             let text = filters[elem];
             if (text) {
-                let title = names_translates[elem].value;
+                let title = document.app.translates[elem].value;
                 new_label.push(`${title}: ${text}`);
             }
         }

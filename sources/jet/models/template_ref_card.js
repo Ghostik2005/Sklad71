@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, search_key} from "../views/common";
+import {message} from "../views/common";
 import { emptyWidth } from "../views/variables";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
 import {getRef, setRef} from "../models/data_processing";
@@ -96,7 +96,7 @@ export default class TemplateRefCardView extends JetView{
             header += "Новый элемент";
         } else {
 
-            header += this.edited[search_key(this.edited, '_name')];
+            header += this.edited[this.app.getService("common").search_key(this.edited, '_name')];
         }
         this.getRoot().getHead().getChildViews()[0].setValue(header);
         return this.getRoot().show();
@@ -148,7 +148,7 @@ export default class TemplateRefCardView extends JetView{
 
     validateCard(data){
         let result = false;
-        let n = data[search_key(data, '_name')];
+        let n = data[this.app.getService("common").search_key(data, '_name')];
         if (!n || n.length < 2) result = "Укажите наименование "
         // if (!data.c_namefull || data.c_namefull.length < 2) result = "Укажите полное название товара"
         // if (!data.header.n_base) result = 'Укажите основание документа';

@@ -3,7 +3,7 @@ import {JetView} from "webix-jet";
 import HeaderView from "../views/header";
 import FooterView from "../views/footer";
 import CenterView from "../views/center";
-import SideButtonsBar from "../models/sidebuttons-bar";
+import SideButtonsBar from "../views/sidebuttons-bar";
 import {getCookie, message} from "../views/common";
 import {getCredentionals} from "../models/data_processing"
 
@@ -17,9 +17,7 @@ export default class StartView extends JetView{
                 {height: 2},
                 {cols: [
                     {$subview: SideButtonsBar},
-                    // {template: "aaa"},
                     { $subview: CenterView },
-                    // { $subview: true, borderless: true},
                 ]},   
                 { $subview: FooterView },
             ],
@@ -78,6 +76,7 @@ export default class StartView extends JetView{
     }
 
     ready() {
+
         this.app.commonWidgets['header'].setUser();
         this.app.commonWidgets['header'].setOrg();
     }

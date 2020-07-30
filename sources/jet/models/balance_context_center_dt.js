@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import {message} from "../views/common";
 import {tables_excludeColumns} from "../views/variables";
-import {newDocument} from "../views/common";
+import {newDocument} from "../models/common_functions";
 import {menu_options, balance_menu_options_excludes} from "../views/variables";
 
 
@@ -14,7 +14,7 @@ export default class BalanceContextCenterDt extends JetView{
         let c_menu = {
             view:'contextmenu', 
             autowidth: true,
-            id:"balance_cmenu",
+            localId:"__balance_cmenu",
             css: "context_center_dt",
             point: true,
             on:{

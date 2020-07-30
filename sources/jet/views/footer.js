@@ -7,6 +7,7 @@ export default class FooterView extends JetView{
         var cfg = this.app.config;
         var prod = (cfg.production) ? "Production" : "test";
         return {view: 'toolbar',
+            id: "__bar__main_footer",
             css: 'margin0',
             borderless: true,
             cols: [
@@ -18,8 +19,12 @@ export default class FooterView extends JetView{
             ]
         }
     }
+
+    init() {
+        this.widget_name = "footer";
+    }
     
     ready() {
-        this.app.commonWidgets['footer'] = this;
+        this.app.commonWidgets[this.widget_name] = this;
     }
 }

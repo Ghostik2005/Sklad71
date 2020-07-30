@@ -63,7 +63,7 @@ export const partnersColumns = [
     {id: "n_type_text",
         // sort: "server",
         width: 140,
-        header: [{text: "Тип партнера"},
+        header: [{text: "Тип контрагента"},
         ],
         headermenu:false,
         hidden: !true,

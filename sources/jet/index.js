@@ -1,21 +1,22 @@
 import "./styles/styles.css";
 
-
-
+import {bSpace} from "./views/variables";
+import {extendWebix, getRefs} from "./views/common";
+import {common} from "./views/common";
 import {JetApp, JetView} from "webix-jet";
 import {EmptyRouter} from "webix-jet";
 import "./locales/ru";
-import {extendWebix, getRefs} from "./views/common"
+
 
 export default class app extends JetApp{
 	constructor(config){
+                
 		const defaults = {            
             production:     PRODUCTION,
             id:             "sklad71App",
             name:           APPNAME,
             version:        VERSION,
             start:          "/login",
-            // start:          "/start",
             home_org_id:    "",
             home_org:       "",
             user:           "",
@@ -30,27 +31,26 @@ export default class app extends JetApp{
             popDelay:       800,
             roles:          [],
             sklad_cook:     "sk_new-app",
-            user_id:        ""
+            user_id:        "",
+            restricted:     {}, //словарь элементов, если true - запрещено пользователю
+            restricted_menu: {}, //словарь элементов контекстного меню, если true - запрещено пользователю
         };
+        super({ ...defaults, ...config });    
         
-        super({ ...defaults, ...config });
-        
-        // this.config.r_url = document.location.protocol +'//' + document.location.hostname +  "/sorbent_logic"
-        // document.rpc_url = (this.config.production) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/RPC/';
         document.rpc_url = (PRODUCTION) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/RPC/';
 
-        // document.rpc_url = 'http://127.0.0.1/RPC/';
-        // console.log('init.r', document.rpc_url);        
 
 		this.attachEvent("app:error:resolve", function(name, error) {
 			window.console.error(error);
 		});
         var app = this;
+        app.use(common);
+        document.app = app;
         app['commonWidgets'] = {
             "arrivals": {},
             "shipments": {},
-            "balance": {},
-            "sidebar": {},
+            // "balance": {},
+            // "sidebar": {},
             "orders": {},
         },
 
@@ -69,11 +69,13 @@ export default class app extends JetApp{
         app.attachEvent("app:error:resolve", function(name, error) {
             window.console.error(error);
             });
-        getRefs();
-        extendWebix();
 
-	}
+        getRefs(app);
+    }
+    
 }
+
+extendWebix();
 
 webix.i18n.setLocale("ru-RU");
 if (!BUILD_AS_MODULE){

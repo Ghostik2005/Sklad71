@@ -2,12 +2,11 @@
 
 import {JetView} from "webix-jet";
 import {emptyWidth} from "../views/variables";
-import ButtonFilters from "../models/arrivals_button_filters"
+import ArrivalsButtonFilters from "../models/arrivals_button_filters"
 import ArrivalsStatusBar from "../models/arrivals_status_bar";
 import SearchBar from "../models/search_bar";
-import QuickFilters from "../models/arrivals_quick_filters";
 import { message } from "../views/common";
-import {request, checkResponse} from "../views/common";
+import TemplateQuickFilters from "../models/template_quick_filters";
 
 export default class ArrivalsHeaderView extends JetView{
     config(){
@@ -22,8 +21,8 @@ export default class ArrivalsHeaderView extends JetView{
                 {width: emptyWidth},
                 // {$subview: SearchBar, name: "search_bar"},
                 {},
-                {$subview: QuickFilters, name: "quick_filters"},
-                {$subview: ButtonFilters, name: "button_filter"}
+                new TemplateQuickFilters(this.app, 'arrivals'),
+                ArrivalsButtonFilters,
             ]
     
         }

@@ -4,8 +4,8 @@ import {JetView} from "webix-jet";
 import {emptyWidth} from "../views/variables";
 import ButtonFilters from "../models/orders_button_filters"
 import OrdersStatusBar from "../models/orders_status_bar";
-import QuickFilters from "../models/orders_quick_filters";
 import { message } from "../views/common";
+import TemplateQuickFilters from "../models/template_quick_filters";
 
 export default class OrdersHeaderView extends JetView{
     config(){
@@ -20,8 +20,9 @@ export default class OrdersHeaderView extends JetView{
                 {width: emptyWidth},
                 // {$subview: SearchBar, name: "search_bar"},
                 {},
-                {$subview: QuickFilters, name: "quick_filters"},
-                {$subview: ButtonFilters, name: "button_filter"}
+
+                new TemplateQuickFilters(this.app, 'orders'),
+                ButtonFilters,
             ]
     
         }

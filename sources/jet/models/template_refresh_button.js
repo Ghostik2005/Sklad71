@@ -1,17 +1,18 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {html_button_template, message} from "../views/common";
+import {message} from "../views/common";
 
 export default class TemplateRefreshButton extends JetView{
 
     constructor(app, widget) {
         super(app);
         this.widget = widget;
+        console.log('w', widget);
     }
 
     config(){
-
+        let app = this.app;
         let button =  {view:"button", type: 'htmlbutton',
             width: 35,
             height: 35, 
@@ -19,7 +20,7 @@ export default class TemplateRefreshButton extends JetView{
             label: "",
             localId: "__refresh",
             template: () => {
-                return html_button_template('./library/img/refresh_1.svg', 'Обновить')
+                return app.getService("common").html_button_template('./library/img/refresh_1.svg', 'Обновить')
             },
             on: {
                 onItemClick:  (id, event) => {

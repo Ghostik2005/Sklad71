@@ -1,8 +1,8 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {message, search_key} from "../views/common";
-import { emptyWidth } from "../views/variables";
+import {message,} from "../views/common";
+// import { emptyWidth } from "../views/variables";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
 import {getPoint, setPoint} from "../models/data_processing";
 
@@ -11,7 +11,6 @@ export default class RefPointCardView extends JetView{
 
     constructor(app, parent, edited) {
         super(app);
-        console.log('parent', parent);
         this.parent = parent;
         this.edited = edited;
     }
@@ -97,7 +96,7 @@ export default class RefPointCardView extends JetView{
             header += "Новый элемент";
         } else {
 
-            header += this.edited[search_key(this.edited, '_name')];
+            header += this.edited[this.app.getService("common").search_key(this.edited, '_name')];
         }
         this.getRoot().getHead().getChildViews()[0].setValue(header);
         return this.getRoot().show();

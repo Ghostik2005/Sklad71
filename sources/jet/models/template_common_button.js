@@ -5,7 +5,7 @@ import {message} from "../views/common";
 
 
 
-export default class ButtonTemplate extends JetView{
+export default class CommonButtonTemplate extends JetView{
 
     constructor(app, cfg) {
         super(app);
@@ -13,18 +13,20 @@ export default class ButtonTemplate extends JetView{
     }
 
     config(){
+        let local_this = this;
+        let button_id = `__button__${local_this.cfg.name}`;
+
         let button = {view:"button",
             localId: "__button",
-            // type: "icon",
+            id: button_id,
+            type: "icon",
             width: this.cfg.width || 102,
             // icon: "mdi-filter-remove-outline",
             label: this.cfg.label,
-            // css: "remove_filter",
+            css: local_this.button_css.join(" "),
             on: {
                 onItemClick: () => {
-                    
-                    this.cfg.callback(this)
-                    this.getRoot().getParentView().$scope.hide();
+                    local_this.cfg.callback(local_this.cfg.parent, local_this)
                 },
             },
         }

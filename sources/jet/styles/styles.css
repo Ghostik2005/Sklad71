@@ -137,7 +137,12 @@ button,
     height:20px;
 }
 
-.changed {
+.webix_tab_close:focus {
+    color: #94a1b3 !important;
+}
+
+.changed,
+.warning {
     color: red;
 }
 
@@ -152,17 +157,22 @@ button,
     /* border-radius: 10px; */
 }
 
-.warning {
-    color: red;
-}
 
 .webix_view > .webix_disabled {
     background-color: #ebedf0;
     opacity: 0.2;
   }
 
-.webix_all_tabs .webix_item_tab.webix_selected {
+.webix_all_tabs .webix_item_tab:hover {
+    background-color: transparent;
+    /* color: #0e86fe; */
+    opacity: 0.5;
+    /* background-color: #f4f5f9; */
+}
+
+.webix_all_tabs .webix_item_tab.webix_selected,
+.webix_all_tabs .webix_item_tab.webix_selected:focus {
     box-shadow: inset 0 -4px #1ca1c1;
     padding-bottom: 0;
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
 }
