@@ -3,8 +3,6 @@
 import {JetView} from "webix-jet";
 import TemplateRefreshButton from "../models/template_refresh_button";
 
-let states = document.app.states;
-
 
 export default class TemplateQuickFilters extends JetView{
     constructor(app, parent_name) {

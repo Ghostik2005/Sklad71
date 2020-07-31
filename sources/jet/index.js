@@ -4,7 +4,7 @@ import {getRefs} from "./views/common";
 import {JetApp, JetView} from "webix-jet";
 import {EmptyRouter} from "webix-jet";
 import "./locales/ru";
-import { app_common } from "./common";
+import { app_common } from "./app_common";
 
 
 export default class app extends JetApp{
@@ -53,7 +53,6 @@ export default class app extends JetApp{
                 expire: expires*1000
             })
         };
-
         getRefs(app);
         app['commonWidgets'] = {
             "arrivals": {},

@@ -1,5 +1,5 @@
 "use strict";
-
+import {names_translates} from "../variables/variables"
 
 function getTranslates() {
     let params_to = {method:"get_translates", kwargs: {"user": "XXX"}}
@@ -20,12 +20,12 @@ export function getRefs(app) {
 export function names(method) {
     let app = document.app;
     let ret;
-
     if (app && app.translates) {
         ret = app.translates[method];
     } else {
-        console.log('gg1', new Date())
+        // console.log('gg1', new Date())
         ret = 'undefined'
+        // ret = names_translates[method];
     }
     return ret
 }

@@ -5,7 +5,6 @@ import {getShipmentsDocument, saveShipmentsDocument, getOrdersDocumentShip, chec
 import {dtColumns} from "../variables/shipments_document_dt";
 import ShipmentSelectionView from "../models/shipment_product_selection";
 import DocumentHeader from "../models/document_header"
-
 let states = document.app.states;
 
 

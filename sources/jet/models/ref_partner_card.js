@@ -146,7 +146,6 @@ export default class RefPartnerCardView extends JetView{
 
     validateCard(data){
         let result = false;
-        // let n = data[this.search_key(data, '_name')];
         if (!data.n_name || data.n_name.length < 2) return "Укажите название"
         if (!data.n_namefull || data.n_namefull.length < 2) return "Укажите полное название"
         if (!data.n_address || data.n_address.length < 2) return "Укажите юридический адрес"

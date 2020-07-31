@@ -4,7 +4,6 @@ import {JetView} from "webix-jet";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
 import {getPoint, setPoint} from "../models/data_processing";
 
-
 export default class RefPointCardView extends JetView{
 
     constructor(app, parent, edited) {

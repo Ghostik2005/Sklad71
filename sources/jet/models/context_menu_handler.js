@@ -2,7 +2,6 @@
 
 import {newDocument} from "../models/common_functions";
 
-
 export function handle_context(cfg) {
     let context = cfg.context;
     let id = cfg.id;

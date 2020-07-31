@@ -5,6 +5,7 @@ import TemplateComboRefCard from "../models/template_combo_ref_card";
 import {getRef, setRef} from "../models/data_processing";
 
 
+
 export default class TemplateRefCardView extends JetView{
 
     constructor(app, parent, edited) {
