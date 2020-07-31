@@ -176,3 +176,7 @@ button,
     padding-bottom: 0;
     /* text-transform: uppercase; */
 }
+
+.webix_ssheet_toolbar_spacer {
+    background: #dddddd;
+  }  

@@ -5,206 +5,97 @@ import BalanceView from "../views/balance";
 import PopMenuView from "../models/template_pop_menu";
 import {screens} from "../variables/variables";
 import TemplateMainTableView from  "../models/template_main_table";
-
+import TemplateSideButtonView from "../models/template_button_side";
 
 export default class SideButtonsBar extends JetView{
     config(){
         let app = this.app;
+        let l_this = this;
         var side_bar = {view: 'toolbar', localId: "sideMenu", borderless: true,
             id: "_sideMenu",
             width: 44,
             rows: [
                 {height: 20},
-                {view:"button", 
-                    hidden: !true,
-                    id: "__button__new_document",
-                    type: 'htmlbutton',
-                    longPress: !true,
-                    width: 40,
-                    height: 40, 
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/new-document.svg', 'Новый документ', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick:  function(id, e) {
-                            (this.$scope.new_docs.isVisible()) ? this.$scope.new_docs.hide() : this.$scope.new_docs.show(this);
-                        },
+                new TemplateSideButtonView(app, {
+                    name: "new_document", 
+                    click: function(lt) {
+                        (l_this.new_docs.isVisible()) ? l_this.new_docs.hide() : l_this.new_docs.show(lt);
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    hidden: !true,
-                    id: "__button__references",
-                    longPress: false,
-                    height: 40,
-                    width: 40,
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/references.svg', 'Справочники', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function() {
-                            (this.$scope.refs.isVisible()) ? this.$scope.refs.hide() : this.$scope.refs.show(this);
-                        }
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "references", 
+                    click: function(lt) {
+                        (l_this.refs.isVisible()) ? l_this.refs.hide() : l_this.refs.show(lt)
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    hidden: !true,
-                    longPress: true,
-                    id: "__button__balances",
-                    width: 40,
-                    height: 40, 
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/stocks.svg', 'Остатки', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function () {
-                            this.$scope.add_bar(this, BalanceView, "balances");
-                        },
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "balances", 
+                    click: function(lt) {
+                        l_this.add_bar(lt, BalanceView, "balances");
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    width: 40,
-                    height: 40, 
-                    longPress: false,
-                    id: "__button__arrivals",
-                    label: "",
-                    localId: "__arrivals",
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/purchase_30x30.svg', 'Поступления', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function (id, event) {
-                            this.$scope.add_bar(this, TemplateMainTableView, "arrivals");
-                        },
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "arrivals", 
+                    click: function(lt) {
+                        l_this.add_bar(lt, TemplateMainTableView, "arrivals");
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    width: 40,
-                    height: 40, 
-                    longPress: false,
-                    label: "",
-                    id: "__button__orders",
-                    localId: "__orders",
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/orders.svg', 'Заказы', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function (id, event) {
-                            this.$scope.add_bar(this, TemplateMainTableView, "orders");
-                        },
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "orders", 
+                    click: function(lt) {
+                        l_this.add_bar(lt, TemplateMainTableView, "orders");
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    width: 40,
-                    height: 40, 
-                    longPress: false,
-                    label: "",
-                    id: "__button__shipments",
-                    localId: "__shipments",
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/shipment.svg', 'Отгрузки', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function (id, event) {
-                            this.$scope.add_bar(this, TemplateMainTableView, "shipments");
-                        },
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "shipments", 
+                    click: function(lt) {
+                        l_this.add_bar(lt, TemplateMainTableView, "shipments");
                     }
-                },
-
-                {view:"button", type: 'htmlbutton',
-                    hidden: true,
-                    width: 40,
-                    height: 40, 
-                    id: "__button__movements",
-                    longPress: false,
-                    label: "", 
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/movings.svg', 'Перемещения', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function (id, event) {
-                            // this.$scope.add_bar(this, MovingsView, "movings");
-                        },
+                }),
+                {view: "side-menu-separator", hidden: PRODUCTION},
+                new TemplateSideButtonView(app, {
+                    name: "analitics", 
+                    click: function(lt) {
+                        // l_this.add_bar(lt, TemplateMainTableView, "analitics");
+                        document.message('analitics');
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    hidden: true,
-                    width: 40,
-                    height: 40, 
-                    longPress: false,
-                    id: "__button__transfers",
-                    label: "", 
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/transfers.svg', 'Передачи в розницу', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function (id, event) {
-                            // this.$scope.add_bar(this, TransfersView, "transfers");
-                        },
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "reports", 
+                    click: function(lt) {
+                        // l_this.add_bar(lt, TemplateMainTableView, "reports");
+                        document.message('reports');
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    hidden: true,
-                    longPress: false,
-                    id: "__button__analitics",
-                    height: 40,
-                    width: 40,
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/statistics_30x30.svg', 'Аналитика', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function () {
-                            document.message('Аналитика')
-                            // this.$scope.add_bar(this, analiticView, "anlitics");
-                        }
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "options", 
+                    click: function(lt) {
+                        // l_this.add_bar(lt, TemplateMainTableView, "options");
+                        document.message('Настройки интерфейса и т.п.');
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    hidden: true,
-                    id: "__button__reports",
-                    longPress: true,
-                    width: 40,
-                    height: 40, 
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/report.svg', 'Отчеты', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function () {
-                            document.message('Отчеты')
-                        },
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "users", 
+                    click: function(lt) {
+                        // l_this.add_bar(lt, TemplateMainTableView, "users");
+                        document.message('Права доступа пользователей');
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    hidden: true,
-                    id: "__button__options",
-                    longPress: true,
-                    width: 40,
-                    height: 40, 
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/settings.svg', 'Настройки', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function () {
-                            document.message('Настройки интерфейса и т.п.')
-                            // this.$scope.add_bar(this, oView, "options");
-                        },
+                }),
+                {view: "side-menu-separator", hidden: PRODUCTION},
+                new TemplateSideButtonView(app, {
+                    name: "movings", 
+                    click: function(lt) {
+                        // l_this.add_bar(lt, TemplateMainTableView, "movings");
+                        document.message('movings');
                     }
-                },
-                {view:"button", type: 'htmlbutton',
-                    hidden: true,
-                    id: "__button__users",
-                    longPress: true,
-                    width: 40,
-                    height: 40,
-                    template: () => {
-                        return app.getService("common").html_button_template('./library/img/users.svg', 'Пользователи', 'side_menu_button')
-                    },
-                    on: {
-                        onItemClick: function () {
-                            document.message('Права доступа пользователей')
-                            // this.$scope.add_bar(this, uView, "users");
-                        },
+                }),
+                new TemplateSideButtonView(app, {
+                    name: "transfers", 
+                    click: function(lt) {
+                        // l_this.add_bar(lt, TemplateMainTableView, "transfers");
+                        document.message('transfers');
                     }
-                },
+                }),
                 {}
                 ]
             };

@@ -163,6 +163,16 @@ export function app_common(app) {
     }, webix.ui.datafilter.summColumn);
 
     webix.protoUI({
+        name:"side-menu-separator",
+        defaults:{
+            css:"webix_ssheet_toolbar_spacer",
+            template:" ",
+            height:1,
+            borderless:!0
+        }
+    },webix.ui.view);
+
+    webix.protoUI({
         name: "cWindow",
         defaults: {
             resize: !true,
