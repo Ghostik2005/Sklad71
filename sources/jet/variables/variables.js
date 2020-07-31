@@ -15,7 +15,7 @@ export const screens = { //названия, id и параметры всех �
     transfers: {name: "В розницу", id: "_transfers", width: 120},
     shipments: {name: "Отгрузки", id: "_shipments", width: 120},
     info: {id: "_mView", width: 120, name: undefined},
-    balances: {id: "_balance", name: "Остатки", width: 100},
+    balances: {id: "_balances", name: "Остатки", width: 100},
     orders: {name: "Заказы", id: "_orders", width: 120},
 }
 

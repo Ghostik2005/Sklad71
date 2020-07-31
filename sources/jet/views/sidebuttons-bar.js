@@ -195,7 +195,6 @@ export default class SideButtonsBar extends JetView{
                     longPress: true,
                     width: 40,
                     height: 40,
-                    disabled: !(app.config.role != 9),
                     template: () => {
                         return app.getService("common").html_button_template('./library/img/users.svg', 'Пользователи', 'side_menu_button')
                     },
@@ -215,11 +214,7 @@ export default class SideButtonsBar extends JetView{
 
 
     add_bar(parent, view, view_name) {
-        let options = (view_name === "arrivals") ? screens.arrivals :
-                    (view_name === "shipments") ? screens.shipments:
-                    (view_name === "balances") ? screens.balances:
-                    (view_name === "orders") ? screens.orders:
-                    screens.info
+        let options = (screens[view_name]) ? screens[view_name] : screens.info
         let uid = options.id;
         if (!this.screens[uid]) {
             let header = options.name
