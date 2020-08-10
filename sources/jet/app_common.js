@@ -1,6 +1,6 @@
 "use strict";
 
-import {getUser, request, checkResponse} from "./views/common"
+import {getUser, request, checkResponse, deleteCookie} from "./views/common"
 
 export function app_common(app) {
     const s = {
@@ -16,6 +16,19 @@ export function app_common(app) {
             let img = "<div class='" + img_class + "', title='" + tooltip + "', style='background-image:url(" + picture + ");'></div>";
             let but = "<div class='webix_el_button'><button class='webix_img_btn_abs', style='background:transparent'>" + img + "</button> </div>";
             return but
+        },
+
+        icon_button_template(label, icon_pict, tooltip) {
+            let icon = '<svg  version="1.1" class="icon_button" viewBox="0 0 30 30">' + icon_pict +'</svg>';
+            let box = "<div class='webix_el_box', title='" + tooltip + "'><button class='webix_button custom_button'>" + icon + "<span class='icon_button_label', style=''>" + label + "</span>"
+            let but = "<div class='webix_el_button>" + box + "</div>";
+            return but
+        },
+
+        icon_menu_button_template(label, icon_pict, tooltip) {
+            let icon = '<svg  version="1.1" class="icon_button" viewBox="0 0 30 30">' + icon_pict +'</svg>';
+            let box = "<span class='webix_el_box', title='" + tooltip + "'>" + icon + "<span class='icon_button_label'>" + label + "</span></span>"
+            return box
         },
 
         saveDocument(th){
@@ -167,7 +180,8 @@ export function app_common(app) {
         defaults:{
             css:"webix_ssheet_toolbar_spacer",
             template:" ",
-            height:1,
+            width: 1,
+            // height:1,
             borderless:!0
         }
     },webix.ui.view);

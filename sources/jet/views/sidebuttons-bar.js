@@ -6,22 +6,19 @@ import PopMenuView from "../models/template_pop_menu";
 import {screens} from "../variables/variables";
 import TemplateMainTableView from  "../models/template_main_table";
 import TemplateSideButtonView from "../models/template_button_side";
+import TemplateIconButtonView from "../models/template_icon_button";
+import TemplateMenuButtonMenu from "../models/template_menu_button_menu"
 
 export default class SideButtonsBar extends JetView{
     config(){
         let app = this.app;
         let l_this = this;
-        var side_bar = {view: 'toolbar', localId: "sideMenu", borderless: true,
+        var side_bar = {view: 'toolbar',
+            css: "side_bar_bar",
             id: "_sideMenu",
-            width: 44,
-            rows: [
-                {height: 20},
-                new TemplateSideButtonView(app, {
-                    name: "new_document", 
-                    click: function(lt) {
-                        (l_this.new_docs.isVisible()) ? l_this.new_docs.hide() : l_this.new_docs.show(lt);
-                    }
-                }),
+            height: 44,
+            // width: 44,
+            cols: [
                 new TemplateSideButtonView(app, {
                     name: "references", 
                     click: function(lt) {
@@ -40,63 +37,59 @@ export default class SideButtonsBar extends JetView{
                         l_this.add_bar(lt, TemplateMainTableView, "arrivals");
                     }
                 }),
-                new TemplateSideButtonView(app, {
-                    name: "orders", 
-                    click: function(lt) {
-                        l_this.add_bar(lt, TemplateMainTableView, "orders");
-                    }
+                {view: "side-menu-separator"},
+                new TemplateMenuButtonMenu(app, {
+                    name: "documents"
                 }),
-                new TemplateSideButtonView(app, {
-                    name: "shipments", 
-                    click: function(lt) {
-                        l_this.add_bar(lt, TemplateMainTableView, "shipments");
-                    }
+                new TemplateMenuButtonMenu(app, {
+                    name: "journals"
                 }),
-                {view: "side-menu-separator", hidden: PRODUCTION},
-                new TemplateSideButtonView(app, {
-                    name: "analitics", 
-                    click: function(lt) {
-                        // l_this.add_bar(lt, TemplateMainTableView, "analitics");
-                        document.message('analitics');
-                    }
+                new TemplateMenuButtonMenu(app, {
+                    name: "products"
                 }),
-                new TemplateSideButtonView(app, {
+                new TemplateMenuButtonMenu(app, {
+                    name: "classifiers"
+                }),
+                {view: "side-menu-separator"},
+                new TemplateMenuButtonMenu(app, {
+                    name: "contragents"
+                }),
+                {view: "side-menu-separator"},
+                new TemplateIconButtonView(app, {
                     name: "reports", 
-                    click: function(lt) {
-                        // l_this.add_bar(lt, TemplateMainTableView, "reports");
-                        document.message('reports');
-                    }
                 }),
-                new TemplateSideButtonView(app, {
-                    name: "options", 
-                    click: function(lt) {
-                        // l_this.add_bar(lt, TemplateMainTableView, "options");
-                        document.message('Настройки интерфейса и т.п.');
-                    }
+                new TemplateIconButtonView(app, {
+                    name: "analitics", 
                 }),
-                new TemplateSideButtonView(app, {
-                    name: "users", 
-                    click: function(lt) {
-                        // l_this.add_bar(lt, TemplateMainTableView, "users");
-                        document.message('Права доступа пользователей');
-                    }
-                }),
+
+
+                // new TemplateSideButtonView(app, {
+                //     name: "arrivals", 
+                //     click: function(lt) {
+                //         l_this.add_bar(lt, TemplateMainTableView, "arrivals");
+                //     }
+                // }),
+                // new TemplateSideButtonView(app, {
+                //     name: "orders", 
+                //     click: function(lt) {
+                //         l_this.add_bar(lt, TemplateMainTableView, "orders");
+                //     }
+                // }),
+                // new TemplateSideButtonView(app, {
+                //     name: "shipments", 
+                //     click: function(lt) {
+                //         l_this.add_bar(lt, TemplateMainTableView, "shipments");
+                //     }
+                // }),
+                {},
+
                 {view: "side-menu-separator", hidden: PRODUCTION},
-                new TemplateSideButtonView(app, {
-                    name: "movings", 
-                    click: function(lt) {
-                        // l_this.add_bar(lt, TemplateMainTableView, "movings");
-                        document.message('movings');
-                    }
+                new TemplateMenuButtonMenu( app, {
+                    name: "managements"
                 }),
-                new TemplateSideButtonView(app, {
-                    name: "transfers", 
-                    click: function(lt) {
-                        // l_this.add_bar(lt, TemplateMainTableView, "transfers");
-                        document.message('transfers');
-                    }
+                new TemplateMenuButtonMenu( app, {
+                    name: "options"
                 }),
-                {}
                 ]
             };
         return side_bar
@@ -134,7 +127,6 @@ export default class SideButtonsBar extends JetView{
     init() {
         this.widget_name = "sidebar";
         this.refs = this.ui(new PopMenuView(this.app, {buttons: "refs_menu", name: "refs"}));
-        this.new_docs = this.ui(new PopMenuView(this.app, {buttons: "new_docs_menu", name: "docs"}));
         this.app.commonWidgets[this.widget_name] = this;
     }
 }

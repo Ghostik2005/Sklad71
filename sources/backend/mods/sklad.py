@@ -9,6 +9,7 @@ import bz2
 import glob
 import os
 import subprocess
+import traceback
 
 if __name__ == "__main__":
     import botclient
@@ -1698,24 +1699,24 @@ where q.cid = {pos_id}::bigint;
 
     def _create_ref_sql(self, filters):
         ret = []
+        reference = filters['filters']['reference']
+        offset = filters.get('start', 0)
+        count = filters.get('count', 17)
         try:
             field = filters['sort']['id']
             direction = filters['sort']['dir']
-            reference = filters['filters']['reference']
-            offset = filters.get('start', 0)
-            count = filters.get('count', 17)
         except:
+            # traceback.print_exc()
             print("exception")
             field = 'c_name'
             direction = 'asc'
-            reference = None
-            offset = 0
-            count = 17
         if reference in ["partners", "points", "ptypes", "employees"] and field == 'c_name':
             field = 'n_name'
         where = self._set_where_ref_sel(filters.get('filters'))
         order = f"""\norder by r.{field} {direction} \n"""
         limits = f"""limit {count} offset {offset}"""
+
+        print(reference)
 
         if reference == 'partners':
             rows = []
@@ -1972,6 +1973,7 @@ from ref_{reference} r
 """
             sql_count = f"""select count(*) from ({sql+where}) as ccc"""
             sql += where + order + limits
+            print(sql)
             rows = self._request(sql) or []
             cou = self._request(sql_count)
             if cou:

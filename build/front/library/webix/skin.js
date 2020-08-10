@@ -1,3 +1,3 @@
 //[Skin Customization]
-webix.skin.material.barHeight=32;webix.skin.material.tabbarHeight=32;webix.skin.material.rowHeight=26;webix.skin.material.listItemHeight=26;webix.skin.material.inputHeight=26;webix.skin.material.layoutMargin.wide=8;webix.skin.material.layoutMargin.space=8;webix.skin.material.layoutPadding.space=8;
+webix.skin.material.barHeight=40;webix.skin.material.tabbarHeight=40;webix.skin.material.rowHeight=28;webix.skin.material.listItemHeight=28;webix.skin.material.inputHeight=30;webix.skin.material.layoutMargin.wide=10;webix.skin.material.layoutMargin.space=10;webix.skin.material.layoutPadding.space=10;
  webix.skin.set('material');

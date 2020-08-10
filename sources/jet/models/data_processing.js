@@ -271,15 +271,10 @@ export function refGetData(params, table) {
 }
 
 export function productSelectionGetData(params, table) {
-    // let widgs = table.$scope.app.commonWidgets;
     let filters = {c_name: table.cfg.topParent.getFilter()};
-    // let filters = {c_name: table.$scope.getFilter()}; //получаем значение из filter-элементе
-    if (!params) {
-        params = {sort:table.config.sorting};
-    }
-    params = Object.assign(params, {filters: filters});
-    table.config.sorting = params.sort;
-    let params_to = {method:"get_products", kwargs: {"user": getUser(), filters: params}}
+    let kwargs = genKwargs(params, table, "", filters);
+    table.config.sorting = kwargs.filters.sort;
+    let params_to = {method:"get_products", kwargs: kwargs};
     return request(params_to).then(function(data) {
         data = checkResponse(data, 'a');
         return data    
@@ -287,32 +282,21 @@ export function productSelectionGetData(params, table) {
 }
 
 export function shipmentProductSelectionGetData(params, table) {
-    // let widgs = table.$scope.app.commonWidgets;
     let filters = {n_product: table.$scope.getFilter()}; //получаем значение из filter-элементе
-    if (!params) {
-        params = {sort:table.config.sorting};
-    }
-    params = Object.assign(params, {filters: filters});
-    table.config.sorting = params.sort;
-    let params_to = {method:"balance.get_data", kwargs: {"user": getUser(), filters: params}}
+    let kwargs = genKwargs(params, table, "", filters);
+    table.config.sorting = kwargs.filters.sort;
+    let params_to = {method:"balance.get_data", kwargs: kwargs};
     return request(params_to).then(function(data) {
         data = checkResponse(data, 'a');
         return data    
     })
 }
 
-
-
 export function balanceGetData(params, table) {
-    let widgs = table.$scope.app.commonWidgets;
-    let filters = (widgs && widgs.balances.menu_filters) ? widgs.balances.menu_filters.getFilters() : {};
-    if (!params) {
-        params = {sort:table.config.sorting};
-    };
-    filters = Object.assign(filters, (widgs.balances.header) ? widgs.balances.header.getSearch(): {})
-    params = Object.assign(params, {filters: filters});
-    table.config.sorting = params.sort;
-    let params_to = {method:"balance.get_data", kwargs: {"user": getUser(), filters: params}}
+
+    let kwargs = genKwargs(params, table, "balances")
+    table.config.sorting = kwargs.filters.sort;
+    let params_to = {method:"balance.get_data", kwargs: kwargs}
     return request(params_to).then(function(data) {
         data = checkResponse(data, 'a');
         return data    
@@ -321,14 +305,10 @@ export function balanceGetData(params, table) {
 
 
 export function shipmentsGetData(params, table) {
-    let widgs = table.$scope.app.commonWidgets;
-    let filters = (widgs && widgs.shipments.menu_filters) ? widgs.shipments.menu_filters.getFilters() : {};
-    if (!params) {
-        params = {sort:table.config.sorting};
-    }
-    params = Object.assign(params, {filters: filters});
-    table.config.sorting = params.sort;
-    let params_to = {method:"shipments.get_data", kwargs: {"user": getUser(), filters: params}}
+
+    let kwargs = genKwargs(params, table, "shipments")
+    table.config.sorting = kwargs.filters.sort;
+    let params_to = {method:"shipments.get_data", kwargs: kwargs}
     return request(params_to).then(function(data) {
         data = checkResponse(data, 'a');
         return data    
@@ -336,14 +316,10 @@ export function shipmentsGetData(params, table) {
 }
 
 export function ordersGetData(params, table) {
-    let widgs = table.$scope.app.commonWidgets;
-    let filters = (widgs && widgs.orders.menu_filters) ? widgs.orders.menu_filters.getFilters() : {};
-    if (!params) {
-        params = {sort:table.config.sorting};
-    }
-    params = Object.assign(params, {filters: filters});
-    table.config.sorting = params.sort;
-    let params_to = {method:"orders.get_data", kwargs: {"user": getUser(), filters: params}}
+
+    let kwargs = genKwargs(params, table, "orders")
+    table.config.sorting = kwargs.filters.sort;
+    let params_to = {method:"orders.get_data", kwargs: kwargs}
     return request(params_to).then(function(data) {
         data = checkResponse(data, 'a');
         return data    
@@ -359,17 +335,10 @@ export function ordersSaveData(id, action, row) {
 
 }
 
-
-
 export function arrivalsGetData(params, table) {
-    let widgs = table.$scope.app.commonWidgets;
-    let filters = (widgs && widgs.arrivals.menu_filters) ? widgs.arrivals.menu_filters.getFilters() : {};
-    if (!params) {
-        params = {sort:table.config.sorting};
-    }
-    params = Object.assign(params, {filters: filters});
-    table.config.sorting = params.sort;
-    let params_to = {method:"arrivals.get_data", kwargs: {"user": getUser(), filters: params}}
+    let kwargs = genKwargs(params, table, "arrivals")
+    table.config.sorting = kwargs.filters.sort;
+    let params_to = {method:"arrivals.get_data", kwargs: kwargs}
     return request(params_to).then(function(data) {
         data = checkResponse(data, 'a');
         return data    
@@ -393,28 +362,13 @@ export function getMovingsDocument(doc_id){
 }
 
 export function movingsGetData(params, table) {
-    // table.clearAll();
-    let widgs = table.$scope.app.commonWidgets;
-    let filters = (widgs && widgs.menu_filters) ? widgs.menu_filters.getFilters() 
-                                                : {};
-    if (!params) {
-        params = {sort:table.config.sorting};
-    }
-    params = Object.assign(params, {filters: filters});
-    let params_to = {method:"arrivals.get_data", kwargs: {"user": getUser(), filters: params}}
-    let result =  request(params_to).then(function(data) {
-        data = checkResponse(data, 'a');
-        return data
-    })
-    table.config.sorting = params.sort
-    return result
+    document.message('перемещения получение данных')
 }
 
 export function movingsSaveData(id, action, row) {
     console.log('id', id);
     console.log('action', action);
     console.log('row', row);
-
     return true
 
 }
@@ -422,26 +376,11 @@ export function movingsSaveData(id, action, row) {
 export function getTransfersDocument(doc_id){
     let params_to = {method:"arrivals.get_arrivals_document", kwargs: {"user": getUser(), "doc_id": doc_id}}
     let result = checkResponse(request(params_to, !0).response, 's');
-
     return result    
 }
 
 export function transfersGetData(params, table) {
-    // table.clearAll();
-    let widgs = table.$scope.app.commonWidgets;
-    let filters = (widgs && widgs.menu_filters) ? widgs.menu_filters.getFilters() 
-                                                : {};
-    if (!params) {
-        params = {sort:table.config.sorting};
-    }
-    params = Object.assign(params, {filters: filters});
-    let params_to = {method:"arrivals.get_data", kwargs: {"user": getUser(), filters: params}}
-    let result =  request(params_to).then(function(data) {
-        data = checkResponse(data, 'a');
-        return data
-    })
-    table.config.sorting = params.sort
-    return result
+    document.message('трансферы получение данных')
 }
 
 export function transfersSaveData(id, action, row) {
@@ -450,6 +389,23 @@ export function transfersSaveData(id, action, row) {
     console.log('row', row);
 
     return true
-
 }
+
+function genKwargs(params, table, data_type, filters) {
+    let new_params = JSON.parse(JSON.stringify(params))
+    if (!filters) {
+        let widgs = table.$scope.app.commonWidgets;
+        filters = (widgs && widgs[data_type].menu_filters) ? widgs[data_type].menu_filters.getFilters() : {};
+    }
+    if (new_params && !new_params.sort) {
+        Object.assign(new_params, {sort:table.config.sorting});
+    };
+    if (!new_params) {
+        new_params = {sort:table.config.sorting};
+    }
+    new_params = Object.assign(new_params, {filters: filters});
+    return {"user": getUser(), filters: new_params}
+}
+
+
 

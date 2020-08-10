@@ -14,11 +14,12 @@ export default class StartView extends JetView{
             id: "sklad_main_ui",
             rows: [
                 { $subview: HeaderView },
+                {$subview: SideButtonsBar},
                 {height: 2},
-                {cols: [
-                    {$subview: SideButtonsBar},
+                // {cols: [
+                    // {$subview: SideButtonsBar},
                     { $subview: CenterView },
-                ]},   
+                // ]},   
                 { $subview: FooterView },
             ],
         };

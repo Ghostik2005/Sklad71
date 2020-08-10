@@ -15,7 +15,7 @@ export default class ButtonTemplate extends JetView{
         let button = {view:"button",
             localId: "__button",
             // type: "icon",
-            width: this.cfg.width || 102,
+            width: this.cfg.width,
             // icon: "mdi-filter-remove-outline",
             label: this.cfg.label,
             // css: "remove_filter",

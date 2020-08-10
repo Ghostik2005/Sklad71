@@ -12,20 +12,23 @@ export default class PopMenuView extends JetView{
     }
     config(){
         return {view: "popup",
-            head: "sub-menu",
+            // head: "sub-menu",
             loclalId: "_pop",
             // width: 140,
-            padding: 1,
+            padding: 2,
+            point: true,
             css: "pop-up-menu",
             relative: true,
             body: { 
                 cols: [
                     {//view: "form",
+                        // minWidth: 160,
                         localId: "__mform",
                         rows: [
                         ]
                     },
                     {//view: "form",
+                        // minWidth: 160,
                         hidden: true,
                         localId: "__eform",
                         rows: [
@@ -40,7 +43,7 @@ export default class PopMenuView extends JetView{
         return this.getRoot().isVisible();
     }
     show(target){
-        return this.getRoot().show(target.$view);
+        return this.getRoot().show(target.$view, {x:0, y:-3});
     }
     hide(){
         return this.getRoot().hide();
@@ -71,5 +74,7 @@ export default class PopMenuView extends JetView{
                 this.$$("__mform").addView(new ButtonTemplate(this.app, item))
             })
         }
+        // this.$$("__mform").resize();
+        // this.$$("__eform").resize();
     }
 }

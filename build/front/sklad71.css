@@ -1,3 +1,9 @@
+:root {
+  /* --main-color: #5ccce7; */
+  --main-color: #1ca1c1;
+  --highlited-color: yellow;
+  --tab-bkg-color: #f4f5f9;
+}
 .webix_message_area {
   width: 400px;
   right: 120px;
@@ -10,8 +16,7 @@
 }
 button,
 .webix_popup_button {
-  text-transform: uppercase !important;
-  font-size: x-small !important;
+  font-size: small !important;
 }
 .footer,
 .center_dt .webix_cell {
@@ -32,12 +37,26 @@ button,
 .webix_ss_header td {
   border-bottom: 0px;
 }
+.webix_list_item.menu,
+.webix_menu,
+.webix_list_item.menu:hover,
+.webix_list_item.menu:active,
+.webix_list_item.menu:focus,
+.side_bar_bar,
+.icon_exit_button,
+.icon_button,
+.icon_button_label,
+.exit_button_label,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item,
 .label_highlited {
-  color: #1CA1C1;
+  color: var(--main-color);
 }
-.webix_point_top,
 .context_center_dt {
   margin-left: -15px;
+}
+.webix_point_top {
+  margin-left: -35px;
 }
 .table_icon,
 .menubtn {
@@ -48,9 +67,6 @@ button,
 }
 .table_icon {
   font-size: 15px;
-}
-.center_text {
-  text-align: center;
 }
 .italic {
   font-style: italic;
@@ -63,10 +79,6 @@ button,
 .ordinary_label {
   font-style: normal;
   font-weight: normal;
-}
-.menu_filters_margin_top {
-  /* margin-top: 0px !important; */
-  /* margin-bottom: 0px !important; */
 }
 .menu_filters_margin_top input,
 .menu_filters_margin_top label,
@@ -121,11 +133,9 @@ button,
 .full-size {
   width: 100% !important;
 }
+.context_menu,
 .pop-up-menu {
-  background: #f4f5f9 /*!important*/;
   opacity: 0.9;
-  border: 1px solid #0e86fe;
-  /* border-radius: 10px; */
 }
 .webix_view > .webix_disabled {
   background-color: #ebedf0;
@@ -133,17 +143,106 @@ button,
 }
 .webix_all_tabs .webix_item_tab:hover {
   background-color: transparent;
-  /* color: #0e86fe; */
-  opacity: 0.5;
-  /* background-color: #f4f5f9; */
+}
+button,
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item,
+.webix_popup_button,
+.webix_all_tabs .webix_item_tab,
+.webix_all_tabs .webix_item_tab.webix_selected,
+.webix_all_tabs .webix_item_tab.webix_selected:focus {
+  text-transform: uppercase;
 }
 .webix_all_tabs .webix_item_tab.webix_selected,
 .webix_all_tabs .webix_item_tab.webix_selected:focus {
-  box-shadow: inset 0 -4px #1ca1c1;
+  box-shadow: inset 0 -4px var(--main-color);
   padding-bottom: 0;
-  /* text-transform: uppercase; */
 }
 .webix_ssheet_toolbar_spacer {
   background: #dddddd;
+}
+.side_bar_bar {
+  padding-top: 3px;
+}
+.icon_exit_button {
+  width: 20px;
+  height: 20px;
+}
+.icon_button {
+  padding-top: 5px;
+  width: 30px;
+  height: 30px;
+}
+.webix_secondary .webix_button.exit_button,
+.webix_secondary .webix_button.custom_button {
+  padding-top: 2px;
+}
+.pop-up-menu,
+.side_bar_bar,
+.webix_list_item.menu,
+.webix_menu,
+.webix_list_item.menu:hover,
+.webix_list_item.menu:active,
+.webix_list_item.menu:focus,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item,
+.webix_secondary .webix_button.custom_button:hover,
+.webix_secondary .webix_button.custom_button:active,
+.webix_secondary .webix_button.custom_button:focus {
+  background-color: var(--tab-bkg-color);
+}
+.webix_all_tabs .webix_item_tab:hover,
+.webix_secondary .webix_button.custom_button:hover,
+.webix_secondary .webix_button.exit_button:hover {
+  opacity: 0.5;
+}
+.webix_secondary .webix_button.exit_button,
+.webix_secondary .webix_button.exit_button:hover,
+.webix_secondary .webix_button.exit_button:active,
+.webix_secondary .webix_button.exit_button:focus {
+  background-color: inherit !important;
+}
+.icon_button,
+.icon_exit_button,
+.exit_button_label,
+.icon_button_label {
+  float: left;
+}
+.icon_button_label {
+  line-height: 36px;
+  font-size: medium;
+}
+.exit_button_label {
+  line-height: 24px;
+  padding-left: 5px;
+}
+.webix_all_tabs .webix_item_tab {
+  line-height: 20px;
+}
+.exit_button_label,
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item {
+  font-size: small;
+}
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item {
+  outline: none;
+  font-weight: 500;
+}
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item {
+  opacity: 0.9;
+}
+.center_text,
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu .webix_list_item {
+  text-align: center;
+}
+.webix_list_item.menu {
+  padding: 2px 6px;
 }
 

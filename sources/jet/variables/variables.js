@@ -10,14 +10,109 @@ export const tables_excludeColumns = [ //столбцы, к которым не 
 ]
 
 export const screens = { //названия, id и параметры всех вкладок основного экрана
-    arrivals: {name: "Поступления", id: "_arrivals", width: 140},
+    arrivals: {name: "Приходы", id: "_arrivals", width: 140},
     movings: {name: "Перемещения", id: "_movings", width: 120},
     transfers: {name: "В розницу", id: "_transfers", width: 120},
-    shipments: {name: "Отгрузки", id: "_shipments", width: 120},
+    shipments: {name: "Продажи", id: "_shipments", width: 120},
     info: {id: "_mView", width: 120, name: undefined},
     balances: {id: "_balances", name: "Остатки", width: 100},
     orders: {name: "Заказы", id: "_orders", width: 120},
 }
+
+export const button_menu_options = {
+
+    contragents: [
+        {id: 16000, value: "Контрагенты"},
+        {id: 26000, value: "Группы контрагентов"},
+        {id: 36000, value: "Виды контрагентов"},
+        {id: 46000, value: "Сегменты контрагентов"},
+        {id: 56000, value: "Подразделения контрагентов"},
+    ],
+
+    classifiers: [
+        {id: 15000, value: "Валюты"},
+        {id: 25000, value: "Банки"},
+        {id: 35000, value: "Страны"},
+        {id: 45000, value: "Регионы"},
+        {id: 55000, value: "НДС"},
+        {id: 65000, value: "Торговые марки"},
+        {id: 75000, value: "СПЕ"},
+        {id: 85000, value: "Формы выпуска"},
+        {id: 95000, value: "Упаковки"},
+        {id: 105000, value: "МНН"},
+        {id: 115000, value: "Мегакатегории"},
+        {id: 125000, value: "Производители"},
+        {id: 135000, value: "Группы"},
+        {id: 145000, value: "Направления"},
+        {id: 155000, value: "Дозировки"},
+        {id: 165000, value: "Категории"},
+        {id: 175000, value: "Области применения"},
+    ],
+
+    products: [
+        {id: 14000, value: "Остатки"},
+        {id: 24000, value: "Движение товаров"},
+        {id: 34000, value: "Номенклатура"},
+        {id: 44000, value: "Группы номенклатуры"},
+        {id: 54000, value: "Бренды"},
+        {id: 64000, value: "Виды номенклатуры"},
+        {id: 74000, value: "Сегменты номенклатуры"},
+        {id: 84000, value: "Штрихкоды"},
+    ],
+
+    journals: [
+        {id: 13000, value: "Приходы"},
+        {id: 23000, value: "Оприходывания остатков"},
+        {id: 33000, value: "Перемещения"},
+        {id: 43000, value: "Заказы"},
+        {id: 53000, value: "Продажи"},
+        {id: 63000, value: "Списания"},
+    ],
+
+    documents: [
+        {id: 12000, value: "Приход"},
+        {id: 22000, value: "Перемещение"},
+        {id: 32000, value: "Продажа"},
+        {id: 42000, value: "Ввод остатков"},
+        {id: 52000, value: "Списание"},
+
+    ],
+    options: [
+        {id: 11000, value: "Пользователи"},
+        {id: 21000, value: "Роли пользователей"},
+        {id: 31000, value: "Интерфейсы"},
+        {id: 41000, value: "Что-то еще", submenu: [
+            {id: 41001, value: "Что-то еще 1"},
+            {id: 41002, value: "Что-то еще 2"},
+            {id: 41003, value: "Что-то еще 3"},
+        ]},
+    ],
+
+    managements: [
+        {id: 10000, value: "Предприятие", submenu: [
+            {id: 10001, value: "Организации"},
+            {id: 10002, value: "Склады"},
+            {id: 10003, value: "Подразделения"},
+        ]},
+        {id: 20000, value: "Персонал", submenu: [
+            {id: 20001, value: "Физические лица"},
+            {id: 20002, value: "Сотрудники"},
+            {id: 20003, value: "Должности"},
+            {id: 20004, value: "Графики"},
+        ]},
+        {id: 30000, value: "Ценообразование", submenu: [
+            {id: 30001, value: "Типы цен"},
+            {id: 30002, value: "Типы скидок"},
+            {id: 30003, value: "Ценовые группы"},
+        ]},
+        {id: 40000, value: "Маркетинг", submenu: [
+            {id: 40001, value: "Типы мероприятий"},
+            {id: 40002, value: "Партнеры"},
+            {id: 40003, value: "Категории подразделений"},
+        ]},
+    ]
+}
+
 
 export const menu_options = [ //все возможные пункты контекстного меню
     {id: 1, value: "Скопировать поле"},

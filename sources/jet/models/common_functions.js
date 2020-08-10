@@ -55,6 +55,18 @@ export const newDocument = {
         doc.show(blank_item, webix.UIManager.getFocus(), table);
     },
 
+    movement: () => {
+        document.message('Перемещение')
+    },
+
+    rest: () => {
+        document.message('Ввод остатков')
+    },
+
+    writeoff: () => {
+        document.message('Списание')
+    }
+
 
 }
 

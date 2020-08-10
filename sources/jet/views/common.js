@@ -1,5 +1,4 @@
 "use strict";
-import {names_translates} from "../variables/variables"
 
 function getTranslates() {
     let params_to = {method:"get_translates", kwargs: {"user": "XXX"}}
