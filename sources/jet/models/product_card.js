@@ -3,7 +3,7 @@
 import {JetView} from "webix-jet";
 import { emptyWidth } from "../variables/variables";
 import TemplateComboCard from "../models/template_combo_p_card";
-import {getProduct, setProduct, getId, checkCode} from "../models/data_processing";
+import {refSingle, getDatas, checks} from "../models/data_processing";
 
 
 export default class ProductCardView extends JetView{
@@ -18,9 +18,9 @@ export default class ProductCardView extends JetView{
 
         const fourth = 244;
         const third = 330;
-        
+
         const row1 = {cols: [
-            {view: "combo", 
+            {view: "combo",
                 name: "c_type",
                 localId: "__c_type",
                 label: "Тип товара",
@@ -33,7 +33,7 @@ export default class ProductCardView extends JetView{
                     body: {
                         tooltip: true,
                         type:{
-                            width:"auto"          
+                            width:"auto"
                         },
                         autowidth: true,
                         parentName: "c_type",
@@ -42,9 +42,6 @@ export default class ProductCardView extends JetView{
                         data: [{id: 1, value: "Лекарственное средство"},
                             {id: 2, value: "Прочие товары"},
                         ],
-                        // url: function(params) {
-                        //     return productGetFilters(params, this);
-                        // },
                         type:{
                             height:32
                         }
@@ -53,7 +50,7 @@ export default class ProductCardView extends JetView{
                 value: 1,
             },
             {width: emptyWidth*2},
-            {view: "combo", 
+            {view: "combo",
                 tooltip: true,
                 name: "c_gvnls",
                 localId: "__c_gvnls",
@@ -70,9 +67,6 @@ export default class ProductCardView extends JetView{
                         data: [{id: 1, value: "Да"},
                             {id: 2, value: "Нет"},
                         ],
-                        // url: function(params) {
-                        //     return productGetFilters(params, this);
-                        // },
                         type:{
                             height:32
                         }
@@ -85,7 +79,7 @@ export default class ProductCardView extends JetView{
                                             labelPosition: "left", name: "c_vatid", value: "2006552811470000003",
                                             fitMaster: true}),
             {minWidth: emptyWidth*2},
-            {view: "text", 
+            {view: "text",
                 name: "c_nnt",
                 localId: "__c_nnt",
                 label: "Код товара",
@@ -103,7 +97,7 @@ export default class ProductCardView extends JetView{
                 tooltip: "Сгенерировать автоматически",
                 on: {
                     onItemClick: () => {
-                        let new_id = getId();
+                        let new_id = getDatas.new_id();
                         if (new_id && new_id.data) {
                             this.$$("__c_nnt").setValue(new_id.data)
                         }
@@ -115,15 +109,15 @@ export default class ProductCardView extends JetView{
         ]};
 
         const row2 = {cols: [
-            new TemplateComboCard(this.app, {width: third, labelName: "Группа", 
+            new TemplateComboCard(this.app, {width: third, labelName: "Группа",
                                             name: "c_gpid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Форма выпуска", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Форма выпуска",
                                             name: "c_rfid", //value: "2006552811470000003",
                                             fitMaster: true}),
             {width: emptyWidth*2},
-            {view: "text", 
+            {view: "text",
                 name: "c_doseval",
                 tooltip: true,
                 localId: "__c_dosval",
@@ -136,7 +130,7 @@ export default class ProductCardView extends JetView{
                 value: "",
 
             },
-            new TemplateComboCard(this.app, {width: 80, labelName: "<span style='color: transparent'>_</span>", 
+            new TemplateComboCard(this.app, {width: 80, labelName: "<span style='color: transparent'>_</span>",
                                             name: "c_doseid", //value: "2006552811470000003",
                                             fitMaster: true}),
             {width: emptyWidth*2},
@@ -145,23 +139,23 @@ export default class ProductCardView extends JetView{
                                             fitMaster: !true}),
         ]};
 
-        
+
         const row3 = {cols: [
-            new TemplateComboCard(this.app, {width: third, labelName: "МНН", 
+            new TemplateComboCard(this.app, {width: third, labelName: "МНН",
                                             name: "c_mnnid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: third, labelName: "Производитель", 
+            new TemplateComboCard(this.app, {width: third, labelName: "Производитель",
                                             name: "c_manid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: third, labelName: "Страна производства", 
+            new TemplateComboCard(this.app, {width: third, labelName: "Страна производства",
                                             name: "c_mancid", //value: "2006552811470000003",
-                                            fitMaster: !true}),            
+                                            fitMaster: !true}),
         ]};
 
         const row4 = {cols: [
-            {view: "text", 
+            {view: "text",
                 name: "c_pack",
                 tooltip: true,
                 localId: "__c_pack",
@@ -174,33 +168,33 @@ export default class ProductCardView extends JetView{
                 value: "",
             },
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Первичная упаковка", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Первичная упаковка",
                                             name: "c_ppid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Вторичная упаковка", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Вторичная упаковка",
                                             name: "c_psid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Третичная упаковка", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Третичная упаковка",
                                             name: "c_ptid", //value: "2006552811470000003",
                                             fitMaster: !true}),
         ]};
 
         const row5 = {cols: [
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Область применения", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Область применения",
                                             name: "c_aaid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Направление", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Направление",
                                             name: "c_dirid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Мегакатегория", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Мегакатегория",
                                             name: "c_megaid", //value: "2006552811470000003",
                                             fitMaster: !true}),
             {width: emptyWidth*2},
-            new TemplateComboCard(this.app, {width: fourth, labelName: "Категория", 
+            new TemplateComboCard(this.app, {width: fourth, labelName: "Категория",
                                             name: "c_catid", //value: "2006552811470000003",
                                             fitMaster: !true}),
         ]};
@@ -235,8 +229,8 @@ export default class ProductCardView extends JetView{
                     elements: [
                         row1,
                         {cols: [
-                            {view:"text", 
-                                hidden: true, 
+                            {view:"text",
+                                hidden: true,
                                 name: "c_id",
                                 value: ""
                             },
@@ -253,7 +247,7 @@ export default class ProductCardView extends JetView{
                             },
                             {rows: [
                                 {},
-                                {view: "button", 
+                                {view: "button",
                                     label: "COP",
                                     width: 50,
                                     tooltip: "Скопировать в полное название",
@@ -268,7 +262,7 @@ export default class ProductCardView extends JetView{
                                 },
                             ]},
                         ]},
-                        {view: "text", 
+                        {view: "text",
                             name: "c_namefull",
                             css: "card_text_field",
                             localId: "__c_namefull",
@@ -278,7 +272,7 @@ export default class ProductCardView extends JetView{
                             labelPosition: "top",
                             labelWidth: 180,
                             value: "",
-                            
+
                         },
                         row3,
                         row2,
@@ -286,7 +280,7 @@ export default class ProductCardView extends JetView{
                         row5,
                     ]
                 },
-                {borderless: !true, 
+                {borderless: !true,
                     padding: 4,
                     cols: [
                         {},
@@ -308,7 +302,7 @@ export default class ProductCardView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "Отменить",
+                            label: "Закрыть",
                             width: 136,
                             localId: "__cancel",
                             on: {
@@ -318,7 +312,7 @@ export default class ProductCardView extends JetView{
                             }
                         },
                     ]
-                },           
+                },
             ]}
         }
 
@@ -340,9 +334,9 @@ export default class ProductCardView extends JetView{
     hide(){
         // webix.UIManager.removeHotKey("up", null, this.$$("_popup"));
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     setUnChange() {
@@ -361,7 +355,6 @@ export default class ProductCardView extends JetView{
     }
 
     parseProduct(product) {
-        // console.log(product);
         let p_id;
         if (product) {
             // редактируем, id уже есть
@@ -371,29 +364,27 @@ export default class ProductCardView extends JetView{
         } else {
             // id пустой
         }
-        //делаем запрос на сервер 
-        let req_data = getProduct(p_id);
+        //делаем запрос на сервер
+        let req_data = refSingle.get(p_id, "product");
 
         //и парсим товар
         this.$$("__p_form").blockEvent();
         if (req_data){
             let data = req_data.data[0];
-            // console.log('data_prod', data);
             this.$$("__p_form").parse(data);
         }
-        this.$$("__p_form").unblockEvent();        
+        this.$$("__p_form").unblockEvent();
 
     }
 
 
     validateCard(data){
         let result = false;
-        // console.log('data', data);
         if (!data.c_name || data.c_name.length < 2) result = "Укажите название товара"
         if (!data.c_namefull || data.c_namefull.length < 2) result = "Укажите полное название товара"
         if (!data.c_nnt) result = "Укажите код товара"
         if (!this.edided) {
-            if (!checkCode(data.c_nnt)) result = "Код товара не уникален"
+            if (!checks.code(data.c_nnt)) result = "Код товара не уникален"
         }
 
         return result
@@ -405,15 +396,13 @@ export default class ProductCardView extends JetView{
         if (valid) return valid;
         let result = false
         let p_table = $$(this.parent.table_id)
-        // console.log('pt', );
-        let r_data = setProduct(data);
-        // console.log('r_d', r_data);
+        let r_data = refSingle.save(data, "product");
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
         if(p_table) {
             if (this.edided.id) {
                 p_table.updateItem(this.edided.id, r_data.data[0]);
             } else {
-                p_table.add(r_data.data[0], 0);   
+                p_table.add(r_data.data[0], 0);
             }
         }
 
@@ -423,11 +412,6 @@ export default class ProductCardView extends JetView{
 
 
     ready() {
-        // webix.UIManager.addHotKey("Esc", () => { 
-        //     console.log('----');
-        //     this.$$("__cancel").callEvent("onItemClick")
-        //     return false; 
-        // }, this.$$("_popup"));
         //получаем значение товара если есть id, иначе - товар по умолчанию.
         this.parseProduct(this.edided)
         // и затем парсим в форму

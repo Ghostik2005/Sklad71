@@ -63,7 +63,6 @@ export default class TemplateCenterContextMenu extends JetView{
 
     show(e, position){
         let context = this.getRoot().getContext();
-        // console.log('c', context);
         this.clearAll();
         this.parse(menu_options);
         let id_hide = []

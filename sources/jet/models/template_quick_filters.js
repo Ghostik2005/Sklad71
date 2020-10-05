@@ -74,9 +74,7 @@ export default class TemplateQuickFilters extends JetView{
     }
 
     checkTag(name, state, setF=true) {
-        // this.app.commonWidgets.shipments.menu_filters.hide();
         //выделяем выбранное слово, остальные сбрасываем
-        // console.log('name', name);
         let label = this.$$(name).$view.children[0].children[1];
         if (!label.classList.contains('ordinary_label') && setF) {
             state = ''

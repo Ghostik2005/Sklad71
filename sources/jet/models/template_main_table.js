@@ -6,10 +6,12 @@ import TemplateMainHeaderView from "../models/template_main_table_header";
 
 export default class TemplateMainTableView extends JetView{
     
-    constructor(app, name) {
+    constructor(app, name, c_header) {
         super(app);
         this.p_name = name;
-        console.log('name', name);
+        this.app.commonWidgets[name] = {};
+        this.c_header = c_header || TemplateMainHeaderView;
+
 
     }
 
@@ -19,7 +21,7 @@ export default class TemplateMainTableView extends JetView{
         var ui = {
             type:"line",
             rows: [
-                new TemplateMainHeaderView(app, local_this.p_name),
+                new local_this.c_header(app, local_this.p_name),
                 {height: 2},
                 new TemplateCenterView(app, local_this.p_name),
             ],
@@ -29,7 +31,7 @@ export default class TemplateMainTableView extends JetView{
 
 
     init(){
-
+        
     }
 
     ready() {

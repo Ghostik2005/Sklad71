@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {getOrdersDocument, saveOrdersDocument, checkOpened} from "../models/data_processing";
+import {documentProcessing, checks} from "../models/data_processing";
 import {dtColumns} from "../variables/orders_document_dt";
 import DocumentHeader from "../models/document_header"
 
@@ -29,24 +29,19 @@ export default class OrderBody extends JetView{
                     // (this.change == true) ? this.$$("__save").show() : this.$$("__save").hide();
                     // (this.change == true) ? this.$$("__cancel").show() : this.$$("__cancel").hide();
                     this.$$("__table").clearAll();
-                    let data = getOrdersDocument(this.doc.n_id)
+                    let data = documentProcessing.get(this.doc.n_id, "orders");
                     // data.data.push({"n_product": "...добавить"});
-                    // console.log('id', data);
                     this.$$("__table").parse(data);
                 },
                 onHide: () => {
-                    checkOpened(this.doc.n_id, true);
+                    checks.opened(this.doc.n_id, true);
                     if (this.focus) webix.UIManager.setFocus(this.focus);
                 }
             },
             body: {
                 rows:[
-                    {
-                        $subview: new DocumentHeader(th.app, th, true),
-                        localId: "__header",
-                    },
-                    {
-                        view: "datatable",
+                    new DocumentHeader(th.app, th, true),
+                    {view: "datatable",
                         borderless: true,
                         name: "__orders_document",
                         clipboard: true,
@@ -69,10 +64,6 @@ export default class OrderBody extends JetView{
                             yCount: 4
                         },
                         data: {},
-                        // url: function() {
-                        //     console.log('th', this.$scope.doc.doc_id)
-                        //     return getOrdersDocument(this.$scope.doc.doc_id);
-                        // },
                         css:"webix_header_border center_dt",
                         scroll: 'xy',
                         tooltip: true,
@@ -88,10 +79,15 @@ export default class OrderBody extends JetView{
                                 th.setChange();
                             },
                             onLiveEdit: function() {
-                                // console.log('edit');
                             },
                             onDataUpdate: function() {
                                 th.setChange();
+                            },
+                            onItemClick: function(row, ev) {
+                                let item = this.getItem(row)
+                                if (item.n_product == '...добавить') {
+                                    this.callEvent('onItemDblClick', [row,])
+                                }
                             },
                             onItemDblClick: function(item) {
                             },
@@ -143,7 +139,6 @@ export default class OrderBody extends JetView{
                                         let not_saved = this.$$("__save").callEvent('onItemClick');
                                         if (!not_saved) {
                                             let r_data = app.getService("common").holdDocument('arrival', this.doc.n_id, this.doc.id);
-                                            console.log('r_data', r_data);
                                             // return
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
                                             if (r_data.data) {
@@ -158,15 +153,15 @@ export default class OrderBody extends JetView{
                                             } else {
                                                 document.message("Ошибка проведения транзакции","error", 3)
                                             }
-                                            
-                                        }   
+
+                                        }
                                     }
                                 }
                             },
                             {view: "button",
                                 width: 136,
                                 localId: "__cancel",
-                                label: "Отменить",
+                                label: "Закрыть",
                                 on: {
                                     onItemClick: ()=>{
                                         this.hide();
@@ -191,7 +186,7 @@ export default class OrderBody extends JetView{
             width:500
         }).then(function(result){
             switch(result){
-                case "0": 
+                case "0":
                     document.message("Good!");
                     break;
                 case "1":
@@ -200,13 +195,11 @@ export default class OrderBody extends JetView{
                 case "2":
                     document.message("Come back later");
                     break;
-            }   
+            }
         });
     }
 
     show(doc, focus, table) {
-        // console.log('header', this.getRoot());
-        // console.log('doc', doc);
         this.flag_new = doc.flag_new;
         this.change = false;
         this.focus = focus;
@@ -214,11 +207,11 @@ export default class OrderBody extends JetView{
         this.doc = doc;
         if (doc) {
             let state_item = states[doc.n_state];
-            this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` + 
+            this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` +
             ` Заказ покупателя от ${webix.i18n.dateFormatStr(doc.n_dt_invoice)}, ${doc.n_recipient || ''}`);
             this.getRoot().show();
             return webix.UIManager.setFocus(this.$$("__table"))
-        };        
+        };
         return false
     }
 
@@ -242,14 +235,15 @@ export default class OrderBody extends JetView{
 
     saveDocumentServer(th, data){
         let result = false
-        let r_data = saveOrdersDocument(data, th.doc.id);
-        // console.log('r_d', r_data);
+        let r_data = documentProcessing(data, th.doc.id, "orders");
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
         if (this.table) {
             if (!this.flag_new) {
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
+                this.doc = this.table.getItem(this.table.getFirstId())
+                this.getRoot().getChildViews()[1].getChildViews()[1].$scope.$$("__n_id").setValue(this.doc.n_id)
             }
         }
         return result

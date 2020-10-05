@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {productSelectionGetData} from "../models/data_processing";
+import {getDatas} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 import TemplateProductsView from "../models/template_products_dt"
 import {prodSelColumns} from "../variables/product_selection_dt";
@@ -20,7 +20,7 @@ export default class ProductSelectionView extends JetView{
         this.table_id = webix.uid();
         let dt = new TemplateProductsView(th.app, {
             columns: prodSelColumns,
-            loadFunction: productSelectionGetData,
+            loadFunction: getDatas.product_data,
             sorting: {id: "c_name", dir: "asc"},
             topParent: th,
             id: this.table_id,
@@ -46,52 +46,26 @@ export default class ProductSelectionView extends JetView{
                         n_total_summ: '',
                         n_prod_id: new_item.c_id
                     }
-                    if (th.s_sel) {
-                    // if (this.$scope.s_sel) {
-                        //заменяем товар в родителе, закрываем окно
-                        // let old_item = JSON.parse(JSON.stringify(this.$scope.parent.getItem(this.$scope.s_sel)));
-                        let old_item = JSON.parse(JSON.stringify(th.parent.getItem(th.s_sel)))
-                        console.log('old_item', old_item);
-                        // let q = this.$scope.searchDuplicates(this.$scope.parent, new_item.n_prod_id);
-                        let q = th.searchDuplicates(th.parent, new_item.n_prod_id);
-                        if (q) {
-                            let new_item = th.parent.getItem(q);
-                            new_item.n_amount += 1;
-                            // this.$scope.parent.updateItem(q, new_item)
-                            th.parent.updateItem(q, new_item)
-                            // this.$scope.parent.remove(old_item.id)
-                            th.parent.remove(old_item.id)
-                        } else {
-                            // this.$scope.parent.updateItem(this.$scope.s_sel.row, new_item);
+                    let old_item = JSON.parse(JSON.stringify(th.parent.getItem(th.s_sel)))
+                    let q = th.searchDuplicates(th.parent, new_item.n_prod_id);
+                    if (q) {
+                        let new_item = th.parent.getItem(q);
+                        new_item.n_amount += 1;
+                        th.parent.updateItem(q, new_item);
+                        if (q != old_item.id) th.parent.remove(old_item.id)
+                    } else {
+                        if (th.s_sel) {
                             th.parent.updateItem(th.s_sel.row, new_item);
                             if (! old_item.n_prod_id) {
                                 delete old_item.id;
-                                // this.$scope.parent.add(old_item)
                                 th.parent.add(old_item)
                             }
-                        }
-                        th.hide();
-                        // this.$scope.hide();
-                    } else {
-                        //добавляем товар в родетеля, окно оставляем открытым
-                        // if (this.$scope.parent.config.view === 'datatable') {
-                        if (th.parent.config.view === 'datatable') {
-                            // let q = this.$scope.searchDuplicates(this.$scope.parent, new_item.n_prod_id);
-                            let q = th.searchDuplicates(th.parent, new_item.n_prod_id);
-                            if (q) {
-                                // let new_item = this.$scope.parent.getItem(q);
-                                let new_item = th.parent.getItem(q);
-                                new_item.n_amount += 1;
-                                // this.$scope.parent.updateItem(q, new_item)
-                                th.parent.updateItem(q, new_item)
-                            } else {
-                                // this.$scope.parent.$scope.add_new(new_item);
-                                th.parent.$scope.add_new(new_item);
-                            }
                         } else {
-                            console.log("new_item", new_item)
-                        }  
-                    }
+                            th.parent.$scope.add_new(new_item);
+                        }
+
+                    };
+                    if (th.s_sel) th.hide();
                 }
             },
         });
@@ -148,10 +122,8 @@ export default class ProductSelectionView extends JetView{
                             hidden: true,
                             on: {
                                 onItemClick: ()=>{
-                                    // let item = this.$$("__table").getSelectedItem();
                                     let item = $$(this.table_id).getSelectedItem();
-                                    console.log('item', item);
-                                    let prod_select = this.ui( 
+                                    let prod_select = this.ui(
                                         new ProductCardView(this.app, this, {c_id: item.c_id, c_name: item.c_name, id: item.id})
                                     );
                                     prod_select.show();
@@ -159,7 +131,7 @@ export default class ProductSelectionView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "add",
+                            label: "доб.",
                             width: 50,
                             tooltip: "Добавить товар",
                             localId: "__add",
@@ -174,7 +146,6 @@ export default class ProductSelectionView extends JetView{
                     ]
                     },
                     dt,
-                    // dattable,
                     {borderless: !true,
                         cols: [
                             {},
@@ -208,11 +179,9 @@ export default class ProductSelectionView extends JetView{
     }
 
     getData(){
-        // let t = this.$$("__table")
         let t = $$(this.table_id)
         t.clearAll(true);
         t.loadNext(0, 0, 0, 0, 1).then((data)=> {
-            // console.log('data1', data);
             if (data) {
                 t.clearAll(true);
                 t.parse(data);
@@ -226,13 +195,11 @@ export default class ProductSelectionView extends JetView{
         try {
             re = this.$$("__search").getValue();
         } catch(e) {
-            // console.log('e', e)
         }
         return re;
     }
 
     show(header){
-        // console.log(header)
         if (header) {
             this.getRoot().getHead().getChildViews()[0].setValue(header);
         }
@@ -242,9 +209,9 @@ export default class ProductSelectionView extends JetView{
 
     hide(){
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     ready() {

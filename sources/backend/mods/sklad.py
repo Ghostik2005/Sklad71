@@ -18,80 +18,112 @@ else:
 
 class SKLAD:
 
-    def __init__(self):
+    def __init__(self, log=None):
+
+        self.log = log
 
         self._range_no = 10 # 0, 1, 10, 100
 
         # self.RPC = botclient.BOTProxy('dbbot.plx-db0', ('127.0.0.1', 4222))
-        self.RPC = botclient.BOTProxy('dbbot.nomad', ('127.0.0.1', 4222))
+        self.RPC = botclient.BOTProxy('dbbot.test', ('127.0.0.1', 4222))
         self._set_gen_id()
 
         try:
-            from . import balance
+            from . import balances
         except ImportError:
-            self.balance = self.__not_implemented
+            self.balances = self.__not_implemented
         else:
-            self.balance = balance.BALANCE(self.RPC, self)
+            self.balances = balances.BALANCE(self)
 
         try:
             from . import shipments
         except ImportError:
             self.shipments = self.__not_implemented
         else:
-            self.shipments = shipments.SHIPMENTS(self.RPC, self)
+            self.shipments = shipments.SHIPMENTS(self)
+
+        try:
+            from . import movements
+        except ImportError:
+            self.movements = self.__not_implemented
+        else:
+            self.movements = movements.MOVEMENTS(self)
 
         try:
             from . import orders
         except ImportError:
             self.orders = self.__not_implemented
         else:
-            self.orders = orders.ORDERS(self.RPC, self)
+            self.orders = orders.ORDERS(self)
 
         try:
             from . import arrivals
         except ImportError:
             self.arrivals = self.__not_implemented
         else:
-            self.arrivals = arrivals.ARRIVALS(self.RPC, self)
+            self.arrivals = arrivals.ARRIVALS(self)
+
+        try:
+            from . import rests
+        except ImportError:
+            self.rests = self.__not_implemented
+        else:
+            self.rests = rests.RESTS(self)
+
+    def _print(self, *msg):
+
+        if self.log:
+            self.log(' '.join([str(i) for i in msg]), kind='sklad_info')
+        else:
+            print(*msg)
+
+
+    def get_test(self):
+        return "test"
 
     def _request(self, sql):
-        return self.RPC('fdb.execute', sync=(1, 7))('nomad/new_sklad_test.ro', sql)
-        _c = self.RPC('fdb', sync=(1, 7))
-        print('+'*20)
-        print(_c)
-        return _c.execute('nomad/new_sklad_test.ro', sql) 
-        # return _c.execute('nomad/new_sklad_test', sql) 
+        return self.RPC('fdb.execute', sync=(1, 7))('ms/new_sklad_test.ro', sql)
+        # _c = self.RPC('fdb', sync=(1, 7))
+        # self._print('+'*20)
+        # self._print(_c)
+        # # return _c.execute('nomad/new_sklad_test.ro', sql)
+        # return _c.execute('ms/new_sklad_test', sql)
 
     def _execute(self, sql):
         _c = self.RPC('fdb')
-        return _c.execute('nomad/new_sklad_test', sql) 
+        return _c.execute('ms/new_sklad_test', sql)
 
     def _uid_range(self):
         with requests.get('http://mshub.ru/ext/uid%s' % self._range_no, timeout=(3, 5), verify=False) as f:
             _min, _max = f.text.split()[:2]
+            self._print(_min, _max)
             return int(_min), int(_max)
 
     def __not_implemented(self):
         return "not_implemented"
 
     def _set_gen_id(self):
-        _min, _max = self._uid_range()
-        sql = f"""ALTER SEQUENCE IF EXISTS gen_id
---MINVALUE {_min}
-MAXVALUE {_max}
-START {_min+1}
-RESTART {_min+1}"""
-        ret = self._execute(sql)
+        try:
+            _min, _max = self._uid_range()
+        except:
+            pass
+        else:
+            sql = f"""ALTER SEQUENCE IF EXISTS gen_id
+    --MINVALUE {_min}
+    MAXVALUE {_max}
+    START {_min+1}
+    RESTART {_min+1}"""
+            ret = self._execute(sql)
 
 
 
 
     def get_filter_list(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_filter_list ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_filter_list ", "*"*10)
+        self._print("*"*10, " get_filter_list ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_filter_list ", "*"*10)
         c_name = kwargs.get('filterName')
         doc_type = kwargs.get('docType')
         rows = []
@@ -152,10 +184,10 @@ order by {c_name} asc"""
 
     def check_prod_code(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " check_prod_code ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " check_prod_code ", "*"*10)
+        self._print("*"*10, " check_prod_code ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " check_prod_code ", "*"*10)
         code = kwargs.get('code')
         if code:
             sql = f"""select c_nnt from ref_products where c_nnt = '{code}'"""
@@ -171,11 +203,11 @@ order by {c_name} asc"""
 
     def get_new_id(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_new_id ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_new_id ", "*"*10)
-        
+        self._print("*"*10, " get_new_id ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_new_id ", "*"*10)
+
         sql = """select nextval('gen_id'::regclass);"""
         r = self._execute(sql)[0][0]
         t1 = time.time() - t
@@ -186,11 +218,10 @@ order by {c_name} asc"""
 
     def get_states(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_states ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_states ", "*"*10)
-
+        self._print("*"*10, " get_states ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_states ", "*"*10)
         sql = """select n_id, n_value, n_picture, n_color, n_active
 from ref_states
 order by n_id
@@ -200,12 +231,11 @@ order by n_id
         ret = {}
         for row in rows:
             ret[str(row[0])] = {
-                "id": str(row[0]), 
+                "id": str(row[0]),
                 "value": row[1],
-                "picture": row[2], 
+                "picture": row[2],
                 "color": row[3]
             }
-        print(ret)
         t2 = time.time() - t1 - t
         answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
         return answer
@@ -213,10 +243,10 @@ order by n_id
 
     def get_translates(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_translates ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_translates ", "*"*10)
+        self._print("*"*10, " get_translates ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_translates ", "*"*10)
 
         sql = """select n_id, n_title, n_value
 from service_fields_translates
@@ -234,9 +264,43 @@ order by n_id
             # }
             # ret.append(r)
         t2 = time.time() - t1 - t
-        # print(ret)
+        # self._print(ret)
         answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
         return answer
+
+
+    def _get_movement_header(self, doc_id):
+        ret = []
+        sql = f"""select jmh.n_id, jmh.n_number, jmh.n_state, jmh.n_dt_invoice::date, s.n_name,
+rec.n_name, jmh.n_summ, jmh.n_nds, jmh.n_pos_numbers, emp.n_name,
+jmh.n_base, p.n_value, jmh.n_dt_change, jmh.ctid
+from journals_movements_headers jmh
+join ref_paids p on (jmh.n_paid = p.n_id)
+join ref_partners s on (jmh.n_supplier = s.n_id)
+join ref_partners rec on (jmh.n_recipient = rec.n_id)
+join ref_employees emp on (jmh.n_executor = emp.n_id)
+where jmh.n_id = {int(doc_id)};
+        """
+        rows = self._request(sql)
+        for row in rows:
+            r = {
+                "n_id": str(row[0]),
+                "n_number": row[1],
+                "n_state": row[2],
+                "n_dt_invoice": row[3],
+                "n_supplier": row[4],
+                "n_recipient": row[5],
+                "n_summ": row[6],
+                "n_nds": row[7],
+                "n_pos_numbers": row[8],
+                "n_executor": row[9],
+                "n_base": row[10],
+                "n_paid": row[11],
+                "n_dt_change": row[12]
+            }
+            ret.append(r)
+        return ret
+
 
     def _get_shipment_header(self, doc_id):
         ret = []
@@ -253,9 +317,9 @@ where jah.n_id = {int(doc_id)};
         rows = self._request(sql)
         for row in rows:
             r = {
-                "n_id": str(row[0]), 
+                "n_id": str(row[0]),
                 "n_number": row[1],
-                "n_state": row[2], 
+                "n_state": row[2],
                 "n_dt_invoice": row[3],
                 "n_supplier": row[4],
                 "n_recipient": row[5],
@@ -266,6 +330,34 @@ where jah.n_id = {int(doc_id)};
                 "n_base": row[10],
                 "n_paid": row[11],
                 "n_dt_change": row[12]
+            }
+            ret.append(r)
+        return ret
+
+    def _get_rest_header(self, doc_id):
+        ret = []
+        sql = f"""select jrh.n_id, jrh.n_number, jrh.n_state, jrh.n_dt_invoice::date,
+rec.n_name, jrh.n_summ, jrh.n_nds, jrh.n_pos_numbers, emp.n_name,
+jrh.n_base, jrh.n_dt_change, jrh.ctid
+from journals_rests_headers jrh
+join ref_partners rec on (jrh.n_recipient = rec.n_id)
+join ref_employees emp on (jrh.n_executor = emp.n_id)
+where jrh.n_id = {int(doc_id)};
+        """
+        rows = self._request(sql)
+        for row in rows:
+            r = {
+                "n_id": str(row[0]),
+                "n_number": row[1],
+                "n_state": row[2],
+                "n_dt_invoice": row[3],
+                "n_recipient": row[4],
+                "n_summ": row[5],
+                "n_nds": row[6],
+                "n_pos_numbers": row[7],
+                "n_executor": row[8],
+                "n_base": row[9],
+                "n_dt_change": row[10]
             }
             ret.append(r)
         return ret
@@ -285,9 +377,9 @@ where jah.n_id = {int(doc_id)};
         rows = self._request(sql)
         for row in rows:
             r = {
-                "n_id": str(row[0]), 
+                "n_id": str(row[0]),
                 "n_number": row[1],
-                "n_state": row[2], 
+                "n_state": row[2],
                 "n_dt_invoice": row[3],
                 "n_supplier": row[4],
                 "n_recipient": row[5],
@@ -301,79 +393,175 @@ where jah.n_id = {int(doc_id)};
             }
             ret.append(r)
         return ret
-    
+
     def _get_moving_header(self, doc_id):
         return []
 
     def _get_transfer_header(self, doc_id):
         return []
 
-
-    def _hold_shipment_document(self, doc_id):
-        sql = f"""insert into journals_products_movement (n_product_id, n_type, n_sign, 
- 										n_quantity, n_unit, n_document_id, 
- 										n_price_w_vats, 
- 										n_price_no_vats, 
+    def _hold_rest_document(self, doc_id):
+        sql = f"""insert into journals_products_movement (n_product_id, n_type, n_sign,
+ 										n_quantity, n_unit, n_document_id,
+ 										n_price_w_vats,
+ 										n_price_no_vats,
  										n_price_vats)
-select (jab.n_product->'n_product')::bigint, 'shipment', true, 
-(jab.n_product->'n_amount')::bigint, (jab.n_product->'n_unit')::text, 
-jab.n_doc_id::bigint,
-round(((jab.n_product->'n_price')::int + (((jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::int)::numeric), 
-(jab.n_product->'n_price')::numeric,
-round(( ( (jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::numeric)
-from journals_shipments_bodies jab
-where jab.n_doc_id = {int(doc_id)} and not jab.n_deleted;
+select (jrb.n_product->'n_product')::bigint, 'rest', true,
+(jrb.n_product->'n_amount')::bigint, (jrb.n_product->'n_unit')::text,
+jrb.n_doc_id::bigint,
+round(((jrb.n_product->'n_price')::int + (((jrb.n_product->'n_price')::numeric * (jrb.n_product->'n_vats_base')::numeric)/100)::int)::numeric),
+(jrb.n_product->'n_price')::numeric,
+round(( ( (jrb.n_product->'n_price')::numeric * (jrb.n_product->'n_vats_base')::numeric)/100)::numeric)
+from journals_rests_bodies jrb
+where jrb.n_doc_id = {int(doc_id)} and not jrb.n_deleted;
 
-update journals_products_balance jpb set
-n_quantity = jpb.n_quantity - 
-		(select (jsb.n_product->'n_amount')::bigint
-		from journals_shipments_bodies jsb
-		where jsb.n_doc_id = {int(doc_id)} and not jsb.n_deleted
-			and (jsb.n_product->'n_balance_id')::bigint=jpb.n_id
-	  	),
-n_dt = CURRENT_TIMESTAMP
-where jpb.n_id in 
-	(select (n_product->'n_balance_id')::bigint
-	from journals_shipments_bodies
-	where n_doc_id = {int(doc_id)} and not n_deleted
-	);
-
-update journals_orders_headers
-set n_state = 2 
-where n_id::text = 
-	(select jsb.n_base
-	 from journals_shipments_headers jsb 
-	 where jsb.n_id = {int(doc_id)}
-	);
-        """
-        print(sql)
-        return self._execute(sql)        
-
-    def _hold_arrival_document(self, doc_id):
-        sql = f"""insert into journals_products_movement (n_product_id, n_type, n_sign, 
- 										n_quantity, n_unit, n_document_id, 
- 										n_price_w_vats, 
- 										n_price_no_vats, 
- 										n_price_vats)
-select (jab.n_product->'n_product')::bigint, 'arrival', true, 
-(jab.n_product->'n_amount')::bigint, (jab.n_product->'n_unit')::text, 
-jab.n_doc_id::bigint,
-round(((jab.n_product->'n_price')::int + (((jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::int)::numeric), 
-(jab.n_product->'n_price')::numeric,
-round(( ( (jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::numeric)
-from journals_arrivals_bodies jab
-where jab.n_doc_id = {int(doc_id)} and not jab.n_deleted;
-
-insert into journals_products_balance 
+insert into journals_products_balance
 	(n_product_id,
 	n_quantity,
 	n_price,
 	n_vat,
 	n_consignment
 	)
-select 
-	(jab.n_product->'n_product')::bigint as n_product_id, 
-	(jab.n_product->'n_amount')::bigint as n_quantity, 
+select
+	(jrb.n_product->'n_product')::bigint as n_product_id,
+	(jrb.n_product->'n_amount')::bigint as n_quantity,
+	(jrb.n_product->'n_price')::numeric as n_price,
+	round(( ( (jrb.n_product->'n_price')::numeric * (jrb.n_product->'n_vats_base')::numeric)/100)::numeric) as n_vat,
+	replace((jrb.n_product->'n_consignment')::text, '"', '') as n_consignment
+from journals_rests_bodies jrb
+where jrb.n_doc_id = {int(doc_id)} and not jrb.n_deleted
+on conflict (n_product_id, n_price, n_vat, n_vat_included, n_warehouse, n_consignment)
+do update
+set
+	n_quantity = journals_products_balance.n_quantity::int +
+		(select (n_product->'n_amount')::int
+			from journals_rests_bodies
+			where n_doc_id = {int(doc_id)} and not journals_rests_bodies.n_deleted
+ 				and (n_product->'n_product')::bigint=journals_products_balance.n_product_id
+		),
+	n_dt = CURRENT_TIMESTAMP
+where journals_products_balance.n_product_id in (select (n_product->'n_product')::bigint
+from journals_rests_bodies
+where n_doc_id = {int(doc_id)} and not n_deleted)
+and journals_products_balance.n_consignment =
+	(select  journals_products_balance.n_consignment
+	from journals_products_balance jpb1
+	where jpb1.n_id = journals_products_balance.n_id)
+
+    returning journals_products_balance.n_id::text
+        """
+
+        # sql = f"select 1"
+        self._print(sql)
+
+        return self._execute(sql)
+
+    def _hold_movement_document(self, doc_id):
+        sql = f"""insert into journals_products_movement (n_product_id, n_type, n_sign,
+ 										n_quantity, n_unit, n_document_id,
+ 										n_price_w_vats,
+ 										n_price_no_vats,
+ 										n_price_vats)
+select (jmb.n_product->'n_product')::bigint, 'movement', true,
+(jmb.n_product->'n_amount')::bigint, (jmb.n_product->'n_unit')::text,
+jmb.n_doc_id::bigint,
+round(((jmb.n_product->'n_price')::int + (((jmb.n_product->'n_price')::numeric * (jmb.n_product->'n_vats_base')::numeric)/100)::int)::numeric),
+(jmb.n_product->'n_price')::numeric,
+round(( ( (jmb.n_product->'n_price')::numeric * (jmb.n_product->'n_vats_base')::numeric)/100)::numeric)
+from journals_movements_bodies jmb
+where jmb.n_doc_id = {int(doc_id)} and not jmb.n_deleted;
+
+update journals_products_balance jpb set
+n_quantity = jpb.n_quantity -
+		(select (jmb.n_product->'n_amount')::bigint
+		from journals_movements_bodies jmb
+		where jmb.n_doc_id = {int(doc_id)} and not jmb.n_deleted
+			and (jmb.n_product->'n_balance_id')::bigint=jpb.n_id
+	  	),
+n_dt = CURRENT_TIMESTAMP
+where jpb.n_id in
+	(select (n_product->'n_balance_id')::bigint
+	from journals_movements_bodies
+	where n_doc_id = {int(doc_id)} and not n_deleted
+	);
+
+update journals_orders_headers
+set n_state = 2
+where n_id::text =
+	(select jmb.n_base
+	 from journals_movements_headers jmb
+	 where jmb.n_id = {int(doc_id)}
+	);
+        """
+        self._print(sql)
+        return self._execute(sql)
+
+
+    def _hold_shipment_document(self, doc_id):
+        sql = f"""insert into journals_products_movement (n_product_id, n_type, n_sign,
+ 										n_quantity, n_unit, n_document_id,
+ 										n_price_w_vats,
+ 										n_price_no_vats,
+ 										n_price_vats)
+select (jsb.n_product->'n_product')::bigint, 'shipment', true,
+(jsb.n_product->'n_amount')::bigint, (jsb.n_product->'n_unit')::text,
+jsb.n_doc_id::bigint,
+round(((jsb.n_product->'n_price')::int + (((jsb.n_product->'n_price')::numeric * (jsb.n_product->'n_vats_base')::numeric)/100)::int)::numeric),
+(jsb.n_product->'n_price')::numeric,
+round(( ( (jsb.n_product->'n_price')::numeric * (jsb.n_product->'n_vats_base')::numeric)/100)::numeric)
+from journals_shipments_bodies jsb
+where jsb.n_doc_id = {int(doc_id)} and not jsb.n_deleted;
+
+update journals_products_balance jpb set
+n_quantity = jpb.n_quantity -
+		(select (jsb.n_product->'n_amount')::bigint
+		from journals_shipments_bodies jsb
+		where jsb.n_doc_id = {int(doc_id)} and not jsb.n_deleted
+			and (jsb.n_product->'n_balance_id')::bigint=jpb.n_id
+	  	),
+n_dt = CURRENT_TIMESTAMP
+where jpb.n_id in
+	(select (n_product->'n_balance_id')::bigint
+	from journals_shipments_bodies
+	where n_doc_id = {int(doc_id)} and not n_deleted
+	);
+
+update journals_orders_headers
+set n_state = 2
+where n_id::text =
+	(select jsb.n_base
+	 from journals_shipments_headers jsb
+	 where jsb.n_id = {int(doc_id)}
+	);
+        """
+        self._print(sql)
+        return self._execute(sql)
+
+    def _hold_arrival_document(self, doc_id):
+        sql = f"""insert into journals_products_movement (n_product_id, n_type, n_sign,
+ 										n_quantity, n_unit, n_document_id,
+ 										n_price_w_vats,
+ 										n_price_no_vats,
+ 										n_price_vats)
+select (jab.n_product->'n_product')::bigint, 'arrival', true,
+(jab.n_product->'n_amount')::bigint, (jab.n_product->'n_unit')::text,
+jab.n_doc_id::bigint,
+round(((jab.n_product->'n_price')::int + (((jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::int)::numeric),
+(jab.n_product->'n_price')::numeric,
+round(( ( (jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::numeric)
+from journals_arrivals_bodies jab
+where jab.n_doc_id = {int(doc_id)} and not jab.n_deleted;
+
+insert into journals_products_balance
+	(n_product_id,
+	n_quantity,
+	n_price,
+	n_vat,
+	n_consignment
+	)
+select
+	(jab.n_product->'n_product')::bigint as n_product_id,
+	(jab.n_product->'n_amount')::bigint as n_quantity,
 	(jab.n_product->'n_price')::numeric as n_price,
 	round(( ( (jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::numeric) as n_vat,
 	replace((jab.n_product->'n_consignment')::text, '"', '') as n_consignment
@@ -382,12 +570,12 @@ where jab.n_doc_id = {int(doc_id)} and not jab.n_deleted
 on conflict (n_product_id, n_price, n_vat, n_vat_included, n_warehouse, n_consignment)
 do update
 set
-	n_quantity = journals_products_balance.n_quantity::int + 
-		(select (n_product->'n_amount')::int 
+	n_quantity = journals_products_balance.n_quantity::int +
+		(select (n_product->'n_amount')::int
 			from journals_arrivals_bodies
 			where n_doc_id = {int(doc_id)} and not journals_arrivals_bodies.n_deleted
  				and (n_product->'n_product')::bigint=journals_products_balance.n_product_id
-		), 
+		),
 	n_dt = CURRENT_TIMESTAMP
 where journals_products_balance.n_product_id in (select (n_product->'n_product')::bigint
 from journals_arrivals_bodies
@@ -401,7 +589,7 @@ and journals_products_balance.n_consignment =
         """
         return self._execute(sql)
 
-    
+
     def _get_str(self, source):
 
         return source.split("\t")[-1]
@@ -409,19 +597,19 @@ and journals_products_balance.n_consignment =
     def create_order(self, *args, **kwargs):
         t = time.time()
         ret = ['ok',]
-        print("*"*10, " create_order ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " create_order ", "*"*10)
+        self._print("*"*10, " create_order ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " create_order ", "*"*10)
         o_path = "/data/projects/sklad71/prices"
         files = glob.glob(os.path.join(o_path, 'order51100-*.bz2'))
         for f_name in files:
-            print(f_name)
+            self._print(f_name)
             file_data = None
             with bz2.open(f_name, "r") as _f:
                 file_data = _f.read().decode()
             if file_data:
-                # print(file_data)
+                # self._print(file_data)
                 file_data = file_data.splitlines()
                 n_filename = self._get_str(file_data[1])
                 n_id_field = self._get_str(file_data[2])
@@ -437,7 +625,7 @@ and journals_products_balance.n_consignment =
                 n_summ = int(float(self._get_str(file_data[11]))*100)
                 n_recipient = 'Тверь, Волоколамский пр-т., 13' # self._get_str(file_data[12])
                 n_comment = self._get_str(file_data[13])
-                n_recipient_id = 2006547488710000020 #"?" 
+                n_recipient_id = 2006547488710000020 #"?"
 
                 sql_header = f"""insert into journals_orders_headers
 (n_state, n_supplier, n_filename,
@@ -446,10 +634,10 @@ and journals_products_balance.n_consignment =
 	n_dt_price, n_dt_create,
     n_number, n_dt_send, n_recipient,
 	n_recipient_id, n_summ, n_pos_numbers,
-    n_dt_recieved, n_comment) 
+    n_dt_recieved, n_comment)
 values (
 	1, (select n_partner_id from service_home_organization), '{n_filename}',
-	'{n_id_field}', '{n_name}', 
+	'{n_id_field}', '{n_name}',
 	'{n_p_id}', '{n_code}', '{n_inn}',
 	'{n_dt_price}'::timestamp, '{n_dt_create}'::timestamp,
 	'{n_number}', '{n_dt_send}'::timestamp, '{n_recipient}',
@@ -457,7 +645,7 @@ values (
 	current_timestamp, '{n_comment}'
 	) returning n_id"""
                 doc_id = self._execute(sql_header)[0][0]
-                print(doc_id)
+                self._print(doc_id)
                 table = file_data[16:]
                 sql = []
                 for row in table:
@@ -465,13 +653,13 @@ values (
                     sql_body = f"""insert into journals_orders_bodies (
 n_doc_id, n_product) values
 ({doc_id},
-('{{"n_code": "{row[0]}", "n_amount": {int(row[1])}, "n_price": {int(float(row[2])*100)}, 
+('{{"n_code": "{row[0]}", "n_amount": {int(row[1])}, "n_price": {int(float(row[2])*100)},
 	"n_product": "{row[3]}",
 	"n_man": "{row[4] if row[4] else ''}", "n_comment": "{row[5]}", "n_matrix": "{row[6]}"}}')::jsonb
 );"""
                     sql.append(sql_body)
                 sql = "\n".join(sql)
-                # print(sql)
+                # self._print(sql)
                 self._execute(sql)
 
 
@@ -496,19 +684,19 @@ n_doc_id, n_product) values
         ID_SPR
         """
         pp = [{"51100", 0}
-        ,["2020-06-26 11:07:24", "51100", [10000], "code", ["name".upper(), "", "name"], ["производитель".upper(), "", "производитель"], 
+        ,["2020-06-26 11:07:24", "51100", [10000], "code", ["name".upper(), "", "name"], ["производитель".upper(), "", "производитель"],
             "кол-во", 99999, "", "", "", "", 0, -1]
-        ,["2020-06-26 11:07:24", "51100", [10000], "code", ["name".upper(), "", "name"], ["производитель".upper(), "", "производитель"], 
+        ,["2020-06-26 11:07:24", "51100", [10000], "code", ["name".upper(), "", "name"], ["производитель".upper(), "", "производитель"],
             "кол-во", 99999, "", "", "", "", 0, -1]
         ]
         ret = ['ok',]
-        print("*"*10, " create_price ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " create_price ", "*"*10)
-        sql = """select date_trunc('second', n_dt), rp.c_namefull as name, rp.c_nnt as code, rm.c_name as manuf, rc.c_name as country, 
+        self._print("*"*10, " create_price ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " create_price ", "*"*10)
+        sql = """select date_trunc('second', n_dt), rp.c_namefull as name, rp.c_nnt as code, rm.c_name as manuf, rc.c_name as country,
 jpb.n_quantity as quant,
-case 
+case
 	when jpb.n_vat_included then jpb.n_price
 	else jpb.n_price + jpb.n_vat
 end as temp_price,
@@ -521,26 +709,26 @@ left join ref_manufacturers rm on (rp.c_manid = rm.c_id)
 left join ref_countries rc on (rp.c_mancid = rc.c_id)
 left join ref_vats rv on (rv.c_id = rp.c_vatid)
 where (jpb.n_price_price != 0 or jpb.n_price_price is not null) and jpb.n_consignment is not null;"""
-        
+
         rows = self._request(sql) or []
         s_code = "51100"
         f = [{s_code: 0},]
         for row in rows:
             if not row[3]: row[3] = ''
             r = [
-                row[0], 
-                s_code, 
+                row[0],
+                s_code,
                 [row[7]],
                 row[2],
                 [row[1].upper(), "", row[1]],
                 [row[3].upper(), "", row[3]],
                 f"{row[8]}",
-                row[5], 
-                "", 
-                "", 
+                row[5],
+                "",
+                "",
                 f"{row[8]}",
                 f"{row[8]}",
-                row[9], 
+                row[9],
                 -1
             ]
             f.append(r)
@@ -562,32 +750,32 @@ where (jpb.n_price_price != 0 or jpb.n_price_price is not null) and jpb.n_consig
         запрос на аутентификацию
         """
         t = time.time()
-        print("*"*10, " get_login ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_login ", "*"*10)
+        self._print("*"*10, " get_login ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_login ", "*"*10)
         user = kwargs.get('user', '')
         pwd = kwargs.get('user', 'pwd')
         ret = []
         row = ['belyaev', '0123456789somehashtotal32symbols']
 
-        sql = f"""select n_sklad_name, n_pwd from 
-ref_employees 
+        sql = f"""select n_sklad_name, n_pwd from
+ref_employees
 where n_sklad_name = '{user}'"""
         resp = self._request(sql)
-        print(resp)
+        self._print(resp)
         if resp:
             if resp[0][0] != user.lower():
                 answer = {"data": [], "params": args, "kwargs": kwargs, "reason": "user incorrect"}
             elif resp[0][1] != pwd:
                 answer = {"data": [], "params": args, "kwargs": kwargs, "reason": "pwd incorrect"}
-            answer = {"data": 
+            answer = {"data":
                 [{
                     "n_sklad_name": str(resp[0][0]),
                     "n_hash": row[1],},
-                ], 
+                ],
                 "params": args, "kwargs": kwargs}
-        else: 
+        else:
             answer = {"data": [], "params": args, "kwargs": kwargs, "reason": "user incorrect"}
 
         return answer
@@ -597,13 +785,13 @@ where n_sklad_name = '{user}'"""
         запрос прав пользователя
         """
         t = time.time()
-        print("*"*10, " get_credentionals ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_credentionals ", "*"*10)
+        self._print("*"*10, " get_credentionals ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_credentionals ", "*"*10)
         user = kwargs.get('user', '')
         ret = []
-        sql = f"""select re.n_id, re.n_name, re.n_params, re.n_sklad_name, sho.n_partner_id, rp.n_name  from 
+        sql = f"""select re.n_id, re.n_name, re.n_params, re.n_sklad_name, sho.n_partner_id, rp.n_name  from
 ref_employees re, service_home_organization sho
 join ref_partners rp ON rp.n_id = sho.n_partner_id
 where re.n_sklad_name = '{user}'"""
@@ -626,27 +814,25 @@ where re.n_sklad_name = '{user}'"""
         удаление документа
         """
         t = time.time()
-        print("*"*10, " delete_document ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " delete_document ", "*"*10)
+        self._print("*"*10, " delete_document ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " delete_document ", "*"*10)
         filters = kwargs.get('filters')
         ret = []
         if filters:
             doc_type = filters.get('doc_type')
             doc_id = filters.get('doc_id')
-            if doc_id and doc_type:
-                if doc_type == 'arrival':
-                    self._execute(f"""update journals_arrivals_headers set n_state = 3::bigint where n_id={int(doc_id)}""")
-                elif doc_type == 'moving':
-                    pass
-                elif doc_type == 'transfer':
-                    pass
-                elif doc_type == 'shipment':
-                    self._execute(f"""update journals_shipments_headers set n_state = 3::bigint where n_id={int(doc_id)}""")
-                    pass
-                method = getattr(self, f'_get_{doc_type}_header')
-                ret = method(doc_id)
+            try:
+                doc_type = doc_type.split()[0]
+                doc_id = int(doc_id)
+            except:
+                pass
+            else:
+                if doc_id and doc_type:
+                    self._execute(f"""update journals_{doc_type}s_headers set n_state = 3::bigint where n_id={doc_id}""")
+                    method = getattr(self, f'_get_{doc_type}_header')
+                    ret = method(doc_id)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
         answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
@@ -657,35 +843,25 @@ where re.n_sklad_name = '{user}'"""
         удаление документа
         """
         t = time.time()
-        print("*"*10, " undelete_document ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " undelete_document ", "*"*10)
+        self._print("*"*10, " undelete_document ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " undelete_document ", "*"*10)
         filters = kwargs.get('filters')
         ret = []
         if filters:
             doc_type = filters.get('doc_type')
             doc_id = filters.get('doc_id')
-            if doc_id and doc_type:
-                if doc_type == 'arrival':
-                    old_sql = f"""update journals_products_balance jpb
-set n_quantity = jpb.n_quantity - (select (n_product->'n_amount')::bigint from journals_arrivals_bodies
-							   		where n_doc_id = {int(doc_id)} and not journals_arrivals_bodies.n_deleted
-							   		and (n_product->'n_product')::bigint=jpb.n_product_id), 
-n_dt = CURRENT_TIMESTAMP;
-update journals_products_movement jpm
-set n_deleted = true
-where jpm.n_document_id = {int(doc_id)};
-update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)}; """
-                    self._execute(f"""update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)};""")
-                elif doc_type == 'moving':
-                    pass
-                elif doc_type == 'transfer':
-                    pass
-                elif doc_type == 'shipment':
-                   self._execute(f"""update journals_shipments_headers set n_state = 1::bigint where n_id={int(doc_id)};""") 
-                method = getattr(self, f'_get_{doc_type}_header')
-                ret = method(doc_id)
+            try:
+                doc_type = doc_type.split()[0]
+                doc_id = int(doc_id)
+            except:
+                pass
+            else:
+                if doc_id and doc_type:
+                    self._execute(f"""update journals_{doc_type}s_headers set n_state = 1::bigint where n_id={doc_id};""")
+                    method = getattr(self, f'_get_{doc_type}_header')
+                    ret = method(doc_id)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
         answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
@@ -696,10 +872,10 @@ update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)
         проведение документа
         """
         t = time.time()
-        print("*"*10, " hold_document ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " hold_document ", "*"*10)
+        self._print("*"*10, " hold_document ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " hold_document ", "*"*10)
         filters = kwargs.get('filters')
         ret = []
         ret1 = []
@@ -711,22 +887,24 @@ update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)
                 #пересчитываем количество в текущих остатках
                 method = getattr(self, f'_hold_{doc_type}_document')
                 ret1 = method(doc_id)
-                print(ret)
+                self._print(ret1)
                 if doc_type == 'arrival':
                     self._execute(f"""update journals_arrivals_headers set n_state = 2::bigint where n_id={int(doc_id)}""")
-                elif doc_type == 'moving':
-                    pass
+                elif doc_type == 'movement':
+                    self._execute(f"""update journals_movements_headers set n_state = 2::bigint where n_id={int(doc_id)}""")
+                elif doc_type == 'rest':
+                    self._execute(f"""update journals_rests_headers set n_state = 2::bigint where n_id={int(doc_id)}""")
                 elif doc_type == 'transfer':
                     pass
                 elif doc_type == 'shipment':
                     self._execute(f"""update journals_shipments_headers set n_state = 2::bigint where n_id={int(doc_id)}""")
                 method = getattr(self, f'_get_{doc_type}_header')
                 ret = method(doc_id)
-                print(ret)
+                self._print(ret)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
         answer = {"data": ret, "data1": ret1, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
-        print(answer)
+        self._print(answer)
         return answer
 
     def unhold_document(self, *args, **kwargs):
@@ -734,10 +912,10 @@ update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)
         отмена проведения документа
         """
         t = time.time()
-        print("*"*10, " unhold_document ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " unhold_document ", "*"*10)
+        self._print("*"*10, " unhold_document ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " unhold_document ", "*"*10)
         filters = kwargs.get('filters')
         ret = []
         if filters:
@@ -750,11 +928,11 @@ update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)
                     self._execute(f"""update journals_products_balance
 set
 	n_quantity = journals_products_balance.n_quantity::int -
-		(select (n_product->'n_amount')::int 
+		(select (n_product->'n_amount')::int
 			from journals_arrivals_bodies
 			where n_doc_id = {int(doc_id)} and not journals_arrivals_bodies.n_deleted
  				and (n_product->'n_product')::bigint=journals_products_balance.n_product_id
-		), 
+		),
 	n_dt = CURRENT_TIMESTAMP
 where journals_products_balance.n_product_id in (select (n_product->'n_product')::bigint
 from journals_arrivals_bodies
@@ -763,16 +941,59 @@ and journals_products_balance.n_consignment =
 	(select  journals_products_balance.n_consignment
 	from journals_products_balance jpb1
 	where jpb1.n_id = journals_products_balance.n_id);
-    
+
 update journals_products_movement jpm
 set n_deleted = true
 where jpm.n_document_id = {int(doc_id)};
 
 update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)};
-    
+
     """)
                     # self._execute(f"""update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)}""")
-                elif doc_type == 'moving':
+                elif doc_type == 'rest':
+                    self._execute(f"""update journals_products_balance
+set
+	n_quantity = journals_products_balance.n_quantity::int -
+		(select (n_product->'n_amount')::int
+			from journals_rests_bodies
+			where n_doc_id = {int(doc_id)} and not journals_rests_bodies.n_deleted
+ 				and (n_product->'n_product')::bigint=journals_products_balance.n_product_id
+		),
+	n_dt = CURRENT_TIMESTAMP
+where journals_products_balance.n_product_id in (select (n_product->'n_product')::bigint
+from journals_rests_bodies
+where n_doc_id = {int(doc_id)} and not n_deleted)
+and journals_products_balance.n_consignment =
+	(select  journals_products_balance.n_consignment
+	from journals_products_balance jpb1
+	where jpb1.n_id = journals_products_balance.n_id);
+
+update journals_products_movement jpm
+set n_deleted = true
+where jpm.n_document_id = {int(doc_id)};
+
+update journals_rests_headers set n_state = 1::bigint where n_id={int(doc_id)};
+
+""")
+                elif doc_type == 'movement':
+                    self._execute(f"""update journals_products_balance jpb set
+n_quantity = jpb.n_quantity +
+		(select (jmb.n_product->'n_amount')::bigint
+		from journals_movements_bodies jmb
+		where jmb.n_doc_id = {int(doc_id)} and not jmb.n_deleted
+			and (jmb.n_product->'n_balance_id')::bigint=jpb.n_id
+	  	),
+n_dt = CURRENT_TIMESTAMP
+where jpb.n_id in
+	(select (n_product->'n_balance_id')::bigint
+	from journals_movements_bodies
+	where n_doc_id = {int(doc_id)} and not n_deleted
+	);
+
+update journals_products_movement jpm
+set n_deleted = true
+where jpm.n_document_id = {int(doc_id)};
+update journals_movements_headers set n_state = 1::bigint where n_id={int(doc_id)}; """)
                     pass
                 elif doc_type == 'transfer':
                     pass
@@ -785,7 +1006,7 @@ n_quantity = jpb.n_quantity +
 			and (jsb.n_product->'n_balance_id')::bigint=jpb.n_id
 	  	),
 n_dt = CURRENT_TIMESTAMP
-where jpb.n_id in 
+where jpb.n_id in
 	(select (n_product->'n_balance_id')::bigint
 	from journals_shipments_bodies
 	where n_doc_id = {int(doc_id)} and not n_deleted
@@ -808,7 +1029,7 @@ update journals_shipments_headers set n_state = 1::bigint where n_id={int(doc_id
     def _set_where_ref_sel(self, params=None):
         inserts = []
         if params:
-            # print(params)
+            # self._print(params)
             n_name = params.get('n_name')
             if n_name:
                 r = f"""lower(r.n_name) like lower('%{n_name}%')"""
@@ -819,7 +1040,7 @@ update journals_shipments_headers set n_state = 1::bigint where n_id={int(doc_id
     def _set_where_prod_sel(self, params=None):
         inserts = []
         if params:
-            # print(params)
+            # self._print(params)
             c_name = params.get('c_name')
             if c_name:
                 r = f"""lower(rp.c_name) like lower('%{c_name}%')"""
@@ -829,10 +1050,10 @@ update journals_shipments_headers set n_state = 1::bigint where n_id={int(doc_id
 
     def save_point(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " save_point ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " save_point ", "*"*10)
+        self._print("*"*10, " save_point ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " save_point ", "*"*10)
         data = kwargs.get('doc_data')
         if data:
             n_address = data.get("n_address", "")
@@ -867,27 +1088,27 @@ returning n_id;
     '{n_name}'::text, '{n_address}'::text, '{n_contact}'::text,
     '{n_phone}'::text, '{n_email}'::text, '{n_comment}'::text,
     {n_parent}::bigint, 2019024587420000001, '{n_code}'::text
-) 
+)
 returning n_id;
         """
         else:
             pass
             #error names
-        print(sql)
+        self._print(sql)
         ret = self._get_point(self._execute(sql)[0][0])
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
 
     def get_point(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_point ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_point ", "*"*10)
+        self._print("*"*10, " get_point ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_point ", "*"*10)
         p_id = kwargs.get('p_id')
         ret = []
 
@@ -895,14 +1116,14 @@ returning n_id;
 
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
 
     def _get_point(self, point_id):
         ret = []
-        sql = f"""select 
+        sql = f"""select
     rp.n_id, rp.n_name, rp.n_address, rp.n_contact,
     rp.n_phone, rp.n_email, rp.n_comment,
     rp.n_parent_id, rp1.n_name, rp.n_code
@@ -910,7 +1131,7 @@ from ref_partners rp
 left join ref_partners rp1 on (rp1.n_id = rp.n_parent_id)
 where rp.n_id = {point_id}::bigint;
         """
-        print(sql)
+        self._print(sql)
         resp = self._request(sql)
         for row in resp:
             r = {"id":  str(row[0]),
@@ -941,7 +1162,7 @@ where rp.n_id = {point_id}::bigint;
     (select n_email from ref_partners where n_id = {parent_id}),
     (select n_comment from ref_partners where n_id = {parent_id}),
     {parent_id}::bigint, 2019024587420000001
-) 
+)
 returning n_id;
         """
         point = self._execute(sql)
@@ -950,10 +1171,10 @@ returning n_id;
 
     def save_partner(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " save_partner ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " save_partner ", "*"*10)
+        self._print("*"*10, " save_partner ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " save_partner ", "*"*10)
         data = kwargs.get('doc_data')
         if data:
             n_actual_address = data.get("n_actual_address", "")
@@ -1007,28 +1228,28 @@ returning n_id;
     '{n_phone}'::text, '{n_email}'::text, '{n_bank_bik}'::text,
     '{n_bank_ch_account}'::text, '{n_bank_k_account}'::text, '{n_bank_name}'::text,
     '{n_comment}'::text
-) 
+)
 returning n_id;
         """
 
-        print(sql)
+        self._print(sql)
         partner_id = self._execute(sql)[0][0]
         if not n_id:
             r = self._save_main_point(partner_id)
         ret = self._get_partner(partner_id)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
 
     def get_partner(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_partner ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_partner ", "*"*10)
+        self._print("*"*10, " get_partner ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_partner ", "*"*10)
         p_id = kwargs.get('p_id')
         ret = []
 
@@ -1036,7 +1257,7 @@ returning n_id;
 
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
@@ -1044,7 +1265,7 @@ returning n_id;
 
     def _get_partner(self, partner_id):
         ret = []
-        sql = f"""select 
+        sql = f"""select
 rp.n_id, rp.n_name, rp.n_type, rp.n_namefull,
 rp.n_inn, rp.n_kpp, rp.n_ogrn,
 rp.n_address, rp.n_actual_address, rp.n_contact,
@@ -1055,7 +1276,7 @@ from ref_partners rp
 left join ref_partners_types rpt ON rpt.n_id = rp.n_type
 where rp.n_id = {partner_id}::bigint;
         """
-        print(sql)
+        self._print(sql)
         resp = self._request(sql)
         for row in resp:
             r = {"id": str(row[0]),
@@ -1081,20 +1302,20 @@ where rp.n_id = {partner_id}::bigint;
             ret.append(r)
         return ret
 
-    def save_product_card(self, *args, **kwargs):
+    def save_product(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " save_product_card ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " save_product_card ", "*"*10)
+        self._print("*"*10, " save_product ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " save_product ", "*"*10)
         data = kwargs.get('doc_data')
         if data:
             k = data.keys()
             for row in k:
-                print(row, str(data[row]).strip())
+                self._print(row, str(data[row]).strip())
                 if not str(data[row]).strip():
                     data[row] = 'null'
-                print(row, str(data[row]).strip())
+                self._print(row, str(data[row]).strip())
             c_aaid = data.get('c_aaid',)
             c_catid = data.get('c_catid')
             c_dirid = data.get('c_dirid')
@@ -1118,11 +1339,11 @@ where rp.n_id = {partner_id}::bigint;
             c_type = data.get('c_type')
             c_vatid = data.get('c_vatid')
             # params = [
-            #     data.get('c_aaid'), data.get('c_catid'), data.get('c_dirid'), data.get('c_doseid'), 
-            #     data.get('c_doseval'), data.get('c_gpid'), True if data.get('c_gvnls') == '1' else False, data.get('c_mancid'), 
-            #     data.get('c_manid'), data.get('c_megaid'), data.get('c_mnnid'), data.get('c_name'), 
-            #     data.get('c_namefull'), data.get('c_nnt'), data.get('c_pack'), data.get('c_ppid'), 
-            #     data.get('c_psid'), data.get('c_ptid'), data.get('c_rfid'), data.get('c_speid'), 
+            #     data.get('c_aaid'), data.get('c_catid'), data.get('c_dirid'), data.get('c_doseid'),
+            #     data.get('c_doseval'), data.get('c_gpid'), True if data.get('c_gvnls') == '1' else False, data.get('c_mancid'),
+            #     data.get('c_manid'), data.get('c_megaid'), data.get('c_mnnid'), data.get('c_name'),
+            #     data.get('c_namefull'), data.get('c_nnt'), data.get('c_pack'), data.get('c_ppid'),
+            #     data.get('c_psid'), data.get('c_ptid'), data.get('c_rfid'), data.get('c_speid'),
             #     data.get('c_type'), data.get('c_vatid')
             # ]
             if data["c_id"] != 'null':
@@ -1130,7 +1351,7 @@ where rp.n_id = {partner_id}::bigint;
     c_aaid, c_catid, c_dirid,c_doseid,
     c_doseval, c_gpid, c_gvnls, c_mancid,
     c_manid, c_megaid, c_mnnid, c_name,
-    c_namefull, c_nnt, c_pack, c_ppid, 
+    c_namefull, c_nnt, c_pack, c_ppid,
     c_psid, c_ptid, c_rfid, c_speid,
     c_type, c_vatid
 ) = (
@@ -1149,7 +1370,7 @@ returning c_id;
     c_aaid, c_catid, c_dirid,c_doseid,
     c_doseval, c_gpid, c_gvnls, c_mancid,
     c_manid, c_megaid, c_mnnid, c_name,
-    c_namefull, c_nnt, c_pack, c_ppid, 
+    c_namefull, c_nnt, c_pack, c_ppid,
     c_psid, c_ptid, c_rfid, c_speid,
     c_type, c_vatid
 ) values (
@@ -1162,12 +1383,12 @@ returning c_id;
 )
 returning c_id
 """
-        print(sql)
+        self._print(sql)
         ret = self._get_product(self._execute(sql)[0][0])
-        print(ret)
+        self._print(ret)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
@@ -1176,13 +1397,13 @@ returning c_id
         ret = []
         if p_id:
             #get data from table
-            sql = f"""select c_aaid, 
-    c_catid, 
+            sql = f"""select c_aaid,
+    c_catid,
     c_dirid,
     c_doseid,
     c_doseval,
     c_gpid,
-    case 
+    case
     when c_gvnls then 1
     else 2
     end,
@@ -1203,7 +1424,7 @@ returning c_id
     when c_type is null then 1
     else 2
     end,
-    c_vatid, 
+    c_vatid,
     c_id
     from ref_products
     where c_id = '{int(p_id)}';
@@ -1269,7 +1490,7 @@ returning c_id
 
     def _get_ref_element(self, p_id, reference):
         t = time.time()
-        print("*"*10, " _get_ref_element ", "*"*10)
+        self._print("*"*10, " _get_ref_element ", "*"*10)
         ret = []
         if reference in ["partners", "ptypes", "employees"]:
             pref = 'n'
@@ -1287,14 +1508,14 @@ left join ref_{reference}_types rpt on (r.n_type = rpt.n_id)
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "n_id": str(row[0]), 
-                    "n_name": row[1], 
+                    "id": str(row[0]),
+                    "n_id": str(row[0]),
+                    "n_name": row[1],
                     "n_type": str(row[2]),
                     "n_type_name": row[3]
                 }
                 ret.append(r)
-                
+
         elif reference == "vats":
             rows = []
             sql = f"""select r.c_id, r.c_name, r.c_vat
@@ -1304,9 +1525,9 @@ from ref_{reference} r
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_vat": str(row[2]),
                 }
                 ret.append(r)
@@ -1321,9 +1542,9 @@ left join ref_categories rc on (r.c_catid = rc.c_id)
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_cat": str(row[2]),
                     "c_cat_name": str(row[3]),
                 }
@@ -1338,9 +1559,9 @@ left join ref_directions rd on (r.c_dirid = rd.c_id)
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_dir": str(row[2]),
                     "c_dir_name": str(row[3]),
                 }
@@ -1355,9 +1576,9 @@ left join ref_application_areas rd on (r.c_parentid = rd.c_id)
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_parent": str(row[2]),
                     "c_parent_name": str(row[3]),
                 }
@@ -1372,9 +1593,9 @@ left join ref_groups ra on (r.c_parentid = ra.c_id)
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_parent": str(row[2]),
                     "c_parent_name": str(row[3]),
                 }
@@ -1388,9 +1609,9 @@ from ref_release_forms r
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                 }
                 ret.append(r)
         elif reference == "ptypes":
@@ -1402,9 +1623,9 @@ from ref_partners_types r
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "n_id": str(row[0]), 
-                    "n_name": row[1], 
+                    "id": str(row[0]),
+                    "n_id": str(row[0]),
+                    "n_name": row[1],
                 }
                 ret.append(r)
 
@@ -1417,11 +1638,11 @@ from ref_{reference} r
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_rusname": row[1], 
-                    "c_latname": row[2], 
-                    "c_engname": row[3], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_rusname": row[1],
+                    "c_latname": row[2],
+                    "c_engname": row[3],
                 }
                 ret.append(r)
 
@@ -1434,13 +1655,13 @@ from ref_{reference} r
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "n_id": str(row[0]), 
-                    "n_name": row[1], 
+                    "id": str(row[0]),
+                    "n_id": str(row[0]),
+                    "n_name": row[1],
                 }
                 ret.append(r)
 
-        elif reference in ["trademarks", "packagings", "megacategories", "manufacturers", 
+        elif reference in ["trademarks", "packagings", "megacategories", "manufacturers",
             "directions", "dosages", "countries"]:
             rows = []
             sql = f"""select r.c_id, r.c_name
@@ -1450,9 +1671,9 @@ from ref_{reference} r
             rows = self._request(sql) or []
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                 }
                 ret.append(r)
 
@@ -1461,27 +1682,27 @@ from ref_{reference} r
 
     def get_ref_element(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_ref_element ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_ref_element ", "*"*10)
+        self._print("*"*10, " get_ref_element ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_ref_element ", "*"*10)
         p_id = kwargs.get('p_id')
         reference = kwargs.get('reference')
         ret = []
         ret = self._get_ref_element(p_id, reference)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
 
     def save_ref_element(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " save_ref_element ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " save_ref_element ", "*"*10)
+        self._print("*"*10, " save_ref_element ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " save_ref_element ", "*"*10)
         data = kwargs.get('doc_data')
         reference = kwargs.get('reference')
         ret = []
@@ -1616,7 +1837,7 @@ returning n_id"""
 where c_id = {data['n_id']}::bigint
 returning n_id"""
 
-        elif reference in ["trademarks", "packagings", "megacategories", "manufacturers", 
+        elif reference in ["trademarks", "packagings", "megacategories", "manufacturers",
             "directions", "dosages", "countries"]:
             if not ref_id:
                 #insert
@@ -1633,12 +1854,12 @@ returning c_id"""
         else:
             sql = "select 2"
 
-        print(sql)
+        self._print(sql)
         ret = self._get_ref_element(self._execute(sql)[0][0], reference)
-        print(ret)
+        self._print(ret)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
@@ -1646,10 +1867,10 @@ returning c_id"""
 
     def get_product(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_product ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_product ", "*"*10)
+        self._print("*"*10, " get_product ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_product ", "*"*10)
         p_id = kwargs.get('p_id')
         ret = []
 
@@ -1657,17 +1878,17 @@ returning c_id"""
 
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
         }
         return answer
 
     def get_products_index(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_products_index ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_products_index ", "*"*10)
+        self._print("*"*10, " get_products_index ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_products_index ", "*"*10)
         filters = kwargs.get('filters')
         pos_id = filters.get('production_id')
         try:
@@ -1677,22 +1898,22 @@ returning c_id"""
             field = 'c_name'
             direction = 'asc'
         sql = f"""select q.num
-from 
+from
 (select  row_number() OVER(order by {field} {direction}) as num, c_id as cid
     from ref_products) as q
 where q.cid = {pos_id}::bigint;
 """
-        print(sql)
+        self._print(sql)
         rows = self._request(sql) or []
         t1 = time.time() - t
         ret = []
         for row in rows:
             r = {
-                "index": row[0] 
+                "index": row[0]
             }
             ret.append(r)
         t2 = time.time() - t1 - t
-        answer = {"data": ret, "params": args, 
+        answer = {"data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
                   }
         return answer
@@ -1707,7 +1928,7 @@ where q.cid = {pos_id}::bigint;
             direction = filters['sort']['dir']
         except:
             # traceback.print_exc()
-            print("exception")
+            self._print("exception")
             field = 'c_name'
             direction = 'asc'
         if reference in ["partners", "points", "ptypes", "employees"] and field == 'c_name':
@@ -1716,7 +1937,7 @@ where q.cid = {pos_id}::bigint;
         order = f"""\norder by r.{field} {direction} \n"""
         limits = f"""limit {count} offset {offset}"""
 
-        print(reference)
+        self._print(reference)
 
         if reference == 'partners':
             rows = []
@@ -1735,9 +1956,9 @@ join ref_partners_types rpt on (r.n_type = rpt.n_id and rpt.n_name != 'Точк�
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "n_id": str(row[0]), 
-                    "n_name": row[1], 
+                    "id": str(row[0]),
+                    "n_id": str(row[0]),
+                    "n_name": row[1],
                     "n_type_text": row[2],
                     "n_inn": row[3],
                     "n_points": row[4] if row[4] else 'Нет'
@@ -1750,11 +1971,11 @@ from ref_partners r
 join ref_partners_types rpt on (r.n_type = rpt.n_id and rpt.n_name = 'Точка')
 join ref_partners rp1 on (rp1.n_id=r.n_parent_id)
 """
-            
+
             sql_count = f"""select count(*) from ({sql+where}) as ccc"""
             sql += where + order + limits
-            print(sql)
-            print(sql_count)
+            self._print(sql)
+            self._print(sql_count)
             rows = self._request(sql) or []
             cou = self._request(sql_count)
             if cou:
@@ -1763,9 +1984,9 @@ join ref_partners rp1 on (rp1.n_id=r.n_parent_id)
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "n_id": str(row[0]), 
-                    "n_name": row[1], 
+                    "id": str(row[0]),
+                    "n_id": str(row[0]),
+                    "n_name": row[1],
                     "n_parent": row[2],
                     "n_parent_id": str(row[3]),
                     "n_address": row[4]
@@ -1786,9 +2007,9 @@ from ref_{reference} r
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_vat": row[2],
                 }
                 ret.append(r)
@@ -1808,9 +2029,9 @@ left join ref_categories rc on (r.c_catid = rc.c_id)
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_cat": row[2],
                 }
                 ret.append(r)
@@ -1830,9 +2051,9 @@ left join ref_directions rd on (r.c_dirid = rd.c_id)
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_dir": row[2],
                 }
                 ret.append(r)
@@ -1852,9 +2073,9 @@ left join ref_application_areas rd on (r.c_parentid = rd.c_id)
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_parent": row[2],
                 }
                 ret.append(r)
@@ -1874,9 +2095,9 @@ left join ref_groups ra on (r.c_parentid = ra.c_id)
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                     "c_parent": row[2],
                 }
                 ret.append(r)
@@ -1895,9 +2116,9 @@ from ref_release_forms r
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                 }
                 ret.append(r)
         elif reference == "ptypes":
@@ -1915,9 +2136,9 @@ from ref_partners_types r
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "n_id": str(row[0]), 
-                    "n_name": row[1], 
+                    "id": str(row[0]),
+                    "n_id": str(row[0]),
+                    "n_name": row[1],
                 }
                 ret.append(r)
 
@@ -1936,11 +2157,11 @@ from ref_{reference} r
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_rusname": row[1], 
-                    "c_latname": row[2], 
-                    "c_engname": row[3], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_rusname": row[1],
+                    "c_latname": row[2],
+                    "c_engname": row[3],
                 }
                 ret.append(r)
 
@@ -1959,13 +2180,13 @@ from ref_{reference} r
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "n_id": str(row[0]), 
-                    "n_name": row[1], 
+                    "id": str(row[0]),
+                    "n_id": str(row[0]),
+                    "n_name": row[1],
                 }
                 ret.append(r)
 
-        elif reference in ["trademarks", "packagings", "megacategories", "manufacturers", 
+        elif reference in ["trademarks", "packagings", "megacategories", "manufacturers",
             "directions", "dosages", "countries"]:
             rows = []
             sql = f"""select r.c_id, r.c_name
@@ -1973,7 +2194,7 @@ from ref_{reference} r
 """
             sql_count = f"""select count(*) from ({sql+where}) as ccc"""
             sql += where + order + limits
-            print(sql)
+            self._print(sql)
             rows = self._request(sql) or []
             cou = self._request(sql_count)
             if cou:
@@ -1982,9 +2203,9 @@ from ref_{reference} r
                 cou = 0
             for row in rows:
                 r = {
-                    "id": str(row[0]), 
-                    "c_id": str(row[0]), 
-                    "c_name": row[1], 
+                    "id": str(row[0]),
+                    "c_id": str(row[0]),
+                    "c_name": row[1],
                 }
                 ret.append(r)
 
@@ -1992,15 +2213,15 @@ from ref_{reference} r
 
     def get_reference(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_reference ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_reference ", "*"*10)
+        self._print("*"*10, " get_reference ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_reference ", "*"*10)
         filters = kwargs.get('filters')
         ret, cou, offset = self._create_ref_sql(filters)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
-        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args, 
+        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
                   }
         return answer
@@ -2009,12 +2230,12 @@ from ref_{reference} r
 
     def get_products(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_products ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_products ", "*"*10)
+        self._print("*"*10, " get_products ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_products ", "*"*10)
         filters = kwargs.get('filters')
-        
+
         try:
             field = filters['sort']['id']
             direction = filters['sort']['dir']
@@ -2026,7 +2247,7 @@ from ref_{reference} r
             offset = 0
             count = 17
         where = self._set_where_prod_sel(filters.get('filters'))
-        
+
         order = f"""\norder by rp.{field} {direction} \n"""
 
         limits = f"""limit {count} offset {offset}"""
@@ -2037,7 +2258,7 @@ join ref_vats rv on (rp.c_vatid=rv.c_id)
 """
         sql_count = f"""select count(*) from ({sql+where}) as ccc"""
         sql += where + order + limits
-        print(sql)
+        self._print(sql)
         rows = self._request(sql) or []
         cou = self._request(sql_count)
         t1 = time.time() - t
@@ -2048,17 +2269,17 @@ join ref_vats rv on (rp.c_vatid=rv.c_id)
             cou = 0
         for row in rows:
             r = {
-                "id": str(row[0]), 
-                "c_id": str(row[0]), 
+                "id": str(row[0]),
+                "c_id": str(row[0]),
                 "c_code": row[1],
-                "c_name": row[2], 
+                "c_name": row[2],
                 "c_namefull": row[3],
                 "c_vat": row[4]
 
             }
             ret.append(r)
         t2 = time.time() - t1 - t
-        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args, 
+        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
                   }
         return answer
@@ -2066,10 +2287,10 @@ join ref_vats rv on (rp.c_vatid=rv.c_id)
 
     def get_product_filters(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_product_filters ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_product_filters ", "*"*10)
+        self._print("*"*10, " get_product_filters ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_product_filters ", "*"*10)
         c_name = kwargs.get('filterName')
         rows = []
         ret = []
@@ -2120,10 +2341,10 @@ order by 1, 2"""
 
     def get_ref_filters(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_product_filters ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_product_filters ", "*"*10)
+        self._print("*"*10, " get_product_filters ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " get_product_filters ", "*"*10)
         reference = kwargs.get('reference')
         if reference in ["partners", "points"]:
             pref = "n"
@@ -2141,7 +2362,7 @@ order by 1, 2"""
         if reference:
             if reference == "points":
                 sql_ref = f"""select r.{pref}_id, r.{pref}_name from
-{tables[reference]} r  
+{tables[reference]} r
 left join ref_partners_types rpt on (r.n_type = rpt.n_id)
 where rpt.n_name != 'Точка'
 order by 1, 2
@@ -2168,26 +2389,32 @@ order by 1, 2
 
 if __name__ == "__main__":
 
-    s = SKLAD()
+    # s = SKLAD()
+    sql = """select n_id, n_title, n_value
+from service_fields_translates
+order by n_id"""
+    rpc = botclient.BOTProxy('dbbot.test', ('127.0.0.1', 4222))
+    q = rpc('fdb.execute', sync=(1, 7))('ms/new_sklad_test', sql)
 
-    print(s)
+    self._print(q)
+    # self._print(s)
 
-    q = s.get_new_id()
+    # q = s.get_new_id()
 
-    print(q)
-    print(s.get_new_id())
-    print(s.get_new_id())
-    print(s.get_new_id())
+    # self._print(q)
+    # self._print(s.get_new_id())
+    # self._print(s.get_new_id())
+    # self._print(s.get_new_id())
 
 
 #вставка bodies по id накладных
 row = [11111,]
 sql = f"""insert into journals_arrivals_bodies (n_doc_id, n_product)
-SELECT 
+SELECT
 {row[0]}::bigint,
-('{{"n_product":' ||  r_prod || ', "n_code":' || (substring(r_prod::text from 10 for 20))::text || ', "n_unit": "шт.", 
-   "n_amount":' || r_am || ', "n_price":' || r_price || ', "n_novats_summ":' || r_am * r_price || ', 
-   "n_vats_base":' || r_vat || ', "n_vats_summ":' || round(r_am*r_price*r_vat/100) || ', 
+('{{"n_product":' ||  r_prod || ', "n_code":' || (substring(r_prod::text from 10 for 20))::text || ', "n_unit": "шт.",
+   "n_amount":' || r_am || ', "n_price":' || r_price || ', "n_novats_summ":' || r_am * r_price || ',
+   "n_vats_base":' || r_vat || ', "n_vats_summ":' || round(r_am*r_price*r_vat/100) || ',
    "n_total_summ":'|| r_am*r_price + round(r_am*r_price*r_vat/100) || '}}')::jsonb
 FROM generate_series(1, 1 + (random()*10)::int) as l   -- number of times
 CROSS JOIN LATERAL (select l.l * 0 + c_id as r_prod from ref_products order by random() limit 1) AS t1

@@ -13,7 +13,7 @@ export default class TemplateRefreshButton extends JetView{
         let app = this.app;
         let button =  {view:"button", type: 'htmlbutton',
             width: 35,
-            height: 35, 
+            height: 35,
             longPress: false,
             label: "",
             localId: "__refresh",
@@ -26,7 +26,7 @@ export default class TemplateRefreshButton extends JetView{
                 },
             }
         }
-         
+
         return button
     }
 

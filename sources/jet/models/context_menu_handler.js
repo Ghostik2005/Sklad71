@@ -3,8 +3,6 @@
 import {newDocument} from "../models/common_functions";
 import TemplateMainTableView from  "../models/template_main_table";
 import RefProductsView from "../models/ref_products";
-import BalanceView from "../views/balance";
-import {refGetData} from "../models/data_processing";
 import * as refColumns from "../variables/refs_columns_dt";
 import RefView from "../models/template_ref_view";
 
@@ -15,15 +13,32 @@ export const handle_buttom_context = {
         let local_this = input_cfg.local_this;
         let th = local_this.$scope;
         let app = th.app;
+        let cfg, s, v;
         switch(id) {
             case "16000":
                 document.message("Контрагенты");
+                cfg = {
+                    name: "partners",
+                    sorting: {id: "n_name", dir: "asc"},
+                    columns: refColumns.partnersColumns
+                };
+                v = new RefView($$("sklad_main_ui").$scope.app, cfg);
+                s = $$("sklad_main_ui").$scope.ui(v);
+                s.show('Контрагенты');
                 break;
             case "26000":
                 document.message("Группы контрагентов");
                 break;
             case "36000":
                 document.message("Виды контрагентов");
+                cfg = {
+                    name: "ptypes",
+                    sorting: {id: "n_name", dir: "asc"},
+                    columns: refColumns.partnerstypesColumns
+                };
+                v = new RefView($$("sklad_main_ui").$scope.app, cfg);
+                s = $$("sklad_main_ui").$scope.ui(v);
+                s.show("Виды контрагентов");
                 break;
             case "46000":
                 document.message("Сегменты контрагентов");
@@ -54,7 +69,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "countries",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.countriesColumns
                 };
                 v = new RefView(app, cfg);
@@ -68,7 +82,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "vats",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.vatsColumns
                 };
                 v = new RefView(app, cfg);
@@ -79,7 +92,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "trademarks",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.trademarksColumns
                 };
                 v = new RefView(app, cfg);
@@ -90,7 +102,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "spes",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.spesColumns
                 };
                  v = new RefView(app, cfg);
@@ -101,7 +112,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "relforms",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.relformsColumns
                 };
                 v = new RefView(app, cfg);
@@ -112,7 +122,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "packagings",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.packsColumns
                 };
                 v = new RefView(app, cfg);
@@ -123,7 +132,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "mnns",
                     sorting: {id: "c_rusname", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.mnnsColumns
                 };
                 v = new RefView(app, cfg);
@@ -134,7 +142,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "megacategories",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.megasColumns
                 };
                 v = new RefView(app, cfg);
@@ -145,7 +152,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "manufacturers",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.mansColumns
                 };
                 v = new RefView(app, cfg);
@@ -156,7 +162,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "groups",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.groupsColumns
                 };
                 v = new RefView(app, cfg);
@@ -167,7 +172,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "directions",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.dirsColumns
                 };
                 v = new RefView(app, cfg);
@@ -178,7 +182,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "dosages",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.dosagesColumns
                 };
                 v = new RefView(app, cfg);
@@ -189,7 +192,6 @@ export const handle_buttom_context = {
                 cfg = {
                     name: "categories",
                     sorting: {id: "c_name", dir: "asc"},
-                    loadFunction: refGetData,
                     columns: refColumns.catsColumns
                 };
                 v = new RefView(app, cfg);
@@ -200,7 +202,6 @@ export const handle_buttom_context = {
             case "174000":
                 cfg = {
                     name: "appareas",
-                    loadFunction: refGetData,
                     sorting: {id: "c_name", dir: "asc"},
                     columns: refColumns.appareasColumns
                 };
@@ -218,7 +219,7 @@ export const handle_buttom_context = {
         let app = th.app;
         switch(id) {
             case "14000":
-                app.commonWidgets.sidebar.add_bar(th, BalanceView, "balances")
+                app.commonWidgets.sidebar.add_bar(th, TemplateMainTableView, "balances")
                 break;
             case "24000":
                 document.message("Движение товаров");
@@ -226,7 +227,7 @@ export const handle_buttom_context = {
             case "34000":
                 let v = new RefProductsView(app)
                 let s = th.ui(v)
-                s.show('Справочник номенклатуры товаров')  
+                s.show('Справочник номенклатуры товаров')
                 break;
             case "44000":
                 document.message("Группы номенклатуры");
@@ -257,8 +258,10 @@ export const handle_buttom_context = {
                 break;
             case "23000":
                 document.message("Оприходывания остатков");
+                app.commonWidgets.sidebar.add_bar(th, TemplateMainTableView, "rests")
                 break;
             case "33000":
+                app.commonWidgets.sidebar.add_bar(th, TemplateMainTableView, "movements")
                 document.message("Перемещения");
                 break;
             case "43000":
@@ -432,6 +435,9 @@ export function handle_context(cfg) {
             break;
         case "902":
             newDocument.shipment(th);
+            break;
+        case "907"  :
+            newDocument.rest(th);
             break;
         // default:
         //     document.message(local_this.getMenuItem(id).value);

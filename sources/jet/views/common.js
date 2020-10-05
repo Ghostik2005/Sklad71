@@ -22,9 +22,7 @@ export function names(method) {
     if (app && app.translates) {
         ret = app.translates[method];
     } else {
-        // console.log('gg1', new Date())
         ret = 'undefined'
-        // ret = names_translates[method];
     }
     return ret
 }
@@ -41,21 +39,20 @@ function after_call(text, data, XmlHttpRequest) {
 }
 
 export function request(params, mode) {
-    // console.log('f_req');
-    let url = (PRODUCTION) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/RPC/';
-    // url = document.rpc_url;
+    // let url = (PRODUCTION) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/RPC/';
+    let url = (PRODUCTION) ? '../remote_api/' : 'http://127.0.0.1/remote_api/'
     var req = (mode === !0) ? webix.ajax().sync().headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
                     : webix.ajax().timeout(90000).headers({'Content-type': 'application/json'}).post(url, params, {error: after_call})
     return req
 }
 
 export function checkResponse(result, mode) {
-    
     var ret_value = {};
     var r;
     if (mode === 's') r = JSON.parse(result);
     else if (mode === 'a') r = result.json();
     if (r && r.result && r.result[0] && r.result[0].data) ret_value = r.result[0]
+    if (r && r.result  && r.result.data) ret_value = r.result
 
     return ret_value
 }

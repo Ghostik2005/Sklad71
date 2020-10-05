@@ -47,6 +47,7 @@ export default class CenterView extends JetView{
 
         return {
             view: "layout",
+            borderless: true,
             id: "__bar__main_center",
             rows: [
                 tabbar,
@@ -65,6 +66,7 @@ export default class CenterView extends JetView{
             this.$$("__multiview").addView(formConfig);
             this.$$("__tabbar").addOption(tabConfig, true);
         } catch(e) {
+            console.log(e)
             result = false
         }
         return result

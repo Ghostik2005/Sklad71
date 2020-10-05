@@ -19,12 +19,16 @@ export default class TemplateMenuButtonMenu extends JetView{
         let app = this.app;
         let cfg = icon_buttons_cfg[this.p_name];
         let g_this = this;
+        let vidget_id = `__${g_this.p_name}_menu`;
+        let permission = (app.config.permitted.includes(vidget_id)) ? true : false;
+
         let menu = {
-            view:'menu', 
+            view:'menu',
             width: cfg.width,
             autowidth: true,
-            id: `__${g_this.p_name}_menu`,
-            data: {id: -1, 
+            hidden: !permission,
+            id: vidget_id,
+            data: {id: -1,
                 value: app.getService("common").icon_menu_button_template(cfg.label, cfg.icon, cfg.title),
                 submenu: button_menu_options[this.p_name],
                 config:{
@@ -35,8 +39,6 @@ export default class TemplateMenuButtonMenu extends JetView{
             },
             on:{
                 onMenuItemClick: function(id, e, html){
-                    console.log('m i', id)
-                    console.log('m e', e)
                     let cfg = {local_this: this, id: id}
                     handle_buttom_context[g_this.p_name](cfg)
                 },

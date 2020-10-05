@@ -9,7 +9,6 @@ export default class SearchBar extends JetView{
     config(){
 
         let searchbar = { 
-            // id: "_searchbar",
             view: "text", 
             label: "", 
             labelWidth: 0,
@@ -18,7 +17,6 @@ export default class SearchBar extends JetView{
             placeholder: "Поиск по составу",
             on: {
                 onItemClick: ()=>{
-                    console.log('clickk')
                 }
             }
         }

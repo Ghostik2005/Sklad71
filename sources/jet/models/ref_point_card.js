@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
-import {getPoint, setPoint} from "../models/data_processing";
+import {refSingle} from "../models/data_processing";
 
 export default class RefPointCardView extends JetView{
 
@@ -46,7 +46,7 @@ export default class RefPointCardView extends JetView{
                     // borderless: true,
                     elements: [],
                 },
-                {borderless: !true, 
+                {borderless: !true,
                     padding: 4,
                     cols: [
                         {},
@@ -68,7 +68,7 @@ export default class RefPointCardView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "Отменить",
+                            label: "Закрыть",
                             width: 136,
                             localId: "__cancel",
                             on: {
@@ -78,7 +78,7 @@ export default class RefPointCardView extends JetView{
                             }
                         },
                     ]
-                },           
+                },
             ]}
         }
 
@@ -102,9 +102,9 @@ export default class RefPointCardView extends JetView{
     hide(){
         // webix.UIManager.removeHotKey("up", null, this.$$("_popup"));
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     setUnChange() {
@@ -130,15 +130,15 @@ export default class RefPointCardView extends JetView{
         } else {
             return
         }
-        //делаем запрос на сервер 
-        let req_data = getPoint(p_id, this.parent.cfg.name);
+        //делаем запрос на сервер
+        let req_data = refSingle.get(p_id, "point");
         //и парсим товар
         this.$$("__ref_points_form").blockEvent();
         if (req_data){
             let data = req_data.data[0];
             this.$$("__ref_points_form").parse(data);
         }
-        this.$$("__ref_points_form").unblockEvent();        
+        this.$$("__ref_points_form").unblockEvent();
 
     }
 
@@ -154,10 +154,9 @@ export default class RefPointCardView extends JetView{
     saveCard(){
         let result = false
         let data = this.$$("__ref_points_form").getValues();
-        console.log('data', data);
         let valid = this.validateCard(data);
         if (valid) return valid;
-        let r_data = setPoint(data);
+        let r_data = refSingle.save(data, "point");
         let p_table = $$(this.parent.table_id);
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
 
@@ -165,7 +164,7 @@ export default class RefPointCardView extends JetView{
             if (this.edited.id) {
                 p_table.updateItem(this.edited.id, r_data.data[0]);
             } else {
-                p_table.add(r_data.data[0], 0);   
+                p_table.add(r_data.data[0], 0);
             }
         }
         return result
@@ -185,7 +184,7 @@ export default class RefPointCardView extends JetView{
             this.$$("__ref_points_form").addView(
                 {cols: [
                     {view: "text", name: "n_id", width: 1, hidden: true, localId: "__n_id_field"},
-                    new TemplateComboRefCard(this.app, {width: 200, labelName: "Юр.лицо", 
+                    new TemplateComboRefCard(this.app, {width: 200, labelName: "Юр.лицо",
                         name: "n_parent_id", reference: this.parent.cfg.name,
                         cancel: th.$$("__cancel"),
                         fitMaster: true}
@@ -237,7 +236,7 @@ export default class RefPointCardView extends JetView{
                     },
                     {rows: [
                         {},
-                        {view: "button", 
+                        {view: "button",
                             label: "COPY",
                             width: 60,
                             tooltip: "Скопировать в название",
@@ -276,7 +275,7 @@ export default class RefPointCardView extends JetView{
                     },
                     // {rows: [
                     //     {},
-                    //     {view: "button", 
+                    //     {view: "button",
                     //         label: "COPY",
                     //         width: 60,
                     //         tooltip: "Скопировать в адрес",
@@ -321,7 +320,7 @@ export default class RefPointCardView extends JetView{
                         inputHeight: 38,
                         width: 200,
                         name: "n_phone",
-                        pattern: webix.patterns.phone, 
+                        pattern: webix.patterns.phone,
                         labelWidth: 120,
                         on: {
                             onKeyPress: function(code, event) {
@@ -379,7 +378,7 @@ export default class RefPointCardView extends JetView{
             //получаем значение товара если есть id, иначе - товар по умолчанию.
             this.parseElement(this.edited)
             // и затем парсим в форму
-            webix.UIManager.setFocus(this.$$("__n_address_field"))       
+            webix.UIManager.setFocus(this.$$("__n_address_field"))
         },30);
 
     }

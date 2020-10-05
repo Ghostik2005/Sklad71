@@ -3,6 +3,8 @@
 import OrderBody from "../models/orders_document_body";
 import ArrivalBody from "../models/arrivals_document_body";
 import ShipmentsBody from "../models/shipments_document_body";
+import MovementsBody from "../models/movements_document_body";
+import RestBody from "../models/rests_document_body";
 
 export const newDocument = {
 
@@ -55,12 +57,39 @@ export const newDocument = {
         doc.show(blank_item, webix.UIManager.getFocus(), table);
     },
 
-    movement: () => {
-        document.message('Перемещение')
+    movement: (th, gr) => {
+        let master = $$("sklad_main_ui").$scope;
+        let table = (master.app.commonWidgets.sidebar.screens._movements) ? $$("_movements_main") : undefined;
+        let new_doc = master.ui(MovementsBody);
+        let blank_item = {
+            flag_new: true,
+            n_dt_invoice: new Date(),
+            n_executor: master.app.config.user,
+            n_paid: "Нет",
+            n_state: 1,
+            n_supplier_id: master.app.config.home_org_id,
+            order_id: (gr) ? gr.n_id : undefined,
+            n_recipient_id: (gr) ? gr.n_recipient_id : undefined,
+        }
+        new_doc.show(blank_item, webix.UIManager.getFocus(), table);
+
+        // document.message(`Перемещение ${direction}`)
     },
 
     rest: () => {
-        document.message('Ввод остатков')
+        let master = $$("sklad_main_ui").$scope;
+        let table = (master.app.commonWidgets.sidebar.screens._rests) ? $$("_rests_main") : undefined;
+        let new_doc = master.ui(new RestBody(master.app));
+        let blank_item = {
+            flag_new: true,
+            n_dt_invoice: new Date(),
+            n_executor: master.app.config.user,
+            n_paid: "Нет",
+            n_state: 1,
+            n_recipient_id: master.app.config.home_org_id,
+            _block: "recipient"
+        }
+        new_doc.show(blank_item, webix.UIManager.getFocus(), table);
     },
 
     writeoff: () => {

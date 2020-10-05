@@ -16,7 +16,6 @@ export default class BalanceHeaderView extends JetView{
 
     config(){
         let l_this = this;
-        console.log('dd', l_this.view_name);
         let app = this.app;
         let toolbar = {view: 'toolbar',
             borderless: true,
@@ -47,7 +46,7 @@ export default class BalanceHeaderView extends JetView{
                 },
                 // {$subview: SearchBar, name: "search_bar"},
                 {},
-                new TemplateRefreshButton(this.app, 'balance'),
+                new TemplateRefreshButton(this.app, 'balances'),
                 {width: emptyWidth},
                 {view:"button", type: 'htmlbutton',
                     width: 35,

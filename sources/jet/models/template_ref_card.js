@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
-import {getRef, setRef} from "../models/data_processing";
+import {reference} from "../models/data_processing";
 
 
 
@@ -10,7 +10,6 @@ export default class TemplateRefCardView extends JetView{
 
     constructor(app, parent, edited) {
         super(app);
-        // console.log('parent', parent);
         this.parent = parent;
         this.edited = edited;
     }
@@ -45,10 +44,10 @@ export default class TemplateRefCardView extends JetView{
                     },
                     // borderless: true,
                     elements: [
-                    
+
                     ]
                 },
-                {borderless: !true, 
+                {borderless: !true,
                     padding: 4,
                     cols: [
                         {},
@@ -70,7 +69,7 @@ export default class TemplateRefCardView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "Отменить",
+                            label: "Закрыть",
                             width: 136,
                             localId: "__cancel",
                             on: {
@@ -80,7 +79,7 @@ export default class TemplateRefCardView extends JetView{
                             }
                         },
                     ]
-                },           
+                },
             ]}
         }
 
@@ -104,9 +103,9 @@ export default class TemplateRefCardView extends JetView{
     hide(){
         // webix.UIManager.removeHotKey("up", null, this.$$("_popup"));
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     setUnChange() {
@@ -132,15 +131,15 @@ export default class TemplateRefCardView extends JetView{
         } else {
             return
         }
-        //делаем запрос на сервер 
-        let req_data = getRef(p_id, this.parent.cfg.name);
+        //делаем запрос на сервер
+        let req_data = reference.get(p_id, this.parent.cfg.name);
         //и парсим товар
         this.$$("__ref_form").blockEvent();
         if (req_data){
             let data = req_data.data[0];
             this.$$("__ref_form").parse(data);
         }
-        this.$$("__ref_form").unblockEvent();        
+        this.$$("__ref_form").unblockEvent();
 
     }
 
@@ -171,14 +170,14 @@ export default class TemplateRefCardView extends JetView{
         let data = this.$$("__ref_form").getValues();
         let valid = this.validateCard(data);
         if (valid) return valid;
-        let r_data = setRef(data, this.parent.cfg.name);
+        let r_data = reference.set(data, this.parent.cfg.name);
         let p_table = $$(this.parent.table_id);
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
         if (p_table) {
             if (this.edited.id) {
                 p_table.updateItem(this.edited.id, r_data.data[0]);
             } else {
-                p_table.add(r_data.data[0], 0);   
+                p_table.add(r_data.data[0], 0);
             }
         }
         return result
@@ -196,7 +195,7 @@ export default class TemplateRefCardView extends JetView{
                 name: "ref_name",
                 value: this.parent.cfg.name,
             });
-            columns.forEach((col)=>{ 
+            columns.forEach((col)=>{
                 if (!col.hidden){
                     switch (col.filter_type) {
                         case "text":
@@ -223,10 +222,9 @@ export default class TemplateRefCardView extends JetView{
                             });
                             break;
                         case "combo":
-                            this.$$("__ref_form").addView(new TemplateComboRefCard(this.app, {width: 600, labelName: col.header[0].text, 
+                            this.$$("__ref_form").addView(new TemplateComboRefCard(this.app, {width: 600, labelName: col.header[0].text,
                                 name: col.id, reference: this.parent.cfg.name,
                                 cancel: th.$$("__cancel"),
-                                //value: "2006552811470000003",
                                 fitMaster: true}));
                             break;
                         default:
@@ -234,16 +232,10 @@ export default class TemplateRefCardView extends JetView{
                     }
                 }
             })
-            // webix.UIManager.addHotKey("Esc", () => { 
-            //     console.log('----');
-            //     this.$$("__cancel").callEvent("onItemClick")
-            //     return false; 
-            // }, this.$$("_popup"));
-            
             //получаем значение товара если есть id, иначе - товар по умолчанию.
             this.parseElement(this.edited)
             // и затем парсим в форму
-            webix.UIManager.setFocus(this.$$("__ref_form"))       
+            webix.UIManager.setFocus(this.$$("__ref_form"))
         }, 200);
 
     }

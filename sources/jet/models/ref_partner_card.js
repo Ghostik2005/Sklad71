@@ -2,14 +2,13 @@
 
 import {JetView} from "webix-jet";
 import TemplateComboRefCard from "../models/template_combo_ref_card";
-import {getPartner, setPartner} from "../models/data_processing";
+import {refSingle} from "../models/data_processing";
 
 
 export default class RefPartnerCardView extends JetView{
 
     constructor(app, parent, edited) {
         super(app);
-        console.log('parent', parent);
         this.parent = parent;
         this.edited = edited;
     }
@@ -48,7 +47,7 @@ export default class RefPartnerCardView extends JetView{
                     // borderless: true,
                     elements: [],
                 },
-                {borderless: !true, 
+                {borderless: !true,
                     padding: 4,
                     cols: [
                         {},
@@ -70,7 +69,7 @@ export default class RefPartnerCardView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "Отменить",
+                            label: "Закрыть",
                             width: 136,
                             localId: "__cancel",
                             on: {
@@ -80,7 +79,7 @@ export default class RefPartnerCardView extends JetView{
                             }
                         },
                     ]
-                },           
+                },
             ]}
         }
 
@@ -103,9 +102,9 @@ export default class RefPartnerCardView extends JetView{
     hide(){
         // webix.UIManager.removeHotKey("up", null, this.$$("_popup"));
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     setUnChange() {
@@ -131,15 +130,15 @@ export default class RefPartnerCardView extends JetView{
         } else {
             return
         }
-        //делаем запрос на сервер 
-        let req_data = getPartner(p_id, this.parent.cfg.name);
+        //делаем запрос на сервер
+        let req_data = refSingle.get(p_id, "partner");
         //и парсим товар
         this.$$("__ref_partners_form").blockEvent();
         if (req_data){
             let data = req_data.data[0];
             this.$$("__ref_partners_form").parse(data);
         }
-        this.$$("__ref_partners_form").unblockEvent();        
+        this.$$("__ref_partners_form").unblockEvent();
 
     }
 
@@ -150,31 +149,15 @@ export default class RefPartnerCardView extends JetView{
         if (!data.n_namefull || data.n_namefull.length < 2) return "Укажите полное название"
         if (!data.n_address || data.n_address.length < 2) return "Укажите юридический адрес"
         if (!data.n_actual_address || data.n_actual_address.length < 2) return "Укажите фактический адрес"
-
-        // if (!data.c_namefull || data.c_namefull.length < 2) result = "Укажите полное название товара"
-        // if (!data.header.n_base) result = 'Укажите основание документа';
-        // if (!data.header.n_number) result = 'Укажите номер документа';
-        // if (!data.header.n_supplier) result = 'Укажите поставщика';
-        // if (!data.header.n_recipient) result = 'Укажите получателя';
-        // if (data.table.length<2) result = 'Добавьте товары';
-        // for (let i in data.table) {
-        //     let row = data.table[i];
-        //     if (!row.n_code) continue;
-        //     if (!row.n_amount || isNaN(row.n_amount) || +row.n_amount < 0) {
-        //         result = `Неверное количство в строке ${(row.row_num) ? row.row_num+1: ''}`;
-        //     }
-        //     if (!row.n_price || row.n_price <= 0) result = `Неверная цена в строке ${row.row_num+1}`;
-        // }
         return result
     }
 
     saveCard(){
         let result = false
         let data = this.$$("__ref_partners_form").getValues();
-        console.log('data', data);
         let valid = this.validateCard(data);
         if (valid) return valid;
-        let r_data = setPartner(data);
+        let r_data = refSingle.save(data, "partner");
         let p_table = $$(this.parent.table_id);
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
 
@@ -182,7 +165,7 @@ export default class RefPartnerCardView extends JetView{
             if (this.edited.id) {
                 p_table.updateItem(this.edited.id, r_data.data[0]);
             } else {
-                p_table.add(r_data.data[0], 0);   
+                p_table.add(r_data.data[0], 0);
             }
         }
         return result
@@ -202,7 +185,7 @@ export default class RefPartnerCardView extends JetView{
             this.$$("__ref_partners_form").addView(
                 {cols: [
                 {view: "text", name: "n_id", width: 1, hidden: true, localId: "__n_id_field"},
-                new TemplateComboRefCard(this.app, {width: 140, labelName: "Тип контрагента", 
+                new TemplateComboRefCard(this.app, {width: 140, labelName: "Тип контрагента",
                     name: "n_type", reference: this.parent.cfg.name,
                     cancel: th.$$("__cancel"),
                     fitMaster: true}
@@ -229,7 +212,7 @@ export default class RefPartnerCardView extends JetView{
                     },
                     {rows: [
                         {},
-                        {view: "button", 
+                        {view: "button",
                             label: "COPY",
                             width: 60,
                             tooltip: "Скопировать в полное название",
@@ -270,7 +253,7 @@ export default class RefPartnerCardView extends JetView{
                     },
                     {rows: [
                         {},
-                        {view: "button", 
+                        {view: "button",
                             label: "COPY",
                             width: 60,
                             tooltip: "Скопировать в полное название",
@@ -375,7 +358,7 @@ export default class RefPartnerCardView extends JetView{
                         inputHeight: 38,
                         width: 200,
                         name: "n_phone",
-                        pattern: webix.patterns.phone, 
+                        pattern: webix.patterns.phone,
                         labelWidth: 120,
                         on: {
                             onKeyPress: function(code, event) {
@@ -432,7 +415,7 @@ export default class RefPartnerCardView extends JetView{
                     },
                     {rows: [
                         {},
-                        {view: "button", 
+                        {view: "button",
                             label: "COPY",
                             width: 60,
                             tooltip: "Скопировать в фактический адрес",
@@ -471,7 +454,7 @@ export default class RefPartnerCardView extends JetView{
                     },
                     {rows: [
                         {},
-                        {view: "button", 
+                        {view: "button",
                             label: "COPY",
                             width: 60,
                             tooltip: "Скопировать в юридический адрес",
@@ -604,7 +587,7 @@ export default class RefPartnerCardView extends JetView{
             //получаем значение товара если есть id, иначе - товар по умолчанию.
             this.parseElement(this.edited)
             // и затем парсим в форму
-            webix.UIManager.setFocus(this.$$("__n_name_field"))       
+            webix.UIManager.setFocus(this.$$("__n_name_field"))
         },30);
 
     }

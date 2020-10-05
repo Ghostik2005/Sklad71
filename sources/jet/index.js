@@ -9,8 +9,8 @@ import { app_common } from "./app_common";
 
 export default class app extends JetApp{
 	constructor(config){
-                
-		const defaults = {            
+
+		const defaults = {
             production:     PRODUCTION,
             id:             "sklad71App",
             name:           APPNAME,
@@ -31,35 +31,45 @@ export default class app extends JetApp{
             roles:          [],
             sklad_cook:     "sk_new-app",
             user_id:        "",
-            restricted:     {}, //словарь элементов, если true - запрещено пользователю
-            restricted_menu: {}, //словарь элементов контекстного меню, если true - запрещено пользователю
+            permitted: [
+                "__documents_menu", "__journals_menu", "__products_menu", "__classifiers_menu",
+                "__contragents_menu", "__button__references"
+            ],
+            restricted: [
+                "__managements_menu", "__options_menu", "__button__reports", "__button__analitics",
+                "__button__balances", "__button__arrivals", "__button__orders",
+                "__button__shipments"
+            ],
+
         };
-        super({ ...defaults, ...config });    
-        
-        document.rpc_url = (PRODUCTION) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/RPC/';
+        super({ ...defaults, ...config });
+
+        // document.rpc_url = (PRODUCTION) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/RPC/';
+        console.log("prod", PRODUCTION);
+        document.rpc_url = (PRODUCTION) ? 'https://online365.pro/RPC/' : 'http://127.0.0.1/remote_api/'
 
 
 		this.attachEvent("app:error:resolve", function(name, error) {
 			window.console.error(error);
 		});
         var app = this;
-        
+
         app.use(app_common);
         document.app = app;
         document.message = (msg, type="success", expires=1) => {
             webix.message({
-                type: type, 
+                type: type,
                 text: msg,
                 expire: expires*1000
             })
         };
         getRefs(app);
         app['commonWidgets'] = {
-            "arrivals": {},
-            "shipments": {},
-            "balances": {},
-            // "sidebar": {},
-            "orders": {},
+            // "arrivals": {},
+            // "shipments": {},
+            // "balances": {},
+            // "orders": {},
+
         },
 
 		webix.attachEvent("onBeforeAjax", function(mode, url, data, request, headers, files, promise){
@@ -71,16 +81,16 @@ export default class app extends JetApp{
             window.console.log("message:", message);
             window.console.log("source:", source);
             window.console.log("err:", err);
-            return true; 
+            return true;
         };
 
         app.attachEvent("app:error:resolve", function(name, error) {
             window.console.error(error);
             });
 
-        
+
     }
-    
+
 }
 
 webix.i18n.setLocale("ru-RU");

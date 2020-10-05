@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {getArrivalsDocument, saveArrivalsDocument, checkOpened} from "../models/data_processing";
+import {checks, documentProcessing} from "../models/data_processing";
 import {dtColumns} from "../variables/arrivals_document_dt";
 import DocumentHeader from "../models/document_header"
 import ChargesView from "../models/arrivals_set_charges";
@@ -18,6 +18,7 @@ export default class ArrivalBody extends JetView{
     config(){
         let th = this;
         let app = this.app;
+
         let ret_view = {
             view:"cWindow",
             localId: "__arrivalbody",
@@ -35,24 +36,19 @@ export default class ArrivalBody extends JetView{
                     (this.change == true) ? this.$$("__save").show() : this.$$("__save").hide();
                     // (this.change == true) ? this.$$("__cancel").show() : this.$$("__cancel").hide();
                     this.$$("__table").clearAll();
-                    let data = getArrivalsDocument(this.doc.n_id)
+                    let data = documentProcessing.get(this.doc.n_id, "arrivals")
                     data.data.push({"n_product": "...добавить"});
-                    // console.log('id', data);
                     this.$$("__table").parse(data);
                 },
                 onHide: () => {
-                    checkOpened(this.doc.n_id, true);
+                    checks.opened(this.doc.n_id, true);
                     if (this.focus) webix.UIManager.setFocus(this.focus);
                 }
             },
             body: {
                 rows:[
-                    {
-                        $subview: new DocumentHeader(app, th),
-                        localId: "__header",
-                    },
-                    {
-                        view: "datatable",
+                    new DocumentHeader(app, th),
+                    {view: "datatable",
                         borderless: true,
                         name: "__arrivals_document",
                         clipboard: true,
@@ -75,10 +71,6 @@ export default class ArrivalBody extends JetView{
                             yCount: 4
                         },
                         data: {},
-                        // url: function() {
-                        //     console.log('th', this.$scope.doc.doc_id)
-                        //     return getArrivalsDocument(this.$scope.doc.doc_id);
-                        // },
                         css:"webix_header_border center_dt",
                         scroll: 'xy',
                         tooltip: true,
@@ -94,10 +86,15 @@ export default class ArrivalBody extends JetView{
                                 th.setChange();
                             },
                             onLiveEdit: function() {
-                                // console.log('edit');
                             },
                             onDataUpdate: function() {
                                 th.setChange();
+                            },
+                            onItemClick: function(row, ev) {
+                                let item = this.getItem(row)
+                                if (item.n_product == '...добавить') {
+                                    this.callEvent('onItemDblClick', [row,])
+                                }
                             },
                             onItemDblClick: function(item) {
                                 if (th.doc.n_state == 1) {
@@ -135,7 +132,7 @@ export default class ArrivalBody extends JetView{
                                         if (!not_saved) {
                                             //обновляем данные в таблице
                                             this.setUnchange();
-                                            // this.hide();
+                                            this.flag_new = false;
                                         } else {
                                             document.message(not_saved,"error", 3)
                                         }
@@ -152,7 +149,6 @@ export default class ArrivalBody extends JetView{
                                         let not_saved = this.$$("__save").callEvent('onItemClick');
                                         if (!not_saved) {
                                             let r_data = app.getService("common").holdDocument('arrival', this.doc.n_id, this.doc.id);
-                                            console.log('r_data', r_data);
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
                                             if (r_data.data) {
                                                 if (this.table) {
@@ -165,19 +161,18 @@ export default class ArrivalBody extends JetView{
                                                 this.hide();
                                                 let q = this.ui(new ChargesView(app, this, r_data.data1))
                                                 q.show('Установка наценок для прайса')
-                                                console.log('ss1')
                                             } else {
                                                 document.message("Ошибка транзакции при проведении документа","error", 3)
                                             }
-                                            
-                                        }   
+
+                                        }
                                     }
                                 }
                             },
                             {view: "button",
                                 width: 136,
                                 localId: "__cancel",
-                                label: "Отменить",
+                                label: "Закрыть",
                                 on: {
                                     onItemClick: ()=>{
                                         this.hide();
@@ -202,7 +197,7 @@ export default class ArrivalBody extends JetView{
             width:500
         }).then(function(result){
             switch(result){
-                case "0": 
+                case "0":
                     document.message("Good!");
                     break;
                 case "1":
@@ -211,13 +206,11 @@ export default class ArrivalBody extends JetView{
                 case "2":
                     document.message("Come back later");
                     break;
-            }   
+            }
         });
     }
 
     show(doc, focus, table) {
-        // console.log('header', this.getRoot());
-        // console.log('doc', doc);
         this.flag_new = doc.flag_new;
         this.change = false;
         this.focus = focus;
@@ -225,11 +218,11 @@ export default class ArrivalBody extends JetView{
         this.doc = doc;
         if (doc) {
             let state_item = states[doc.n_state];
-            this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` + 
+            this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` +
             ` Приходный документ №${doc.n_number || ''} от ${webix.i18n.dateFormatStr(doc.n_dt_invoice)}, ${doc.n_supplier || ''}`);
             this.getRoot().show();
             return webix.UIManager.setFocus(this.$$("__table"))
-        };        
+        };
         return false
     }
 
@@ -254,8 +247,7 @@ export default class ArrivalBody extends JetView{
 
     saveDocumentServer(th, data){
         let result = false
-        let r_data = saveArrivalsDocument(data, th.doc.id);
-        // console.log('r_d', r_data);
+        let r_data = documentProcessing.save(data, th.doc.id, 'arrivals');
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
         if (this.table) {
             if (!this.flag_new) {
@@ -263,6 +255,8 @@ export default class ArrivalBody extends JetView{
             } else {
                 this.table.add(r_data.data[0], 0);
                 // document.message("добавляем позицию наверх")
+                this.doc = this.table.getItem(this.table.getFirstId())
+                this.getRoot().getChildViews()[1].getChildViews()[1].$scope.$$("__n_id").setValue(this.doc.n_id)
             }
         }
         return result

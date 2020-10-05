@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {sipmentsProdSelColumns} from "../variables/shipment_product_selection_dt";
-import {shipmentProductSelectionGetData} from "../models/data_processing";
+import {balance_processing} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 
 
@@ -69,8 +69,7 @@ export default class ShipmentSelectionView extends JetView{
                             on: {
                                 onItemClick: ()=>{
                                     let item = this.$$("__table").getSelectedItem();
-                                    console.log('item', item);
-                                    let prod_select = this.ui( 
+                                    let prod_select = this.ui(
                                         new ProductCardView(this.app, this, {c_id: item.c_id, c_name: item.c_name, id: item.id})
                                     );
                                     prod_select.show();
@@ -78,7 +77,7 @@ export default class ShipmentSelectionView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "add",
+                            label: "доб.",
                             width: 50,
                             tooltip: "Добавить товар",
                             localId: "__add",
@@ -111,9 +110,8 @@ export default class ShipmentSelectionView extends JetView{
                         editable: !false,
                         footer: true,
                         url: function(params) {
-                            return shipmentProductSelectionGetData(params, this);
+                            return balance_processing.get_data(params, this);
                         },
-                        // save: arrivalsSaveData,
                         headermenu:{
                             autowidth: true,
                             scroll: true,
@@ -160,6 +158,7 @@ export default class ShipmentSelectionView extends JetView{
                                     let new_item = this.getItem(item);
                                     new_item = {
                                         n_id: undefined,
+                                        n_balance_id: new_item.n_balance_id,
                                         n_product: new_item.n_product,
                                         n_code: new_item.n_code,
                                         n_unit: "",
@@ -192,11 +191,10 @@ export default class ShipmentSelectionView extends JetView{
                                             if (! old_item.n_prod_id) {
                                                 delete old_item.id;
                                                 this.$scope.parent.add(old_item)
-                                            } 
+                                            }
                                         }
                                         this.$scope.hide();
                                     } else {
-                                        console.log('5');
                                         //добавляем товар в родетеля, окно оставляем открытым
                                         if (this.$scope.parent.config.view === 'datatable') {
                                             let q = this.$scope.searchDuplicates(this.$scope.parent, new_item.n_prod_id);
@@ -208,12 +206,11 @@ export default class ShipmentSelectionView extends JetView{
                                                 this.$scope.parent.$scope.add_new(new_item);
                                             }
                                         } else {
-                                            console.log("new_item", new_item)
                                         }
-                                        
+
                                     }
                                 }
-            
+
                             }
                         }
                     },
@@ -251,8 +248,8 @@ export default class ShipmentSelectionView extends JetView{
 
 
     getData(){
+        this.$$("__table").clearAll(true);
         this.$$("__table").loadNext(0, 0, 0, 0, 1).then((data)=> {
-            // console.log('data1', data);
             if (data) {
                 this.$$("__table").clearAll(true);
                 this.$$("__table").parse(data);
@@ -266,13 +263,11 @@ export default class ShipmentSelectionView extends JetView{
         try {
             re = this.$$("__search").getValue();
         } catch(e) {
-            // console.log('e', e)
         }
         return re;
     }
 
     show(header){
-        // console.log(header)
         if (header) {
             this.getRoot().getHead().getChildViews()[0].setValue(header);
         }
@@ -281,9 +276,9 @@ export default class ShipmentSelectionView extends JetView{
 
     hide(){
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     ready() {

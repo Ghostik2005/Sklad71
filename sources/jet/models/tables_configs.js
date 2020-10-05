@@ -1,25 +1,37 @@
 "use strict";
 
-import {arrivalsGetData} from "../models/data_processing";
+import {getDatas} from "../models/data_processing";
+
 import ArrivalBody from "../models/arrivals_document_body";
 import {ArrivdtColumns} from "../variables/arrivals_centerDt";
 
-import {ShipdtColumns} from "../variables/shipments_centerDt";
-import {shipmentsGetData} from "../models/data_processing";
 import ShipmentsBody from "../models/shipments_document_body";
+import {ShipdtColumns} from "../variables/shipments_centerDt";
 
-import {OrddtColumns} from "../variables/orders_centerDt";
-import {ordersGetData, ordersSaveData} from "../models/data_processing";
+import MovementsBody from "../models/movements_document_body";
+import {MovedtColumns} from "../variables/movements_centerDt";
+
 import OrderBody from "../models/orders_document_body";
-
+import {OrddtColumns} from "../variables/orders_centerDt";
 
 import {BaldtColumns} from "../variables/balance_centerDt";
-import {balanceGetData} from "../models/data_processing";
+
+import RestBody from "../models/rests_document_body";
+import {RestsdtColumns} from "../variables/rests_centerDt";
+
 
 export const main_tables_cfg = {
 
+    rests: {
+        loadData: getDatas.getAllData,
+        sorting: {id: "n_dt_invoice", dir: "desc"},
+        docBody: RestBody,
+        columns: RestsdtColumns,
+        id: "_rests_main",
+    },
+
     arrivals: {
-        loadData: arrivalsGetData,
+        loadData: getDatas.getAllData,
         sorting: {id: "n_dt_invoice", dir: "desc"},
         docBody: ArrivalBody,
         columns: ArrivdtColumns,
@@ -27,8 +39,16 @@ export const main_tables_cfg = {
         _block: "recipient",
     },
 
+    movements: {
+        loadData: getDatas.getAllData,
+        sorting: {id: "n_dt_invoice", dir: "desc"},
+        docBody: MovementsBody,
+        columns: MovedtColumns,
+        id: "_movements_main",
+    },
+
     shipments: {
-        loadData: shipmentsGetData,
+        loadData: getDatas.getAllData,
         sorting: {id: "n_dt_invoice", dir: "desc"},
         docBody: ShipmentsBody,
         columns: ShipdtColumns,
@@ -36,7 +56,7 @@ export const main_tables_cfg = {
     },
 
     orders: {
-        loadData: ordersGetData,
+        loadData: getDatas.getAllData,
         sorting: {id: "n_dt_send", dir: "desc"},
         docBody: OrderBody,
         columns: OrddtColumns,
@@ -44,7 +64,7 @@ export const main_tables_cfg = {
     },
 
     balances: {
-        loadData: balanceGetData,
+        loadData: getDatas.getAllData,
         sorting: {id: "n_product", dir: "asc"},
         columns: BaldtColumns,
         id: "_balances_main",

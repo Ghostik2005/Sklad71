@@ -3,9 +3,9 @@ import {JetView} from "webix-jet";
 import HeaderView from "../views/header";
 import FooterView from "../views/footer";
 import CenterView from "../views/center";
-import SideButtonsBar from "../views/sidebuttons-bar";
+import MenuButtonsBar from "../views/menu-bar";
 import {getCookie} from "../views/common";
-import {getCredentionals} from "../models/data_processing"
+import {getDatas} from "../models/data_processing"
 
 export default class StartView extends JetView{
     config() {
@@ -14,12 +14,12 @@ export default class StartView extends JetView{
             id: "sklad_main_ui",
             rows: [
                 { $subview: HeaderView },
-                {$subview: SideButtonsBar},
+                {$subview: MenuButtonsBar},
                 {height: 2},
                 // {cols: [
-                    // {$subview: SideButtonsBar},
+                    // {$subview: MenuButtonsBar},
                     { $subview: CenterView },
-                // ]},   
+                // ]},
                 { $subview: FooterView },
             ],
         };
@@ -62,7 +62,7 @@ export default class StartView extends JetView{
         if (sklad_c.length > 32) {
             let user_name = decodeURI(sklad_c.slice(0, -32))
             // делаем запрос с разрешениями и параметрами пользователя и в этоже время поддягиваем справочники
-            let d = getCredentionals(user_name);
+            let d = getDatas.credentionals(user_name);
             if (d.data) {
                 this.app.config.user = d.data[0].n_name;
                 this.app.config.user_id = d.data[0].n_id;

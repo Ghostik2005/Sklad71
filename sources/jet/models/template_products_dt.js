@@ -34,7 +34,6 @@ export default class TemplateProductsView extends JetView{
             url: (params) => {
                 return this.cfg.loadFunction(params, this);
             },
-            // save: arrivalsSaveData,
             headermenu:{
                 autowidth: true,
                 scroll: true,

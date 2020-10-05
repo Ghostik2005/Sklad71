@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {productGetFilters}  from "../models/data_processing";
+import {filters_process}  from "../models/data_processing";
 
 export default class TemplateComboCard extends JetView{
 
@@ -20,7 +20,7 @@ export default class TemplateComboCard extends JetView{
 
     config(){
 
-        let combo = {view: "combo", 
+        let combo = {view: "combo",
             name: this.cfg.name,
             localId: `__${this.cfg.name}`,
             label: this.cfg.labelName,
@@ -42,7 +42,7 @@ export default class TemplateComboCard extends JetView{
                     yCount: 5,
                     scroll: true,
                     url: function(params) {
-                        return productGetFilters(params, this);
+                        return filters_process.get_prod_filters(params, this);
                     },
                     type:{
                         height:32

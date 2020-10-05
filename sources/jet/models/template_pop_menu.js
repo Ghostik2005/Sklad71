@@ -54,9 +54,6 @@ export default class PopMenuView extends JetView{
     }
 
     ready() {
-        // console.log("cfg", this.cfg);
-        // let buttons = this.cfg.buttons;
-        // console.log('menus', menus);
         let buttons = menus[this.cfg.name];
         let s1, s2;
         if (buttons.length > 10) {
@@ -74,7 +71,5 @@ export default class PopMenuView extends JetView{
                 this.$$("__mform").addView(new ButtonTemplate(this.app, item))
             })
         }
-        // this.$$("__mform").resize();
-        // this.$$("__eform").resize();
     }
 }

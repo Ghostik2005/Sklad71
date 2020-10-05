@@ -5,6 +5,7 @@ import TemplateProductsView from "../models/template_products_dt"
 import TemplateRefCardView from "../models/template_ref_card";
 import RefPartnerCardView from "../models/ref_partner_card";
 import RefPointCardView from "../models/ref_point_card";
+import {getDatas} from "../models/data_processing";
 
 
 
@@ -21,7 +22,7 @@ export default class RefView extends JetView{
         this.table_id = webix.uid();
         let dt = new TemplateProductsView(th.app, {
             columns: th.cfg.columns,
-            loadFunction: th.cfg.loadFunction,
+            loadFunction: th.cfg.loadFunction || getDatas.ref_data,
             sorting: th.cfg.sorting,
             topParent: th,
             id: this.table_id,
@@ -86,7 +87,7 @@ export default class RefView extends JetView{
                                     // let item = this.$$("__table").getSelectedItem();
                                     let item = $$(this.table_id).getSelectedItem();
                                     let ref_ed;
-                                    
+
 
                                     if (this.cfg.name == "partners") {
                                         ref_ed = this.ui(new RefPartnerCardView(this.app, this, item));
@@ -100,7 +101,7 @@ export default class RefView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "add",
+                            label: "доб.",
                             width: 50,
                             tooltip: "Добавить запись",
                             localId: "__add",
@@ -188,9 +189,9 @@ export default class RefView extends JetView{
 
     hide(){
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     ready() {

@@ -19,8 +19,14 @@
 
 
 button,
-.webix_popup_button {
-    font-size: small !important;
+button.webix_button,
+.webix_popup_button,
+.icon_button_label,
+.exit_button_label,
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item {
+    font-size: small;
     }
 
 .footer, .center_dt .webix_cell {
@@ -28,10 +34,10 @@ button,
 }
 
 .center_view {
-    border-width: 1px !important; 
+    border-top-width: 1px !important; 
 }
 
-.margin0, .center_view {
+.margin0 {
     margin: 0 !important;
 }
 
@@ -69,7 +75,7 @@ button,
 }
 
 .webix_point_top{
-    margin-left: -35px;
+    margin-left: -25px;
 }
 
 .table_icon, .menubtn {
@@ -107,7 +113,9 @@ button,
 }
 
 
-.html_button, .custom_menu_button{
+.html_button, 
+.side_menu_button,
+.custom_menu_button{
     background-repeat: no-repeat;
     background-position: center center;
     vertical-align: bottom;
@@ -125,27 +133,20 @@ button,
     border: 1px solid transparent;
 }
 
-
-.side_menu_button, .custom_menu_button{
-    background-repeat: no-repeat;
-    background-position: center center;
-    vertical-align: bottom;
-    display: inline-block;
-}
-
 .side_menu_button {
     background-size: 30px 30px;
-    width:30px;
-    height:30px;
+}
+
+.exit_button_label,
+.custom_menu_button {
+    padding-left: 5px;
 }
 
 .custom_menu_button {
     background-size: 20px 20px;
     margin-left: -10px;
-    padding-left: 5px;
+
     margin-top: 5px;
-    width:20px;
-    height:20px;
 }
 
 .webix_tab_close:focus {
@@ -155,10 +156,6 @@ button,
 .changed,
 .warning {
     color: red;
-}
-
-.full-size {
-    width: 100% !important;
 }
 
 .context_menu,
@@ -201,6 +198,7 @@ button,
     padding-top: 3px;
 }
 
+.custom_menu_button,
 .icon_exit_button {
     width:20px;
     height:20px;
@@ -208,6 +206,10 @@ button,
 
 .icon_button {
     padding-top: 5px;
+}
+
+.side_menu_button,
+.icon_button {
     width:30px;
     height:30px;
 }
@@ -235,7 +237,7 @@ button,
 .webix_all_tabs .webix_item_tab:hover,
 .webix_secondary .webix_button.custom_button:hover,
 .webix_secondary .webix_button.exit_button:hover {
-    opacity: 0.5;   
+    opacity: 0.5;
 }
 
 .webix_secondary .webix_button.exit_button,
@@ -252,27 +254,19 @@ button,
     float: left;
 }
 
-
 .icon_button_label {
-    line-height: 36px; 
-    font-size: medium;
+    line-height: 36px;
 }
 
 .exit_button_label {
     line-height: 24px; 
-    padding-left: 5px;
 }
 
 .webix_all_tabs .webix_item_tab {
     line-height:20px;
 }
 
-.exit_button_label,
-.webix_list_item.menu,
-.context_menu ~ .webix_menu .webix_list_item,
-.context_menu.webix_menu .webix_list_item {
-    font-size: small;
-}
+
 
 .webix_list_item.menu,
 .context_menu ~ .webix_menu .webix_list_item,

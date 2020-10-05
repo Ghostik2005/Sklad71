@@ -230,7 +230,6 @@ function init_suggest(editor, input) {
 }
 
 function create_suggest(config) {
-    console.log('ui', ui);
     if (typeof config == "string") return config;
     if (config.linkInput) return config._settings.id;
 

@@ -2,7 +2,7 @@
 
 import {JetView} from "webix-jet";
 import {emptyWidth} from "../variables/variables"
-import {setCharge, getBalances} from "../models/data_processing";
+import {balance_processing} from "../models/data_processing";
 import {formatText} from "../views/common";
 import {dtColumns} from "../variables/arrivals_charge_price_dt"
 
@@ -21,7 +21,7 @@ export default class ChargesView extends JetView{
 
         let header = {
             localId: "__header-form",
-            borderless: true, 
+            borderless: true,
             rows: [
                 {view: "text",
                     name: "n_id",
@@ -52,17 +52,17 @@ export default class ChargesView extends JetView{
                             format: formatText,
                             labelPosition: "top",
                             disabled: true,
-                            localId: "__sum", 
+                            localId: "__sum",
                         },
                         {width: emptyWidth},
                         {view: "text", label: "Сумма в прайс", labelWidth: 120,
                             format: formatText,
                             labelPosition: "top",
                             disabled: true,
-                            localId: "__sum_price", 
+                            localId: "__sum_price",
                         },
                         {width: emptyWidth},
-                        {view: "text", label: "Количество позиций", labelWidth: 135, 
+                        {view: "text", label: "Количество позиций", labelWidth: 135,
                             disabled: true,
                             labelPosition: "top",
                             localId: "__pos"
@@ -83,7 +83,7 @@ export default class ChargesView extends JetView{
                 ]},
 
             ],
-        
+
         }
 
         let dt = {view: "datatable",
@@ -166,9 +166,11 @@ export default class ChargesView extends JetView{
                                 on: {
                                     onItemClick: ()=>{
                                         let v = this.validate();
-                                        console.log('v', v);
                                         if (v) {
-                                            let r = setCharge({table: this.$$("__table").serialize(), doc_id:this.$$("__n_id").getValue()});
+                                            let r = balance_processing.set_charge({
+                                                table: this.$$("__table").serialize(),
+                                                doc_id:this.$$("__n_id").getValue()
+                                            });
                                             if (r) this.hide();
                                         } else {
                                             document.message('Устанвите наценки, иначе товар не попадет в прайс', 'error', 5)
@@ -184,13 +186,12 @@ export default class ChargesView extends JetView{
 
         return popup
     }
-    
+
     validate() {
         let table = this.$$("__table");
         let result = true;
         table.mapCells(null, "n_price_price", null, 1, function(value){
             let v = +value;
-            console.log('v', v)
             if (isNaN(v)) result = false
             // result+=v;
             return value;
@@ -215,14 +216,12 @@ export default class ChargesView extends JetView{
         }
         this.getRoot().getHead().getChildViews()[1].hide();
         // получамем данные с сервера
-        let rows = getBalances(this.ids);
+        let rows = balance_processing.get_all(this.ids);
         this.getRoot().show();
         this.$$("__n_id").setValue(this.parent.doc.n_id);
         let c_data = this.parent.$$("__table").serialize();
         this.$$("__table").clearAll();
-        // console.log('rows', rows.data);
         rows.data.forEach( (item)=> {
-            // console.log("item", item);
             let new_item = {
                 n_id: item.n_id,
                 n_amount: item.n_amount,
@@ -230,7 +229,7 @@ export default class ChargesView extends JetView{
                 n_total_summ: item.n_total_summ,
                 n_product: item.n_product
             }
-            // console.log('new_item', new_item)
+
             this.$$("__table").add(new_item)
         })
         webix.UIManager.addHotKey("enter", function(view){
@@ -296,9 +295,9 @@ export default class ChargesView extends JetView{
 
     hide(){
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     ready() {

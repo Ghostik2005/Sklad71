@@ -103,7 +103,7 @@ export const side_buttons_cfg = {
 export const icon_buttons_cfg = {
 
     documents: {
-        width: 135,
+        width: 120,
         longPress: false,
         hidden: false,
         title: 'Новый документ',
@@ -112,7 +112,7 @@ export const icon_buttons_cfg = {
     },
 
     contragents: {
-        width: 165,
+        width: 145,
         longPress: false,
         hidden: false,
         title: 'Контрагенты',
@@ -121,7 +121,7 @@ export const icon_buttons_cfg = {
     },
 
     journals: {
-        width: 135,
+        width: 120,
         longPress: false,
         hidden: false,
         title: 'Журналы',
@@ -130,7 +130,7 @@ export const icon_buttons_cfg = {
     },
 
     products: {
-        width: 115,
+        width: 105,
         longPress: false,
         hidden: false,
         title: 'Товары',
@@ -139,7 +139,7 @@ export const icon_buttons_cfg = {
     },
 
     classifiers: {
-        width: 205,
+        width: 190,
         longPress: false,
         hidden: false,
         title: 'Классификаторы',
@@ -148,7 +148,7 @@ export const icon_buttons_cfg = {
     },
 
     reports: {
-        width: 115,
+        width: 100,
         longPress: false,
         hidden: false,
         title: 'Отчеты',
@@ -157,7 +157,7 @@ export const icon_buttons_cfg = {
     },
 
     analitics: {
-        width: 145,
+        width: 130,
         longPress: false,
         hidden: false,
         title: 'Аналитика',
@@ -166,7 +166,7 @@ export const icon_buttons_cfg = {
     },
 
     managements: {
-        width: 155,
+        width: 140,
         longPress: false,
         hidden: false,
         title: 'Управление',
@@ -175,7 +175,7 @@ export const icon_buttons_cfg = {
     },
 
     options: {
-        width: 150,
+        width: 135,
         longPress: false,
         hidden: false,
         title: 'Настройки',

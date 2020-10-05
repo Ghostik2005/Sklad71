@@ -1,17 +1,17 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {checkOpened} from "../models/data_processing";
+import {checks} from "../models/data_processing";
 
 export default class TemplateCenterTable extends JetView{
-    
+
     constructor(app, cfg) {
         super(app);
         this.cfg = cfg;
     }
 
     config(){
-        
+
         let sprv = {view: "datatable",
             borderless: true,
             name: "__main",
@@ -33,7 +33,6 @@ export default class TemplateCenterTable extends JetView{
             url: function(params) {
                 return this.$scope.cfg.loadData(params, this);
             },
-            // save: arrivalsSaveData,
             headermenu:{
                 autowidth: true,
                 scroll: true,
@@ -73,8 +72,7 @@ export default class TemplateCenterTable extends JetView{
                 onItemDblClick: function(id) {
                     if (this.$scope.cfg.docBody) {
                         if (id) {
-                            let permission = checkOpened(this.getItem(id).n_id);
-                            console.log('perm', permission);
+                            let permission = checks.opened(this.getItem(id).n_id);
                             if (permission) {
                                 let focus = webix.UIManager.getFocus();
                                 let doc = this.$scope.ui(this.$scope.cfg.docBody);
@@ -92,7 +90,7 @@ export default class TemplateCenterTable extends JetView{
             view: "layout",
             css: 'center_view',
             cols: [
-                {width: 1}, 
+                {width: 1},
                 {rows: [
                     {height: 1},
                     sprv,

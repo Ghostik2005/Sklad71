@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {filtersGetData} from "../models/data_processing";
+import {filters_process} from "../models/data_processing";
 import ButtonUnFilter from "../models/button_unfilter";
 
 export default class TemplateMenuFilters extends JetView{
@@ -62,10 +62,8 @@ export default class TemplateMenuFilters extends JetView{
                                 localId: "__apply",
                                 on: {
                                     onItemClick: ()=>{
-                                        // console.log('OnIClick');
                                         if (this.isVisible()) {
                                             let b = this.$$("__body").getValues().n_state;
-                                            // console.log('b', b);
                                             if (b) {
                                                 app.commonWidgets[local_this.p_name].quick_filters.checkTag("__" + b, b, false) ;
                                             } else {
@@ -92,9 +90,8 @@ export default class TemplateMenuFilters extends JetView{
         this.$$("__n_state_field").setValue(state);
         this.$$("__apply").callEvent("onItemClick");
     }
-    
+
     saveValues() {
-        // console.log('setValues');
         this.values = this.$$("__body").getValues();
         this.app.commonWidgets[this.p_name].status_bar.setStatus(this.values);
     }
@@ -125,7 +122,6 @@ export default class TemplateMenuFilters extends JetView{
         this.values = {}
         let global_this = this;
         this.app.commonWidgets[this.p_name]['menu_filters'] = this;
-        // console.log('0', this.app.commonWidgets);
         setTimeout( ()=> {
         let columns = this.app.commonWidgets[this.p_name].center_table.getHeaders()
         columns.forEach((col)=>{
@@ -177,7 +173,7 @@ export default class TemplateMenuFilters extends JetView{
                                         yCount: 5,
                                         scroll: true,
                                         url: function(params) {
-                                            return filtersGetData(params, this);
+                                            return filters_process.get_data(params, this);
                                         },
                                         type:{
                                             height:32
@@ -202,7 +198,7 @@ export default class TemplateMenuFilters extends JetView{
                                     body:{
                                         parentName: col.id,
                                         url: function(params) {
-                                            return filtersGetData(params, this);
+                                            return filters_process.get_data(params, this);
                                         },
                                         type:{
                                             height:32

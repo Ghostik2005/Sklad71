@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {getShipmentsDocument, saveShipmentsDocument, getOrdersDocumentShip, checkOpened} from "../models/data_processing";
+import {checks, documentProcessing} from "../models/data_processing";
 import {dtColumns} from "../variables/shipments_document_dt";
 import ShipmentSelectionView from "../models/shipment_product_selection";
 import DocumentHeader from "../models/document_header"
@@ -31,15 +31,15 @@ export default class ShipmentsBody extends JetView{
                     let data;
                     if (this.base){
                         //получаем документ с сервера и парсим его в таблицу
-                        data = getOrdersDocumentShip(this.base);
+                        data = documentProcessing.get_on_order(this.base);
                     } else {
-                        data = getShipmentsDocument(this.doc.n_id);
+                        data = documentProcessing.get(this.doc.n_id, "shipments");
                     }
                     this.$$("__table").clearAll();
                     data.data.push({"n_product": "...добавить"});
                     this.$$("__table").parse(data);
                     setTimeout(() => {
-                        if (this.getHeader().recalcHeader) this.getHeader().recalcHeader(this.$$("__table"));    
+                        if (this.getHeader().recalcHeader) this.getHeader().recalcHeader(this.$$("__table"));
                     }, 100);
                     let table = this.$$("__table");
                     table.eachRow( (row) => {
@@ -48,7 +48,7 @@ export default class ShipmentsBody extends JetView{
                     })
                 },
                 onHide: () => {
-                    checkOpened(this.doc.n_id, true);
+                    checks.opened(this.doc.n_id, true);
                     if (this.focus) webix.UIManager.setFocus(this.focus);
                 }
             },
@@ -70,12 +70,8 @@ export default class ShipmentsBody extends JetView{
                         },
                         {}
                     ]},
-                    {
-                        $subview: new DocumentHeader(app, th),
-                        localId: "__header",
-                    },
-                    {
-                        view: "datatable",
+                    new DocumentHeader(app, th),
+                    {view: "datatable",
                         borderless: true,
                         name: "__shipments_document",
                         clipboard: true,
@@ -127,6 +123,12 @@ export default class ShipmentsBody extends JetView{
                             onDataUpdate: function() {
                                 th.setChange();
                             },
+                            onItemClick: function(row, ev) {
+                                let item = this.getItem(row)
+                                if (item.n_product == '...добавить') {
+                                    this.callEvent('onItemDblClick', [row,])
+                                }
+                            },
                             onItemDblClick: function(item) {
                                 if (th.doc.n_state == 1) {
                                     let prod_select = th.ui( new ShipmentSelectionView(app, this, item));
@@ -163,7 +165,7 @@ export default class ShipmentsBody extends JetView{
                                         if (!not_saved) {
                                             //обновляем данные в таблице
                                             this.setUnChange();
-                                            // this.hide();
+                                            this.flag_new = false;
                                         } else {
                                             document.message(not_saved,"error", 3)
                                         }
@@ -193,15 +195,15 @@ export default class ShipmentsBody extends JetView{
                                             } else {
                                                 document.message("Ошибка проведения транзакции","error", 3)
                                             }
-                                            
-                                        }   
+
+                                        }
                                     }
                                 }
                             },
                             {view: "button",
                                 width: 136,
                                 localId: "__cancel",
-                                label: "Отменить",
+                                label: "Закрыть",
                                 on: {
                                     onItemClick: ()=>{
                                         this.hide();
@@ -226,7 +228,7 @@ export default class ShipmentsBody extends JetView{
             width:500
         }).then(function(result){
             switch(result){
-                case "0": 
+                case "0":
                     document.message("Good!");
                     break;
                 case "1":
@@ -235,7 +237,7 @@ export default class ShipmentsBody extends JetView{
                 case "2":
                     document.message("Come back later");
                     break;
-            }   
+            }
         });
     }
 
@@ -248,7 +250,7 @@ export default class ShipmentsBody extends JetView{
         this.doc = doc;
         if (doc) {
             let state_item = states[doc.n_state];
-            this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` + 
+            this.getRoot().getHead().getChildViews()[0].setValue(`<span style="color: ${state_item.color}">(${state_item.value })</span>` +
             ` Отгрузка №${doc.n_number || ''} от ${webix.i18n.dateFormatStr(doc.n_dt_invoice)}, ${doc.n_supplier || ''}`);
             this.getRoot().show();
             webix.UIManager.setFocus(this.$$("__table"))
@@ -256,7 +258,7 @@ export default class ShipmentsBody extends JetView{
         if (this.doc.n_state==2) {
             this.$$("__table").disable();
             this.$$("__charge").disable();
-            
+
         }
     }
 
@@ -281,13 +283,15 @@ export default class ShipmentsBody extends JetView{
 
     saveDocumentServer(th, data){
         let result = false
-        let r_data = saveShipmentsDocument(data, th.doc.id);
+        let r_data = documentProcessing.save(data, th.doc.id, 'shipments');
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
         if (this.table) {
             if (!this.flag_new) {
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
+                this.doc = this.table.getItem(this.table.getFirstId())
+                this.getRoot().getChildViews()[1].getChildViews()[1].$scope.$$("__n_id").setValue(this.doc.n_id)
             }
         }
         return result
@@ -331,7 +335,7 @@ export default class ShipmentsBody extends JetView{
             });
             return result
         }
-    
+
         table.blockEvent();
         table.eachRow ((row)=> {
             let item = table.getItem(row);
@@ -354,7 +358,7 @@ export default class ShipmentsBody extends JetView{
         this.$$("__charge").setValue(charge.toFixed(2));
         table.unblockEvent();
         if (this.getHeader().recalcHeader) this.getHeader().recalcHeader(table);
-        
+
     }
 
     setUnChange() {

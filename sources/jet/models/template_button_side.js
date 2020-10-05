@@ -13,15 +13,18 @@ export default class TemplateSideButtonView extends JetView{
     config(){
         let app = this.app;
         let cfg = side_buttons_cfg[this.cfg.name];
+        let vidget_id = `__button__${this.cfg.name}`;
+        let permission = (app.config.permitted.includes(vidget_id)) ? true : false;
 
         return {
-            view:"button", 
+            view:"button",
             hidden: (PRODUCTION) ? cfg.hidden : false,
-            id: `__button__${this.cfg.name}`,
+            id: vidget_id,
             type: 'htmlbutton',
+            hidden: !permission,
             longPress: cfg.longPress,
             width: 40,
-            height: 40, 
+            height: 40,
             template: () => {
                 return app.getService("common").html_button_template(cfg.img, cfg.title, cfg.css_class)
             },

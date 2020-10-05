@@ -14,13 +14,17 @@ export default class TemplateIconButtonView extends JetView{
     config(){
         let app = this.app;
         let cfg = icon_buttons_cfg[this.cfg.name];
-        let css = [].concat(this.cfg.css || []).concat(cfg.css_class || [])
+        let css = [].concat(this.cfg.css || []).concat(cfg.css_class || []);
+        let vidget_id = `__button__${this.cfg.name}`;
+        let permission = (app.config.permitted.includes(vidget_id)) ? true : false;
+
 
         return {
-            view:"button", 
+            view:"button",
             hidden: (PRODUCTION) ? cfg.hidden : false,
-            id: `__button__${this.cfg.name}`,
+            id: vidget_id,
             localId: "__i_but",
+            hidden: !permission,
             longPress: cfg.longPress,
             width: cfg.width,
             template: () => {

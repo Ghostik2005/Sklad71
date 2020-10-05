@@ -2,22 +2,23 @@
 
 import {JetView} from "webix-jet";
 import {emptyWidth} from "../variables/variables"
-import {filtersGetData} from "../models/data_processing";
+import {filters_process} from "../models/data_processing";
 import {formatText} from "../views/common";
 
 export default class DocumentHeader extends JetView{
 
-    constructor(app, parent, readonly=false) {
+    constructor(app, parent, readonly=false, hide_list=undefined) {
         super(app);
         this.parent = parent;
         this.readonly = readonly;
+        this.hide_list = hide_list || [];
     }
 
     config(){
 
         let header = {
             localId: "__header-form",
-            borderless: true, 
+            borderless: true,
             rows: [
                 {view: "text",
                     name: "n_id",
@@ -33,7 +34,7 @@ export default class DocumentHeader extends JetView{
                         localId: "__exec",
                         disabled: true,
                         width: 250,
-                        
+
                         on: {
                             onChange: () => {
                                 this.parent.setChange();
@@ -62,7 +63,7 @@ export default class DocumentHeader extends JetView{
                                     body:{
                                         parentName: "n_state",
                                         url: function(params) {
-                                            return filtersGetData(params, this);
+                                            return filters_process.get_data(params, this);
                                         },
                                         type:{
                                             height:32
@@ -77,10 +78,10 @@ export default class DocumentHeader extends JetView{
                             },
 
                             {width: emptyWidth},
-                            {view: "text", 
-                                label: "Номер документа", 
+                            {view: "text",
+                                label: "Номер документа",
                                 name: "n_number",
-                                labelWidth: 120, 
+                                labelWidth: 120,
                                 localId: "__number",
                                 on: {
                                     onKeyPress: function(code, event) {
@@ -92,12 +93,12 @@ export default class DocumentHeader extends JetView{
                                 }
                             },
                             {width: emptyWidth},
-                            {view: "datepicker", 
+                            {view: "datepicker",
                                 name: "n_dt_document",
-                                label: "Дата документа", 
+                                label: "Дата документа",
                                 format: webix.i18n.dateFormatStr,
-                                labelWidth: 105, 
-                                value: new Date(), 
+                                labelWidth: 105,
+                                value: new Date(),
                                 localId: "__date",
                                 on: {
                                     onChange: () => {
@@ -105,7 +106,7 @@ export default class DocumentHeader extends JetView{
                                     }
                                 }
                             },
-                        ]}                        
+                        ]}
                     ]},
                     {width: emptyWidth*3},
                     {rows: [
@@ -114,16 +115,16 @@ export default class DocumentHeader extends JetView{
                             {view: "text", label: "Сумма документа", labelWidth: 120,
                                 format: formatText,
                                 disabled: true,
-                                localId: "__sum", 
+                                localId: "__sum",
                             },
                             {width: emptyWidth},
-                            {view: "text", label: "Сумма НДС", labelWidth: 80, 
+                            {view: "text", label: "Сумма НДС", labelWidth: 80,
                                 disabled: true,
                                 format: formatText,
                                 localId: "__vats"
                             },
                             {width: emptyWidth},
-                            {view: "text", label: "Количество позиций", labelWidth: 135, 
+                            {view: "text", label: "Количество позиций", labelWidth: 135,
                                 disabled: true,
                                 localId: "__pos"
                             },
@@ -132,7 +133,7 @@ export default class DocumentHeader extends JetView{
                 ]},
                 {height: emptyWidth*3},
                 {cols: [
-                    {rows: [
+                    {localId: "__supplier_section", rows: [
                         {template: "поставщик", type: "section"},
                         {view: "combo",
                             disabled: !true,
@@ -148,7 +149,7 @@ export default class DocumentHeader extends JetView{
                                 body:{
                                     parentName: "n_supplier",
                                     url: function(params) {
-                                        return filtersGetData(params, this);
+                                        return filters_process.get_data(params, this);
                                     },
                                     type:{
                                         height:32
@@ -174,7 +175,7 @@ export default class DocumentHeader extends JetView{
                                 body:{
                                     parentName: "n_recipient",
                                     url: function(params) {
-                                        return filtersGetData(params, this);
+                                        return filters_process.get_data(params, this);
                                     },
                                     type:{
                                         height:32
@@ -188,7 +189,7 @@ export default class DocumentHeader extends JetView{
                         {template: "основание документа", type: "section"},
                         {view: "text",
                             name: "n_base",
-                            labelWidth: 0, 
+                            labelWidth: 0,
                             localId: "__base",
                             on: {
                                 onKeyPress: function() {
@@ -272,11 +273,11 @@ export default class DocumentHeader extends JetView{
             }
             if (this.parent._block) {
                 this.$$(`__${this.parent._block}`).disable();
-            
+
             }
         }
     }
- 
+
     recalcHeader(master){
         function getSum(columnId) {
             let result = 0;
@@ -300,6 +301,9 @@ export default class DocumentHeader extends JetView{
 
     ready() {
         this.setHeader();
+        this.hide_list.forEach( (item) => {
+            this.$$(`__${item}_section`).hide();
+        } )
     }
 
     init() {

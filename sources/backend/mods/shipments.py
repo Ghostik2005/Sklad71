@@ -7,21 +7,22 @@ import datetime
 
 class SHIPMENTS:
 
-    def __init__(self, RPC=None, parent=None):
-        self.RPC = RPC
+    def __init__(self, parent):
         self.parent = parent
 
+    def get_test(self):
+        return "test_shipments"
+
+
     def _execute(self, sql):
-        _c = self.RPC('fdb')
-        # print(dir(_c))
-        return _c.execute('nomad/new_sklad_test', sql)
+        return self.parent._execute(sql)
 
     def get_filter_list(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_filter_list ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_filter_list ", "*"*10)
+        self.parent._print("*"*10, " get_filter_list ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " get_filter_list ", "*"*10)
         c_name = kwargs.get('filterName')
         rows = []
         if c_name:
@@ -66,7 +67,7 @@ order by {c_name} asc"""
         # inserts = []
         inserts = ["jah.n_supplier = (select n_partner_id from service_home_organization)", ]
         if params:
-            # print(params)
+            # self.parent._print(params)
             n_charge = params.get('n_charge')
             n_number = params.get('n_number')
             n_state = params.get('n_state')
@@ -180,10 +181,10 @@ order by {c_name} asc"""
 
     def get_data(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_data ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_data ", "*"*10)
+        self.parent._print("*"*10, " get_data ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " get_data ", "*"*10)
         filters = kwargs.get('filters')
         if filters:
             field = filters['sort']['id']
@@ -210,7 +211,7 @@ join ref_employees emp on (jah.n_executor = emp.n_id)
 """
         sql_count = f"""select count(*) from ({sql+where}) as ccc"""
         sql += where + order + limits
-        print(sql)
+        self.parent._print(sql)
         rows = self._execute(sql) or []
         cou = self._execute(sql_count)
         t1 = time.time() - t
@@ -230,9 +231,9 @@ join ref_employees emp on (jah.n_executor = emp.n_id)
             summ_pos += row[8]
             r = {
                 "row_num": i,
-                "n_id": str(row[0]), 
+                "n_id": str(row[0]),
                 "n_number": row[1],
-                "n_state": row[2], 
+                "n_state": row[2],
                 "n_dt_invoice": row[3],
                 "n_supplier": row[4],
                 "n_recipient": row[5],
@@ -247,10 +248,10 @@ join ref_employees emp on (jah.n_executor = emp.n_id)
                 "n_recipient_id": str(row[15]),
                 "n_charge": str(row[16])
             }
-            # print(r)
+            # self.parent._print(r)
             ret.append(r)
         t2 = time.time() - t1 - t
-        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args, 
+        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
                   "summs": {"n_summ": summ_docs, "n_nds": summ_vats, "n_pos_numbers": summ_pos}
                   }
@@ -266,19 +267,19 @@ join ref_employees emp on (jah.n_executor = emp.n_id)
         n_exec = header.get('n_executor')
         n_charge = header.get('charge')
         sql_upd_header = f"""update journals_shipments_headers jah
-set (n_recipient, n_number, n_dt_invoice, n_supplier, 
-	 n_summ, n_nds, n_pos_numbers, 
+set (n_recipient, n_number, n_dt_invoice, n_supplier,
+	 n_summ, n_nds, n_pos_numbers,
 	 n_base, n_executor,
-	 n_dt_change, n_charge) = 
+	 n_dt_change, n_charge) =
 	({int(n_recipient)}::bigint, '{str(n_number)}', '{n_dt_invoice}'::date, {int(n_supplier)}::bigint,
 	(select total_sum from
 		(select n_doc_id, sum((n_product->'n_total_summ')::numeric) as total_sum
 		from journals_shipments_bodies where n_doc_id = {int(n_id)}::bigint and not n_deleted group by n_doc_id) as s2
-	), 
+	),
 	(select vat_sum from
 		(select n_doc_id, sum((n_product->'n_vats_summ')::numeric) as vat_sum
 		from journals_shipments_bodies where n_doc_id = {int(n_id)}::bigint and not n_deleted group by n_doc_id) as s3
-	), 
+	),
 	(select pos_sum from
 		(select n_doc_id, sum((n_product->'n_amount')::numeric) as pos_sum
 		 from journals_shipments_bodies where n_doc_id = {int(n_id)}::bigint and not n_deleted group by n_doc_id) as s1
@@ -291,7 +292,7 @@ returning n_id
         return sql_upd_header
 
     def _make_sql_new_header(self, header):
-        n_state = header.get('n_state') 
+        n_state = header.get('n_state')
         n_base = header.get('n_base')
         n_recipient = header.get('n_recipient')
         n_number = header.get('n_number')
@@ -300,28 +301,28 @@ returning n_id
         n_id = header.get('n_id')
         n_exec = header.get('n_executor')
         n_charge = header.get('charge')
-        sql_new_header = f"""insert into journals_shipments_headers 
-(n_state, n_number, n_dt_invoice, 
- n_summ, n_nds, n_pos_numbers, n_base, 
- n_supplier, n_recipient, 
- n_executor, 
+        sql_new_header = f"""insert into journals_shipments_headers
+(n_state, n_number, n_dt_invoice,
+ n_summ, n_nds, n_pos_numbers, n_base,
+ n_supplier, n_recipient,
+ n_executor,
  n_paid,
- n_charge) values 
-({int(n_state)}, '{str(n_number)}', '{n_dt_invoice}'::date, 
+ n_charge) values
+({int(n_state)}, '{str(n_number)}', '{n_dt_invoice}'::date,
  0, 0, 0, '{n_base}'::text,
- {int(n_supplier)}::bigint, {int(n_recipient)}::bigint, 
+ {int(n_supplier)}::bigint, {int(n_recipient)}::bigint,
  (select n_id from ref_employees where n_name = '{n_exec}'::text),
  (select n_id from ref_paids where n_value = 'Нет'::text),
  {float(n_charge)}::numeric
 )
 returning n_id
 """
-        print(sql_new_header)
+        self.parent._print(sql_new_header)
         return sql_new_header
 
-    def _make_sql_del_body(self, doc_id):    
-        sql = f"""update journals_shipments_bodies set 
-n_deleted = true 
+    def _make_sql_del_body(self, doc_id):
+        sql = f"""update journals_shipments_bodies set
+n_deleted = true
 where n_doc_id = {doc_id}::bigint and not n_deleted"""
 
         return sql
@@ -331,7 +332,7 @@ where n_doc_id = {doc_id}::bigint and not n_deleted"""
         for row in data.get('table'):
             if not row.get('n_code'):
                 continue
-            # print(row)
+            # self.parent._print(row)
             json_row = {
                 "n_product": int(row['n_prod_id']),
                 "n_code": row['n_code'],
@@ -353,34 +354,34 @@ where n_doc_id = {doc_id}::bigint and not n_deleted"""
 """
             sql.append(s)
         sql = ';\n'.join(sql)
-        print(sql)
+        self.parent._print(sql)
         return sql
 
     def recalc_shipments_body(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " recalc_shipments_body ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " recalc_shipments_body ", "*"*10)
+        self.parent._print("*"*10, " recalc_shipments_body ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " recalc_shipments_body ", "*"*10)
         doc_id = kwargs.get('doc_id')
         if doc_id:
             sql = f"""update journals_shipments_headers jah
-set (n_summ, n_nds, n_pos_numbers, 
-	 n_dt_change, 
+set (n_summ, n_nds, n_pos_numbers,
+	 n_dt_change,
      n_charge) = (
 	(select total_sum from
 		(select n_doc_id, sum((n_product->'n_total_summ')::numeric) as total_sum
 		from journals_shipments_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s2
-	), 
+	),
 	(select vat_sum from
 		(select n_doc_id, sum((n_product->'n_vats_summ')::numeric) as vat_sum
 		from journals_shipments_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s3
-	), 
+	),
 	(select pos_sum from
 		(select n_doc_id, sum((n_product->'n_amount')::numeric) as pos_sum
 		 from journals_shipments_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s1
 	),
-	CURRENT_TIMESTAMP, 
+	CURRENT_TIMESTAMP,
     (select round((spr/pr*100)-100, 2) from
 		(select n_doc_id, sum((n_product->'n_price')::numeric) as pr
 		 from journals_shipments_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s51,
@@ -390,23 +391,23 @@ set (n_summ, n_nds, n_pos_numbers,
 where n_id = {int(doc_id)}::bigint
 returning n_id
         """
-            print(sql)
+            self.parent._print(sql)
 
             sql_1 = f"""update journals_shipments_headers jah
-set (n_summ, 
-     n_nds, 
-     n_pos_numbers, 
+set (n_summ,
+     n_nds,
+     n_pos_numbers,
 	 n_dt_change,
-     n_charge) = 
+     n_charge) =
 	(
 	(select total_sum from
 		(select n_doc_id, sum((n_product->'n_total_summ')::numeric) as total_sum
 		from journals_shipments_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s2
-	), 
+	),
 	(select vat_sum from
 		(select n_doc_id, sum((n_product->'n_vats_summ')::numeric) as vat_sum
 		from journals_shipments_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s3
-	), 
+	),
 	(select pos_sum from
 		(select n_doc_id, sum((n_product->'n_amount')::numeric) as pos_sum
 		 from journals_shipments_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s1
@@ -426,10 +427,10 @@ returning n_id
 
     def save_shipments_document(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " save_shipments_document ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " save_shipments_document ", "*"*10)
+        self.parent._print("*"*10, " save_shipments_document ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " save_shipments_document ", "*"*10)
         doc_data = kwargs.get('doc_data')
         res = []
         if doc_data:
@@ -456,10 +457,10 @@ returning n_id
 
     def get_shipments_document(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_shipments_document ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_shipments_document ", "*"*10)
+        self.parent._print("*"*10, " get_shipments_document ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " get_shipments_document ", "*"*10)
         doc_id = kwargs.get('doc_id')
         ret = []
         if doc_id:
@@ -478,7 +479,7 @@ jsb.n_product->'n_total_summ',
 jsb.n_product->'n_product',
 j1.stock,
 jsb.n_product->'n_balance_id'
-from journals_shipments_bodies jsb 
+from journals_shipments_bodies jsb
 join (select pb.n_product_id, rp.c_name as name, pb.n_id  as id, pb.n_quantity as stock
  		from journals_products_balance pb
  		join ref_products rp on (rp.c_id=pb.n_product_id)) as j1

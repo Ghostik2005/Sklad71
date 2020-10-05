@@ -7,25 +7,22 @@ import datetime
 
 class ORDERS:
 
-    def __init__(self, RPC=None, parent=None):
-        self.RPC = RPC
+    def __init__(self, parent):
         self.parent = parent
 
     def _execute(self, sql):
-        _c = self.RPC('fdb')
-        # print(dir(_c))
-        return _c.execute('nomad/new_sklad_test', sql)
+        return self.parent._execute(sql)
 
     def get_orders_document_for_shipment(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_orders_document_for_shipment ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_orders_document_for_shipment ", "*"*10)
+        self.parent._print("*"*10, " get_orders_document_for_shipment ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " get_orders_document_for_shipment ", "*"*10)
         doc_id = kwargs.get('doc_id')
         ret = []
         if doc_id:
-            sql = f""" select job.n_id as order_id, 
+            sql = f""" select job.n_id as order_id,
 job.n_doc_id as order_doc_id,
 rp.c_name as prod_name,
 replace((job.n_product->'n_code')::text, '"', '') as prod_code,
@@ -41,11 +38,11 @@ jpb.n_quantity as balance_quan,
 jpb.n_price as n_price,
 jpb.n_vat as n_vat,
 jpb.n_quantity as n_stock
-from journals_orders_bodies job 
+from journals_orders_bodies job
 left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
-left join journals_products_balance jpb 
-	on (jpb.n_product_id = rp.c_id 
-		and (job.n_product->'n_price')::int = (select case 
+left join journals_products_balance jpb
+	on (jpb.n_product_id = rp.c_id
+		and (job.n_product->'n_price')::int = (select case
 											   when jpb1.n_vat_included is true then jpb1.n_price::int
 											   else (jpb1.n_price+jpb1.n_vat)::int
 											   end
@@ -94,14 +91,14 @@ order by job.n_id
 
     def get_orders_document(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_orders_document ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_orders_document ", "*"*10)
+        self.parent._print("*"*10, " get_orders_document ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " get_orders_document ", "*"*10)
         doc_id = kwargs.get('doc_id')
         ret = []
         if doc_id:
-            sql = f"""select job.n_id as order_id, 
+            sql = f"""select job.n_id as order_id,
 job.n_doc_id as order_doc_id,
 rp.c_name as prod_name,
 replace((job.n_product->'n_code')::text, '"', '') as prod_code,
@@ -114,11 +111,11 @@ rp.c_id as prod_id,
 jpb.n_id as balance_id,
 jpb.n_quantity as balance_quan,
 (job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ
-from journals_orders_bodies job 
+from journals_orders_bodies job
 left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
-left join journals_products_balance jpb 
-	on (jpb.n_product_id = rp.c_id 
-		and (job.n_product->'n_price')::int = (select case 
+left join journals_products_balance jpb
+	on (jpb.n_product_id = rp.c_id
+		and (job.n_product->'n_price')::int = (select case
 											   when jpb1.n_vat_included is true then jpb1.n_price::int
 											   else (jpb1.n_price+jpb1.n_vat)::int
 											   end
@@ -168,7 +165,7 @@ order by job.n_id
     def _set_where_get_data(self, params=None):
         inserts = []
         if params:
-            # print(params)
+            # self.parent._print(params)
             n_state = params.get('n_state')
             n_name = params.get('n_name')
             n_inn = params.get('n_inn')
@@ -277,10 +274,10 @@ order by job.n_id
 
     def get_data(self, *args, **kwargs):
         t = time.time()
-        print("*"*10, " get_data ", "*"*10)
-        print(args)
-        print(kwargs)
-        print("*"*10, " get_data ", "*"*10)
+        self.parent._print("*"*10, " get_data ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " get_data ", "*"*10)
         filters = kwargs.get('filters')
         if filters:
             field = filters['sort']['id']
@@ -309,7 +306,7 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 """
         sql_count = f"""select count(*) from ({sql+where}) as ccc"""
         sql += where + order + limits
-        print(sql)
+        self.parent._print(sql)
         rows = self._execute(sql) or []
         cou = self._execute(sql_count)
         t1 = time.time() - t
@@ -322,7 +319,7 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
             r = {
                 "row_num": i,
                 "n_id": str(row[0]),
-                "n_state": row[1], 
+                "n_state": row[1],
                 "n_supplier_id": str(row[2]),
                 "n_supplier": row[3],
                 'n_filename': row[4],
@@ -342,10 +339,10 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
                 'n_dt_recieved': row[19],
                 "n_comment": row[20],
             }
-            # print(r)
+            # self.parent._print(r)
             ret.append(r)
         t2 = time.time() - t1 - t
-        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args, 
+        answer = {"pos": offset, "total_count": cou, "data": ret, "params": args,
                   "kwargs": kwargs, "timing": {"sql": t1, "process": t2},
                   }
         return answer
@@ -353,10 +350,10 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 
 #     def get_filter_list(self, *args, **kwargs):
 #         t = time.time()
-#         print("*"*10, " get_filter_list ", "*"*10)
-#         print(args)
-#         print(kwargs)
-#         print("*"*10, " get_filter_list ", "*"*10)
+#         self.parent._print("*"*10, " get_filter_list ", "*"*10)
+#         self.parent._print(args)
+#         self.parent._print(kwargs)
+#         self.parent._print("*"*10, " get_filter_list ", "*"*10)
 #         c_name = kwargs.get('filterName')
 #         rows = []
 #         if c_name:
@@ -400,7 +397,7 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 #     def _set_where_get_data(self, params=None):
 #         inserts = []
 #         if params:
-#             # print(params)
+#             # self.parent._print(params)
 #             n_number = params.get('n_number')
 #             n_state = params.get('n_state')
 #             n_dt_invoice = params.get('n_dt_invoice')
@@ -497,19 +494,19 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 #         n_id = header.get('n_id')
 #         n_exec = header.get('n_executor')
 #         sql_upd_header = f"""update journals_orders_headers jah
-# set (n_recipient, n_number, n_dt_invoice, n_supplier, 
-# 	 n_summ, n_nds, n_pos_numbers, 
+# set (n_recipient, n_number, n_dt_invoice, n_supplier,
+# 	 n_summ, n_nds, n_pos_numbers,
 # 	 n_base, n_executor,
-# 	 n_dt_change) = 
+# 	 n_dt_change) =
 # 	({int(n_recipient)}::bigint, '{str(n_number)}', '{n_dt_invoice}'::date, {int(n_supplier)}::bigint,
 # 	(select total_sum from
 # 		(select n_doc_id, sum((n_product->'n_total_summ')::numeric) as total_sum
 # 		from journals_orders_bodies where n_doc_id = {int(n_id)}::bigint and not n_deleted group by n_doc_id) as s2
-# 	), 
+# 	),
 # 	(select vat_sum from
 # 		(select n_doc_id, sum((n_product->'n_vats_summ')::numeric) as vat_sum
 # 		from journals_orders_bodies where n_doc_id = {int(n_id)}::bigint and not n_deleted group by n_doc_id) as s3
-# 	), 
+# 	),
 # 	(select pos_sum from
 # 		(select n_doc_id, sum((n_product->'n_amount')::numeric) as pos_sum
 # 		 from journals_orders_bodies where n_doc_id = {int(n_id)}::bigint and not n_deleted group by n_doc_id) as s1
@@ -522,7 +519,7 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 #         return sql_upd_header
 
 #     def _make_sql_new_header(self, header):
-#         n_state = header.get('n_state') 
+#         n_state = header.get('n_state')
 #         n_base = header.get('n_base')
 #         n_recipient = header.get('n_recipient')
 #         n_number = header.get('n_number')
@@ -530,26 +527,26 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 #         n_supplier = header.get('n_supplier')
 #         n_id = header.get('n_id')
 #         n_exec = header.get('n_executor')
-#         sql_new_header = f"""insert into journals_orders_headers 
-# (n_state, n_number, n_dt_invoice, 
-#  n_summ, n_nds, n_pos_numbers, n_base, 
-#  n_supplier, n_recipient, 
-#  n_executor, 
-#  n_paid) values 
-# ({int(n_state)}, '{str(n_number)}', '{n_dt_invoice}'::date, 
+#         sql_new_header = f"""insert into journals_orders_headers
+# (n_state, n_number, n_dt_invoice,
+#  n_summ, n_nds, n_pos_numbers, n_base,
+#  n_supplier, n_recipient,
+#  n_executor,
+#  n_paid) values
+# ({int(n_state)}, '{str(n_number)}', '{n_dt_invoice}'::date,
 #  0, 0, 0, '{n_base}'::text,
-#  {int(n_supplier)}::bigint, {int(n_recipient)}::bigint, 
+#  {int(n_supplier)}::bigint, {int(n_recipient)}::bigint,
 #  (select n_id from ref_employees where n_name = '{n_exec}'::text),
 #  (select n_id from ref_paids where n_value = 'Нет'::text)
 # )
 # returning n_id
 # """
-#         print(sql_new_header)
+#         self.parent._print(sql_new_header)
 #         return sql_new_header
 
-#     def _make_sql_del_body(self, doc_id):    
-#         sql = f"""update journals_orders_bodies set 
-# n_deleted = true 
+#     def _make_sql_del_body(self, doc_id):
+#         sql = f"""update journals_orders_bodies set
+# n_deleted = true
 # where n_doc_id = {doc_id}::bigint and not n_deleted"""
 
 #         return sql
@@ -559,7 +556,7 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 #         for row in data.get('table'):
 #             if not row.get('n_code'):
 #                 continue
-#             # print(row)
+#             # self.parent._print(row)
 #             json_row = {
 #                 "n_product": int(row['n_prod_id']),
 #                 "n_code": row['n_code'],
@@ -582,26 +579,26 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 
 #     def recalc_orders_body(self, *args, **kwargs):
 #         t = time.time()
-#         print("*"*10, " recalc_orders_body ", "*"*10)
-#         print(args)
-#         print(kwargs)
-#         print("*"*10, " recalc_orders_body ", "*"*10)
+#         self.parent._print("*"*10, " recalc_orders_body ", "*"*10)
+#         self.parent._print(args)
+#         self.parent._print(kwargs)
+#         self.parent._print("*"*10, " recalc_orders_body ", "*"*10)
 #         doc_id = kwargs.get('doc_id')
 #         if doc_id:
 #             sql = f"""update journals_orders_headers jah
-# set (n_summ, 
-#      n_nds, 
-#      n_pos_numbers, 
-# 	 n_dt_change) = 
+# set (n_summ,
+#      n_nds,
+#      n_pos_numbers,
+# 	 n_dt_change) =
 # 	(
 # 	(select total_sum from
 # 		(select n_doc_id, sum((n_product->'n_total_summ')::numeric) as total_sum
 # 		from journals_orders_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s2
-# 	), 
+# 	),
 # 	(select vat_sum from
 # 		(select n_doc_id, sum((n_product->'n_vats_summ')::numeric) as vat_sum
 # 		from journals_orders_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s3
-# 	), 
+# 	),
 # 	(select pos_sum from
 # 		(select n_doc_id, sum((n_product->'n_amount')::numeric) as pos_sum
 # 		 from journals_orders_bodies where n_doc_id = {int(doc_id)}::bigint and not n_deleted group by n_doc_id) as s1
@@ -620,10 +617,10 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 
 #     def save_orders_document(self, *args, **kwargs):
 #         t = time.time()
-#         print("*"*10, " save_orders_document ", "*"*10)
-#         print(args)
-#         print(kwargs)
-#         print("*"*10, " save_orders_document ", "*"*10)
+#         self.parent._print("*"*10, " save_orders_document ", "*"*10)
+#         self.parent._print(args)
+#         self.parent._print(kwargs)
+#         self.parent._print("*"*10, " save_orders_document ", "*"*10)
 #         doc_data = kwargs.get('doc_data')
 #         res = []
 #         if doc_data:
@@ -650,14 +647,14 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 
 #     def get_orders_document(self, *args, **kwargs):
 #         t = time.time()
-#         print("*"*10, " get_orders_document ", "*"*10)
-#         print(args)
-#         print(kwargs)
-#         print("*"*10, " get_orders_document ", "*"*10)
+#         self.parent._print("*"*10, " get_orders_document ", "*"*10)
+#         self.parent._print(args)
+#         self.parent._print(kwargs)
+#         self.parent._print("*"*10, " get_orders_document ", "*"*10)
 #         doc_id = kwargs.get('doc_id')
 #         ret = []
 #         if doc_id:
-#             sql = f"""select n_id, 
+#             sql = f"""select n_id,
 # rp.c_name,
 # jab.n_product->'n_code',
 # jab.n_product->'n_unit',
@@ -669,7 +666,7 @@ join ref_partners rec on (joh.n_recipient_id = rec.n_id)
 # jab.n_product->'n_total_summ',
 # rp.c_id
 
-# from journals_orders_bodies jab 
+# from journals_orders_bodies jab
 # join ref_products rp on (rp.c_id=(jab.n_product->'n_product')::bigint)
 # join ref_vats rv on (rv.c_vat=(jab.n_product->'n_vats_base')::int)
 # where jab.n_doc_id = {int(doc_id)}
@@ -719,10 +716,10 @@ sql = """insert into journals_orders_headers
 	n_dt_price, n_dt_create,
     n_number, n_dt_send, n_recipient,
 	n_recipient_id, n_summ, n_pos_numbers,
-    n_dt_recieved, n_comment) 
+    n_dt_recieved, n_comment)
 values (
 	1, 2018121495480000001, 'order51100-7733833655_sin11-20188453618.txt',
-	'20188453618', '', 
+	'20188453618', '',
 	'', '', '7733833655',
 	'06.07.2020 15:36:02'::timestamp, '06.07.2020 15:36:02'::timestamp,
 	'1', '06.07.2020 15:37:51'::timestamp, 'Тверь, Волоколамский пр-т., 13',
@@ -733,12 +730,12 @@ values (
 sql = """insert into journals_orders_bodies (
 n_doc_id, n_product) values
 (2018931210910000001,
-('{"n_code": "8766900", "n_amount": 5, "n_price": 12000, 
+('{"n_code": "8766900", "n_amount": 5, "n_price": 12000,
 	"n_product": "1000 ТРАВ крем д/рук Интенсивное увлажнение 75мл Первое Решение ООО",
 	"n_man": "", "n_comment": "-1", "n_matrix": "554770"}')::jsonb
 )"""
 
-sql = """update journals_products_balance jpb1 set n_price_price = (select case 
+sql = """update journals_products_balance jpb1 set n_price_price = (select case
 	when jpb.n_vat_included then (jpb.n_price*1.15)::int
 	else ((jpb.n_price + jpb.n_vat)*1.15)::int
 end as temp_price

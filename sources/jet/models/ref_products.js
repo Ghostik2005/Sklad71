@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {productSelectionGetData} from "../models/data_processing";
+import {getDatas} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 import TemplateProductsView from "../models/template_products_dt"
 import {refProdSelColumns} from "../variables/ref_product_selection_dt";
@@ -18,7 +18,7 @@ export default class RefProductsView extends JetView{
         this.table_id = webix.uid();
         let dt = new TemplateProductsView(th.app, {
             columns: refProdSelColumns,
-            loadFunction: productSelectionGetData,
+            loadFunction: getDatas.product_data,
             sorting: {id: "c_name", dir: "asc"},
             topParent: th,
             id: this.table_id,
@@ -81,7 +81,7 @@ export default class RefProductsView extends JetView{
                                 onItemClick: ()=>{
                                     // let item = this.$$("__table").getSelectedItem();
                                     let item = $$(this.table_id).getSelectedItem();
-                                    let prod_select = this.ui( 
+                                    let prod_select = this.ui(
                                         new ProductCardView(this.app, this, {c_id: item.c_id, c_name: item.c_name, id: item.id})
                                     );
                                     prod_select.show();
@@ -89,7 +89,7 @@ export default class RefProductsView extends JetView{
                             }
                         },
                         {view: "button",
-                            label: "add",
+                            label: "доб.",
                             width: 50,
                             tooltip: "Добавить товар",
                             localId: "__add",
@@ -138,11 +138,9 @@ export default class RefProductsView extends JetView{
     }
 
     getData(){
-        // let t = this.$$("__table")
         let t = $$(this.table_id)
         t.clearAll(true);
         t.loadNext(0, 0, 0, 0, 1).then((data)=> {
-            // console.log('data1', data);
             if (data) {
                 t.clearAll(true);
                 t.parse(data);
@@ -156,13 +154,11 @@ export default class RefProductsView extends JetView{
         try {
             re = this.$$("__search").getValue();
         } catch(e) {
-            // console.log('e', e)
         }
         return re;
     }
 
     show(header){
-        // console.log(header)
         if (header) {
             this.getRoot().getHead().getChildViews()[0].setValue(header);
         }
@@ -172,9 +168,9 @@ export default class RefProductsView extends JetView{
 
     hide(){
         setTimeout(() => {
-            return this.getRoot().hide();    
+            return this.getRoot().hide();
         }, 10);
-        
+
     }
 
     ready() {

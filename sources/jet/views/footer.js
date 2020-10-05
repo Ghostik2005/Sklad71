@@ -8,7 +8,7 @@ export default class FooterView extends JetView{
         var prod = (cfg.production) ? "Production" : "test";
         return {view: 'toolbar',
             id: "__bar__main_footer",
-            css: 'margin0',
+            css: 'margin0 center_view',
             borderless: true,
             cols: [
                 {view: "label",
