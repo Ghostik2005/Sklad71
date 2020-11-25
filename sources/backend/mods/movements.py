@@ -338,7 +338,7 @@ where n_doc_id = {doc_id}::bigint and not n_deleted"""
                 "n_ship_price": int(row['n_ship_price']),
                 "n_vat": float(row['n_vat']),
                 "n_novats_summ": int(row['n_novats_summ']),
-                "n_charge": float(row['n_charge']),
+                "n_charge": float(row['n_charge']) if row['n_charge'] else 0,
                 "n_vats_summ": int(row['n_vats_summ']),
                 "n_total_summ": int(row['n_total_summ']),
                 "n_balance_id": int(row['n_balance_id'])

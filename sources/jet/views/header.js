@@ -16,8 +16,9 @@ export default class HeaderView extends JetView{
             borderless: true,
             margin: 0,
             cols: [
-                {view: "label", label: "<span class='label_highlited'>Склад71</span>", autowidth: true,
-                    css: "label_highlited"
+                {view: "label", label: "<span class='label_highlited'>Хознужды</span>", autowidth: true,
+                    css: "label_highlited",
+                    hidden: true,
                 },
                 {width: emptyWidth*3},
                 {view: "label",
@@ -65,12 +66,12 @@ export default class HeaderView extends JetView{
                     },
                 },
                 {width: emptyWidth},
-                {view: "button", 
+                {view: "button",
                     id: `__button__logout`,
                     hidden: (PRODUCTION) ? cfg.hidden : false,
                     longPress: cfg.longPress,
                     width: cfg.width,
-                    height: 24, 
+                    height: 24,
                     template: () => {
                         let icon = '<svg  version="1.1" class="icon_exit_button" viewBox="0 0 22 22">' + cfg.icon +'</svg>';
                         let box = "<div class='webix_el_box', title='" + cfg.title + "'><button class='webix_button exit_button'>" + icon + "<span class='exit_button_label', style=''>" + cfg.label + "</span>"
@@ -84,7 +85,7 @@ export default class HeaderView extends JetView{
                     }
                 }
             ]
-    
+
         }
 
         return toolbar;
@@ -92,7 +93,7 @@ export default class HeaderView extends JetView{
     }
 
     changeOrganization(id, event) {
-        document.message('Смена организации');
+        document.message('Для смены организации свяжитесь с администратором');
 
     }
 
@@ -103,6 +104,7 @@ export default class HeaderView extends JetView{
 
     setOrg() {
         this.$$("__org_name").setValue(this.app.config.home_org);
+        // console.log('org', this.app.config.home_org)
         this.$$("__org_name").resize();
     }
 

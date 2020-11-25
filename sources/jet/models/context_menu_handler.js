@@ -1,6 +1,6 @@
 "use strict";
 
-import {newDocument} from "../models/common_functions";
+import {newDocument, newReport} from "../models/common_functions";
 import TemplateMainTableView from  "../models/template_main_table";
 import RefProductsView from "../models/ref_products";
 import * as refColumns from "../variables/refs_columns_dt";
@@ -45,6 +45,14 @@ export const handle_buttom_context = {
                 break;
             case "56000":
                 document.message("Подразделения контрагентов");
+                cfg = {
+                    name: "points",
+                    sorting: {id: "n_name", dir: "asc"},
+                    columns: refColumns.pointsColumns
+                };
+                v = new RefView($$("sklad_main_ui").$scope.app, cfg);
+                s = $$("sklad_main_ui").$scope.ui(v);
+                s.show('Подразделения');
                 break;
 
         }
@@ -386,6 +394,7 @@ export function handle_context(cfg) {
     let doc_type = cfg.doc_type;
     let app = th.app;
     let r_data;
+    var gr;
 
     switch(id) {
         case "1":
@@ -430,15 +439,28 @@ export function handle_context(cfg) {
                 context.table.updateItem(r_data.kwargs.filters.intable, r_data.data[0])
             }
             break;
+        case "201":
+            gr = context.table.getItem(context.position.row);
+            newDocument.movement(th, gr);
+            break
+        case "204":
+            gr = context.table.getItem(context.position.row);
+            newDocument.shipment(th, gr);
+            break
         case "901":
             newDocument.arrival(th);
             break;
         case "902":
             newDocument.shipment(th);
             break;
-        case "907"  :
+        case "907":
             newDocument.rest(th);
             break;
+        case "301":
+            document.message('PPPPrint')
+            newReport.document(th, doc_type, row);
+            break
+
         // default:
         //     document.message(local_this.getMenuItem(id).value);
         //     break

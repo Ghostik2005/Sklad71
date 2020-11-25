@@ -6,6 +6,7 @@ import {dtColumns} from "../variables/arrivals_document_dt";
 import DocumentHeader from "../models/document_header"
 import ChargesView from "../models/arrivals_set_charges";
 import ProductSelectionView from "../models/product_selection";
+import {newReport} from "../models/common_functions";
 
 let states = document.app.states;
 
@@ -120,6 +121,23 @@ export default class ArrivalBody extends JetView{
                                     }
                                 }
                             },
+                            {view: "button",
+                                localId: "__report",
+                                label: "Печать",
+                                width: 136,
+                                on: {
+                                    onItemClick: ()=>{
+                                        if (this.doc.n_state != 2) {
+                                            let not_saved = this.$$("__save").callEvent('onItemClick');
+                                            if (!not_saved) {
+                                                newReport.document(this, "arrival", this.doc);
+                                            }
+                                        } else {
+                                            newReport.document(this, "arrival", this.doc);
+                                        }
+                                    }
+                                }
+                            },
                             {},
                             {view: "button",
                                 label: "Сохранить",
@@ -148,6 +166,8 @@ export default class ArrivalBody extends JetView{
                                     onItemClick: ()=>{
                                         let not_saved = this.$$("__save").callEvent('onItemClick');
                                         if (!not_saved) {
+                                            console.log('doc', this.doc);
+                                            console.log('doc.id', this.doc.id);
                                             let r_data = app.getService("common").holdDocument('arrival', this.doc.n_id, this.doc.id);
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
                                             if (r_data.data) {
@@ -159,8 +179,9 @@ export default class ArrivalBody extends JetView{
                                                     }
                                                 }
                                                 this.hide();
-                                                let q = this.ui(new ChargesView(app, this, r_data.data1))
-                                                q.show('Установка наценок для прайса')
+                                                // ////////не делаем наценки!!!!!
+                                                // let q = this.ui(new ChargesView(app, this, r_data.data1))
+                                                // q.show('Установка наценок для прайса')
                                             } else {
                                                 document.message("Ошибка транзакции при проведении документа","error", 3)
                                             }
@@ -246,17 +267,22 @@ export default class ArrivalBody extends JetView{
     }
 
     saveDocumentServer(th, data){
+        console.log('q2')
         let result = false
+        console.log('th', th);
+        console.log('doc', th.doc);
+        console.log('doc.id', th.doc.id);
         let r_data = documentProcessing.save(data, th.doc.id, 'arrivals');
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
+        this.doc = r_data.data[0];
+        this.getHeader().$$("__n_id").setValue(this.doc.n_id);
+        // this.getRoot().getChildViews()[1].getChildViews()[0].$scope.$$("__n_id").setValue(this.doc.n_id)
         if (this.table) {
             if (!this.flag_new) {
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
-                this.table.add(r_data.data[0], 0);
                 // document.message("добавляем позицию наверх")
-                this.doc = this.table.getItem(this.table.getFirstId())
-                this.getRoot().getChildViews()[1].getChildViews()[1].$scope.$$("__n_id").setValue(this.doc.n_id)
+                this.table.add(r_data.data[0], 0);
             }
         }
         return result
@@ -269,7 +295,7 @@ export default class ArrivalBody extends JetView{
     }
 
     setHeader() {
-        return this.getHeader.setHeader();
+        return this.getHeader().setHeader();
     }
 
     hide(){

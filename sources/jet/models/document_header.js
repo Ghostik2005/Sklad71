@@ -281,20 +281,25 @@ export default class DocumentHeader extends JetView{
     recalcHeader(master){
         function getSum(columnId) {
             let result = 0;
-            master.mapCells(null, columnId, null, 1, function(value){
-                let v = +value
-                if (!isNaN(v))
-                result+=v;
-                return value;
-            });
+            let cols = master.config.columns;
+            let pr = false
+            cols.forEach( (item)=> {
+                if (item.id == columnId) pr = true
+            })
+            if (pr) {
+                master.mapCells(null, columnId, null, 1, function(value){
+                    let v = +value
+                    if (!isNaN(v))
+                    result+=v;
+                    return value;
+                });
+            }
             return result
         }
 
         this.$$("__sum").setValue(getSum("n_total_summ"));
         this.$$("__vats").setValue(getSum("n_vats_summ"));
         this.$$("__pos").setValue(getSum("n_amount"));
-
-
 
     }
 

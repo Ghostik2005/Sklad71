@@ -21,6 +21,7 @@ export default class RefProductsView extends JetView{
             loadFunction: getDatas.product_data,
             sorting: {id: "c_name", dir: "asc"},
             topParent: th,
+            name: "_products_",
             id: this.table_id,
             dblClick: function(item) {
                 th.$$("__edit").callEvent("onItemClick")
@@ -72,7 +73,7 @@ export default class RefProductsView extends JetView{
                         },
                         {},
                         {view: "button",
-                            label: "edit",
+                            label: "РЕД",
                             width: 50,
                             tooltip: "Редактировать товар",
                             localId: "__edit",
@@ -138,6 +139,7 @@ export default class RefProductsView extends JetView{
     }
 
     getData(){
+
         let t = $$(this.table_id)
         t.clearAll(true);
         t.loadNext(0, 0, 0, 0, 1).then((data)=> {

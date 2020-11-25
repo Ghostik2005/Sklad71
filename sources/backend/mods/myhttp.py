@@ -67,6 +67,9 @@ def _http(self, head, body):
 
 
         if 'post' == head[''][0]:
+            if b'\x1f\x8b\x08\x00' == body[:4]:
+                body = bs.gzip_decode(body, -1)
+            # log(body)
             body = json.loads(body)
             r = _func(self, body['method'], body.get('params', []), body.get('kwargs', {}))
         else:

@@ -213,7 +213,7 @@ export default class RefPartnerCardView extends JetView{
                     {rows: [
                         {},
                         {view: "button",
-                            label: "COPY",
+                            label: "КОП",
                             width: 60,
                             tooltip: "Скопировать в полное название",
                             localId: "__copy_to_full",
@@ -254,7 +254,7 @@ export default class RefPartnerCardView extends JetView{
                     {rows: [
                         {},
                         {view: "button",
-                            label: "COPY",
+                            label: "КОП",
                             width: 60,
                             tooltip: "Скопировать в полное название",
                             localId: "__copy_to_name",
@@ -416,7 +416,7 @@ export default class RefPartnerCardView extends JetView{
                     {rows: [
                         {},
                         {view: "button",
-                            label: "COPY",
+                            label: "КОП",
                             width: 60,
                             tooltip: "Скопировать в фактический адрес",
                             localId: "__copy_to_actual_addr",
@@ -455,7 +455,7 @@ export default class RefPartnerCardView extends JetView{
                     {rows: [
                         {},
                         {view: "button",
-                            label: "COPY",
+                            label: "КОП",
                             width: 60,
                             tooltip: "Скопировать в юридический адрес",
                             localId: "__copy_to_actual_addr",

@@ -47,7 +47,7 @@ export default class ProductCardView extends JetView{
                         }
                     }
                 },
-                value: 1,
+                value: 2,
             },
             {width: emptyWidth*2},
             {view: "combo",
@@ -159,13 +159,14 @@ export default class ProductCardView extends JetView{
                 name: "c_pack",
                 tooltip: true,
                 localId: "__c_pack",
-                label: "Упаковка",
+                label: "Упаковка (мл, г, шт. и т.д.)",
                 labelPosition: "top",
                 height: 60,
                 inputHeight: 38,
                 labelWidth: 70,
                 width: fourth,
                 value: "",
+                pattern:{ mask:"#########", allow:/[0-9]/g}
             },
             {width: emptyWidth*2},
             new TemplateComboCard(this.app, {width: fourth, labelName: "Первичная упаковка",
@@ -248,7 +249,7 @@ export default class ProductCardView extends JetView{
                             {rows: [
                                 {},
                                 {view: "button",
-                                    label: "COP",
+                                    label: "КОП.",
                                     width: 50,
                                     tooltip: "Скопировать в полное название",
                                     localId: "__copy",

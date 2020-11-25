@@ -61,7 +61,7 @@ export default class ShipmentSelectionView extends JetView{
                         },
                         {},
                         {view: "button",
-                            label: "edit",
+                            label: "РЕД",
                             width: 50,
                             tooltip: "Редактировать товар",
                             localId: "__edit",

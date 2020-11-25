@@ -1,6 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
+import {reference, isEmpty} from "../models/data_processing";
 
 
 export default class TemplateProductsView extends JetView{
@@ -11,7 +12,7 @@ export default class TemplateProductsView extends JetView{
     }
 
     config(){
-
+        let l_this = this;
         let table = {view: "datatable",
             // summs: undefined,
             id: this.cfg.id,
@@ -58,6 +59,23 @@ export default class TemplateProductsView extends JetView{
                 // }
             },
             on: {
+                onCheck: function(row_id, col_name, value) {
+                    let item = this.getItem(row_id);
+                    let table_name = this.$scope.cfg.name;
+                    let params = {"table": table_name, "item_id": item.c_id,
+                        "item_code": item.c_code,
+                        "value": value, "field": col_name
+                    }
+                    // console.log('p', params);
+                    let res = reference.checkmark(params);
+                    if (isEmpty(res)) {
+                        this.blockEvent()
+                        item[col_name] = !value;
+                        this.updateItem(row_id, item);
+                        this.unblockEvent()
+                    }
+                },
+
                 onAfterSelect: function() {
                     let i = this.getSelectedId()
                     if (i) {
@@ -69,9 +87,9 @@ export default class TemplateProductsView extends JetView{
                     }
                 },
                 onAfterLoad: function() {
-                    this.blockEvent();
+                    // this.blockEvent();
                     this.markSorting(this.config.sorting.id, this.config.sorting.dir);
-                    this.unblockEvent();
+                    // this.unblockEvent();
                 },
                 onKeyPress: function(code, event) {
                     if (code===13) {
@@ -79,11 +97,14 @@ export default class TemplateProductsView extends JetView{
                         this.callEvent('onItemDblClick', [item])
                     }
                 },
-                onItemDblClick: this.cfg.dblClick,
+                onItemDblClick: function(item) {
+                    return l_this.cfg.dblClick(item, this)
+                },
             }
         }
     return table
 
     }
+
 
 }

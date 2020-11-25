@@ -34,7 +34,7 @@ button.webix_button,
 }
 
 .center_view {
-    border-top-width: 1px !important; 
+    border-top-width: 1px !important;
 }
 
 .margin0 {
@@ -95,25 +95,25 @@ button.webix_button,
 }
 
 .webix_modal {
-    /* width: 0; 
+    /* width: 0;
     height: 0; */
 }
 
-.status_bar .webix_el_box, 
+.status_bar .webix_el_box,
 .ordinary_label{
     font-style: normal;
     font-weight: normal;
 }
 
-.menu_filters_margin_top input, 
+.menu_filters_margin_top input,
 .menu_filters_margin_top label,
-.menu_filters_margin_top button, 
+.menu_filters_margin_top button,
 .menu_filters_margin_top .webix_inp_static{
     height: 28px !important;
 }
 
 
-.html_button, 
+.html_button,
 .side_menu_button,
 .custom_menu_button{
     background-repeat: no-repeat;
@@ -192,7 +192,7 @@ button,
 
 .webix_ssheet_toolbar_spacer {
     background: #dddddd;
-  }  
+  }
 
 .side_bar_bar {
     padding-top: 3px;
@@ -259,7 +259,7 @@ button,
 }
 
 .exit_button_label {
-    line-height: 24px; 
+    line-height: 24px;
 }
 
 .webix_all_tabs .webix_item_tab {
@@ -280,7 +280,12 @@ button,
     opacity: 0.9;
 }
 
+.multiline_header {
+    line-height: 20px !important;
+}
+
 .center_text,
+.multiline_header,
 .webix_list_item.menu,
 .context_menu ~ .webix_menu .webix_list_item,
 .context_menu .webix_list_item {

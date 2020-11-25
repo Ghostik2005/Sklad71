@@ -237,13 +237,14 @@ export default class OrderBody extends JetView{
         let result = false
         let r_data = documentProcessing(data, th.doc.id, "orders");
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
+        this.doc = r_data.data[0];
+        this.getHeader.$$("__n_id").setValue(this.doc.n_id);
+        // this.getRoot().getChildViews()[1].getChildViews()[0].$scope.$$("__n_id").setValue(this.doc.n_id)
         if (this.table) {
             if (!this.flag_new) {
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
-                this.doc = this.table.getItem(this.table.getFirstId())
-                this.getRoot().getChildViews()[1].getChildViews()[1].$scope.$$("__n_id").setValue(this.doc.n_id)
             }
         }
         return result

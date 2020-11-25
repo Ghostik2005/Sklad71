@@ -5,6 +5,20 @@ import ArrivalBody from "../models/arrivals_document_body";
 import ShipmentsBody from "../models/shipments_document_body";
 import MovementsBody from "../models/movements_document_body";
 import RestBody from "../models/rests_document_body";
+import {report_processing} from "../models/data_processing";
+
+
+export const newReport = {
+
+    document: (th, doc_type, doc) => {
+        // console.log('th', th);
+        // console.log('ar1', doc_type);
+        // console.log('ar2', doc);
+        report_processing.new_report(doc_type, doc.n_id);
+
+    }
+
+}
 
 export const newDocument = {
 
@@ -61,6 +75,7 @@ export const newDocument = {
         let master = $$("sklad_main_ui").$scope;
         let table = (master.app.commonWidgets.sidebar.screens._movements) ? $$("_movements_main") : undefined;
         let new_doc = master.ui(MovementsBody);
+        // console.log('gr', gr);
         let blank_item = {
             flag_new: true,
             n_dt_invoice: new Date(),

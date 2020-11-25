@@ -10,6 +10,7 @@ import glob
 import os
 import subprocess
 import traceback
+import tempfile
 
 if __name__ == "__main__":
     import botclient
@@ -20,13 +21,25 @@ class SKLAD:
 
     def __init__(self, log=None):
 
+
         self.log = log
 
         self._range_no = 10 # 0, 1, 10, 100
-
+        self.temp_dir = tempfile.TemporaryDirectory(prefix='price_generator_')
+        self.temp_dir = self.temp_dir.name
+        os.mkdir(self.temp_dir)
         # self.RPC = botclient.BOTProxy('dbbot.plx-db0', ('127.0.0.1', 4222))
-        self.RPC = botclient.BOTProxy('dbbot.test', ('127.0.0.1', 4222))
+        # self.RPC = botclient.BOTProxy('dbbot.test', ('127.0.0.1', 4222))
+        self.RPC = botclient.BOTProxy('dbbot.sklad', ('127.0.0.1', 4222))
+
         self._set_gen_id()
+
+        try:
+            from . import generate_report
+        except ImportError:
+            self.report = self.__not_implemented
+        else:
+            self.report = generate_report.REPORT(self)
 
         try:
             from . import balances
@@ -70,6 +83,21 @@ class SKLAD:
         else:
             self.rests = rests.RESTS(self)
 
+        try:
+            from . import generate_report
+        except ImportError:
+            self.generate_report = self.__not_implemented
+        else:
+            self.generate_report = generate_report.REPORT(self)
+
+
+    def at_exit(self):
+        if self.temp_dir and os.path.exists(self.temp_dir):
+            import shutil
+            shutil.rmtree(self.temp_dir)
+        if hasattr(self.generate_report, 'at_exit'):
+            self.generate_report.at_exit()
+
     def _print(self, *msg):
 
         if self.log:
@@ -82,7 +110,7 @@ class SKLAD:
         return "test"
 
     def _request(self, sql):
-        return self.RPC('fdb.execute', sync=(1, 7))('ms/new_sklad_test.ro', sql)
+        return self.RPC('fdb.execute', sync=(1, 7))('ms/hoznuzhdy.ro', sql)
         # _c = self.RPC('fdb', sync=(1, 7))
         # self._print('+'*20)
         # self._print(_c)
@@ -91,7 +119,7 @@ class SKLAD:
 
     def _execute(self, sql):
         _c = self.RPC('fdb')
-        return _c.execute('ms/new_sklad_test', sql)
+        return _c.execute('ms/hoznuzhdy', sql)
 
     def _uid_range(self):
         with requests.get('http://mshub.ru/ext/uid%s' % self._range_no, timeout=(3, 5), verify=False) as f:
@@ -116,7 +144,34 @@ class SKLAD:
             ret = self._execute(sql)
 
 
+    def products_checkmark(self, *args, **kwargs):
+        t = time.time()
+        self._print("*"*10, " checkmark ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " checkmark ", "*"*10)
+        rows = []
+        field = kwargs.get("field")
+        value = True if kwargs.get("value") else False
+        item_code = kwargs.get("item_code")
+        item_id = kwargs.get("item_id")
 
+        if field and item_code and item_id:
+            sql = f"""update ref_products
+set {field} = '{str(value)}'::bool
+where c_id = {item_id}
+and c_nnt = '{item_code}'::text
+returning c_id, c_nnt, {field}
+"""
+            rows = self._request(sql)
+        t1 = time.time() - t
+        if rows:
+            ret = rows[0]
+        else:
+            ret = None
+        t2 = time.time() - t1 - t
+        answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
+        return answer
 
     def get_filter_list(self, *args, **kwargs):
         t = time.time()
@@ -153,7 +208,7 @@ from ref_partners
 --where n_type = (select n_id from ref_partners_types where n_name = 'Получатель')
 order by n_name asc"""
             elif c_name == 'n_recipient':
-                if doc_type == 'shipment':
+                if doc_type == 'shipment' or doc_type == 'movement' or doc_type == 'order':
                     sql = f"""select n_name, n_id
 from ref_partners
 where n_type in (select n_id from ref_partners_types where n_name = 'Точка')
@@ -419,6 +474,7 @@ insert into journals_products_balance
 	(n_product_id,
 	n_quantity,
 	n_price,
+    n_price_price,
 	n_vat,
 	n_consignment
 	)
@@ -426,6 +482,7 @@ select
 	(jrb.n_product->'n_product')::bigint as n_product_id,
 	(jrb.n_product->'n_amount')::bigint as n_quantity,
 	(jrb.n_product->'n_price')::numeric as n_price,
+    (jrb.n_product->'n_price')::numeric as n_price,
 	round(( ( (jrb.n_product->'n_price')::numeric * (jrb.n_product->'n_vats_base')::numeric)/100)::numeric) as n_vat,
 	replace((jrb.n_product->'n_consignment')::text, '"', '') as n_consignment
 from journals_rests_bodies jrb
@@ -594,40 +651,160 @@ and journals_products_balance.n_consignment =
 
         return source.split("\t")[-1]
 
-    def create_order(self, *args, **kwargs):
+    def put_order(self, *args, **kwargs):
+
+        kwargs_ = {'document':
+            {'ПРАЙС': '19.11.2020 11:56:02',
+                'ИНН': '7733833655',
+                'НОМЕР': '1',
+                'КОММЕНТАРИЙ': ': тестовый заказ',
+                'ПРИМЕЧАНИЕ': ['-1'],
+                'ПРОИЗВОДИТЕЛЬ': ['None'],
+                'МАТРИЦА': ['554770:'],
+                'ЦЕНА': ['5.0'],
+                'СУММА': '20.0',
+                'ИМЯ': 'Тест',
+                'ПОСТАВЩИК': '51100_тестхоз71',
+                'КОЛИЧЕСТВО': ['4'],
+                'ПОЗИЦИЙ': '1',
+                'АДРЕС': '',
+                'ФАЙЛ': 'order51100-7733833655_sin11-20324321623.txt',
+                'КОД1': '1234:5678=9123:4567',
+                'КОД2': ['170072::14963504'],
+                'ТОВАР': ['Антистеплер'],
+                'ОТПРАВКА': '19.11.2020 11:56:44',
+                'ИД': '20324321623',
+                'СОЗДАН': '19.11.2020 11:56:02'
+            }
+        }
         t = time.time()
-        ret = ['ok',]
-        self._print("*"*10, " create_order ", "*"*10)
+        self._print("*"*10, " put_order ", "*"*10)
         self._print(args)
         self._print(kwargs)
-        self._print("*"*10, " create_order ", "*"*10)
-        o_path = "/data/projects/sklad71/prices"
-        files = glob.glob(os.path.join(o_path, 'order51100-*.bz2'))
-        for f_name in files:
-            self._print(f_name)
-            file_data = None
-            with bz2.open(f_name, "r") as _f:
-                file_data = _f.read().decode()
-            if file_data:
-                # self._print(file_data)
-                file_data = file_data.splitlines()
-                n_filename = self._get_str(file_data[1])
-                n_id_field = self._get_str(file_data[2])
-                n_name = self._get_str(file_data[3])
-                n_p_id = '?'
-                n_code = self._get_str(file_data[4])
-                n_inn = self._get_str(file_data[5])
-                n_dt_price = self._get_str(file_data[6])
-                n_dt_create = self._get_str(file_data[7])
-                n_number = self._get_str(file_data[8])
-                n_dt_send = self._get_str(file_data[9])
-                n_pos_numbers = self._get_str(file_data[10])
-                n_summ = int(float(self._get_str(file_data[11]))*100)
-                n_recipient = 'Тверь, Волоколамский пр-т., 13' # self._get_str(file_data[12])
-                n_comment = self._get_str(file_data[13])
-                n_recipient_id = 2006547488710000020 #"?"
+        self._print("*"*10, " put_order ", "*"*10)
+        doc = kwargs.get('document')
+        if doc:
+            doc_id = doc.get('ИД')
+            doc = json.dumps(doc)
+            if doc_id:
+                sql = f"""insert into journals_orders_raw (n_doc_id, n_document)
+                values ('{doc_id}', ('{doc}')::jsonb)"""
+                self._execute(sql)
 
-                sql_header = f"""insert into journals_orders_headers
+        ret = self.create_orders()
+        return True
+
+
+    def create_orders(self, *args, **kwargs):
+        t = time.time()
+        self._print("*"*10, " create_orders ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " create_orders ", "*"*10)
+        sql = f"select jor.n_document, jor.n_id from journals_orders_raw jor where jor.n_adding = false"
+        ret = self._execute(sql)
+        t1 = time.time() - t
+        if ret:
+            for r in ret:
+                try:
+                    row = r[0]
+                    jor_id = r[1]
+                    print(row)
+                    n_filename = row.get('ФАЙЛ', '')
+                    n_id_field = row.get('ИД')
+                    n_name = row.get('ИМЯ', '')
+                    n_p_id = '?'
+                    n_code = row.get('КОД1') #код точки?
+                    n_inn = row.get('ИНН', '')
+                    n_dt_price = row.get('ПРАЙС', '')
+                    n_dt_create = row.get('СОЗДАН', '')
+                    n_number = row.get('НОМЕР', '')
+                    n_dt_send = row.get('ОТПРАВКА', '')
+                    n_pos_numbers = row.get('ПОЗИЦИЙ', 0)
+                    n_summ = int(float(row.get('СУММА', 0))*100)
+                    n_recipient = 'Вологда, Окружное шоссе, 13в' #row.get('АДРЕС', '')
+                    n_comment = row.get('КОММЕНТАРИЙ', '')
+                    n_recipient_id = 2032185578050000668  #ищем в базе по коду из n_code
+                    # n_recipient_id = row.get('ФАЙЛ', '') #2006547488710000020 #"?"
+                    sql_header = f"""insert into journals_orders_headers
+(n_state, n_supplier, n_filename,
+    n_id_field, n_name,
+    n_p_id, n_code, n_inn,
+    n_dt_price, n_dt_create,
+    n_number, n_dt_send, n_recipient,
+    n_recipient_id, n_summ, n_pos_numbers,
+    n_dt_recieved, n_comment)
+values (
+    1, (select n_partner_id from service_home_organization), '{n_filename}',
+    '{n_id_field}', '{n_name}',
+    '{n_p_id}', '{n_code}', '{n_inn}',
+    '{n_dt_price}'::timestamp, '{n_dt_create}'::timestamp,
+    '{n_number}', '{n_dt_send}'::timestamp, '{n_recipient}',
+    '{n_recipient_id}'::bigint, {n_summ}, {n_pos_numbers},
+    current_timestamp, '{n_comment}'
+    ) returning n_id"""
+                    self._print(sql_header)
+                    doc_id = self._execute(sql_header)[0][0]
+                    self._print(doc_id)
+                    sql_all_body = []
+                    for i in range(int(n_pos_numbers)):
+                        row_pos = [row.get('КОД2')[i],
+                            row.get('КОЛИЧЕСТВО')[i],
+                            row.get('ЦЕНА')[i],
+                            row.get('ТОВАР')[i],
+                            row.get('ПРОИЗВОДИТЕЛЬ')[i],
+                            row.get('ПРИМЕЧАНИЕ')[i],
+                            row.get('МАТРИЦА')[i],
+                            ]
+                        sql_body = f"""insert into journals_orders_bodies (
+    n_doc_id, n_product) values
+    ({doc_id},
+    ('{{"n_code": "{row_pos[0]}", "n_amount": {int(row_pos[1])}, "n_price": {int(float(row_pos[2])*100)},
+        "n_product": "{row_pos[3]}",
+        "n_man": "{row_pos[4] if row_pos[4] else ''}", "n_comment": "{row_pos[5]}", "n_matrix": "{row_pos[6]}"}}')::jsonb
+    );"""
+                        sql_all_body.append(sql_body)
+                    sql_all_body = "\n".join(sql_all_body)
+                    self._print(sql_all_body)
+                    self._execute(sql_all_body)
+                except:
+                    import traceback
+                    traceback.print_exc()
+                    sql = f"""delete from journals_orders_headers where n_id = {doc_id}"""
+                    self._execute(sql)
+                else:
+                    sql = f"""update journals_orders_raw set n_adding = true where n_id = {jor_id}"""
+                    self._execute(sql)
+
+        t2 = time.time() - t1 - t
+        answer = {"data": True, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
+        return answer
+
+    def _cre_order(self, f_name):
+        self._print(f_name)
+        file_data = None
+        with bz2.open(f_name, "r") as _f:
+            file_data = _f.read().decode()
+        if file_data:
+            # self._print(file_data)
+            file_data = file_data.splitlines()
+            n_filename = self._get_str(file_data[1])
+            n_id_field = self._get_str(file_data[2])
+            n_name = self._get_str(file_data[3])
+            n_p_id = '?'
+            n_code = self._get_str(file_data[4])
+            n_inn = self._get_str(file_data[5])
+            n_dt_price = self._get_str(file_data[6])
+            n_dt_create = self._get_str(file_data[7])
+            n_number = self._get_str(file_data[8])
+            n_dt_send = self._get_str(file_data[9])
+            n_pos_numbers = self._get_str(file_data[10])
+            n_summ = int(float(self._get_str(file_data[11]))*100)
+            n_recipient = 'Тверь, Волоколамский пр-т., 13' # self._get_str(file_data[12])
+            n_comment = self._get_str(file_data[13])
+            n_recipient_id = 2006547488710000020 #"?"
+
+            sql_header = f"""insert into journals_orders_headers
 (n_state, n_supplier, n_filename,
 	n_id_field, n_name,
 	n_p_id, n_code, n_inn,
@@ -644,25 +821,37 @@ values (
 	'{n_recipient_id}'::bigint, {n_summ}, {n_pos_numbers},
 	current_timestamp, '{n_comment}'
 	) returning n_id"""
-                doc_id = self._execute(sql_header)[0][0]
-                self._print(doc_id)
-                table = file_data[16:]
-                sql = []
-                for row in table:
-                    row = row.split("\t")
-                    sql_body = f"""insert into journals_orders_bodies (
+            doc_id = self._execute(sql_header)[0][0]
+            self._print(doc_id)
+            table = file_data[16:]
+            sql = []
+            for row in table:
+                row = row.split("\t")
+                sql_body = f"""insert into journals_orders_bodies (
 n_doc_id, n_product) values
 ({doc_id},
 ('{{"n_code": "{row[0]}", "n_amount": {int(row[1])}, "n_price": {int(float(row[2])*100)},
 	"n_product": "{row[3]}",
 	"n_man": "{row[4] if row[4] else ''}", "n_comment": "{row[5]}", "n_matrix": "{row[6]}"}}')::jsonb
 );"""
-                    sql.append(sql_body)
-                sql = "\n".join(sql)
-                # self._print(sql)
-                self._execute(sql)
+                sql.append(sql_body)
+            sql = "\n".join(sql)
+            # self._print(sql)
+            self._execute(sql)
 
 
+
+    def create_order_(self, file_name=None, *args, **kwargs):
+        t = time.time()
+        ret = ['ok',]
+        self._print("*"*10, " create_order ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " create_order ", "*"*10)
+        o_path = "/data/projects/sklad71/prices"
+        files = [file_name, ] if file_name else glob.glob(os.path.join(o_path, 'order51100-*.bz2'))
+        for f_name in files:
+            self._cre_order(f_name)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
         answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
@@ -694,17 +883,21 @@ n_doc_id, n_product) values
         self._print(args)
         self._print(kwargs)
         self._print("*"*10, " create_price ", "*"*10)
-        sql = """select date_trunc('second', n_dt), rp.c_namefull as name, rp.c_nnt as code, rm.c_name as manuf, rc.c_name as country,
+        sql = """select date_trunc('second', n_dt),
+rp.c_namefull as name,
+rp.c_nnt as code,
+rm.c_name as manuf,
+rc.c_name as country,
 jpb.n_quantity as quant,
 case
 	when jpb.n_vat_included then jpb.n_price
 	else jpb.n_price + jpb.n_vat
 end as temp_price,
 jpb.n_price_price as price,
-rp.c_pack::int as pack,
+coalesce(rp.c_pack, 0)::int as pack,
 rv.c_vat::text as vat
 from journals_products_balance jpb
-join ref_products rp on (jpb.n_product_id = rp.c_id)
+join ref_products rp on (jpb.n_product_id = rp.c_id) and rp.c_inprice = true
 left join ref_manufacturers rm on (rp.c_manid = rm.c_id)
 left join ref_countries rc on (rp.c_mancid = rc.c_id)
 left join ref_vats rv on (rv.c_id = rp.c_vatid)
@@ -716,30 +909,32 @@ where (jpb.n_price_price != 0 or jpb.n_price_price is not null) and jpb.n_consig
         for row in rows:
             if not row[3]: row[3] = ''
             r = [
-                row[0],
-                s_code,
-                [row[7]],
-                row[2],
-                [row[1].upper(), "", row[1]],
-                [row[3].upper(), "", row[3]],
-                f"{row[8]}",
-                row[5],
-                "",
-                "",
-                f"{row[8]}",
-                f"{row[8]}",
-                row[9],
-                -1
+                row[0], #дата выгрузки прайса
+                s_code, #код поставщика
+                [row[7]], #цена, в коп
+                row[2], #код товара
+                [row[1].upper(), "", row[1]], #наименование
+                [row[3].upper(), "", row[3]], #производитель
+                f"{row[8] if row[8] else ''}", #упаковка
+                row[5], #остаток
+                "", #?
+                "", #?
+                "", #f"{row[8]}", #?
+                "", #f"{row[8]}", #?
+                row[9], #НДС
+                -1 #?
             ]
             f.append(r)
-
-        bz_name = f"/ms71/data/new_sklad_prices/{s_code}.bz2"
+        # bz_name = f"/ms71/data/new_sklad_prices/{s_code}.bz2"
+        bz_name = os.path.join(self.temp_dir, f'{s_code}.bz2')
         if f:
             with bz2.open(bz_name, "w") as _f:
                 data = "[%s\n]" % "\n,".join([json.dumps(e, ensure_ascii=False) for e in f])
                 _f.write(data.encode())
         if os.path.exists(bz_name):
-            r = subprocess.call('/ms71/saas/sklad71/put_price.sh', shell=True)
+            r = subprocess.call(f's3cmd put {bz_name} s3://ms71.offer/prices/r71/', shell=True)
+            # r = subprocess.call('/ms71/saas/sklad71/put_price.sh', shell=True)
+        # r = subprocess.call('s3cmd ls', shell=True)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
         answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
@@ -1420,15 +1615,14 @@ returning c_id
     c_ptid,
     c_rfid,
     c_speid,
-    case
-    when c_type is null then 1
-    else 2
-    end,
+    coalesce(c_type, '2'),
     c_vatid,
-    c_id
+    c_id,
+    c_inprice
     from ref_products
     where c_id = '{int(p_id)}';
     """
+            # print(sql)
             rows =  self._execute(sql)
             for row in rows:
                 r = {
@@ -1455,7 +1649,8 @@ returning c_id
                     "c_speid": str(row[19] or ""),
                     "c_type": str(row[20] or ""),
                     "c_vatid": str(row[21] or ""),
-                    "c_id": str(row[22] or "")
+                    "c_id": str(row[22] or ""),
+                    "c_inprice": row[23]
                 }
                 ret.append(r)
         else:
@@ -1481,8 +1676,9 @@ returning c_id
                 "c_ptid": "",
                 "c_rfid": "",
                 "c_speid": "",
-                "c_type": "1",
-                "c_vatid": "2006552811470000003"
+                "c_type": "2",
+                "c_vatid": "2006552811470000003",
+                "c_inprice": True
             }
             ret.append(r)
 
@@ -2235,24 +2431,22 @@ from ref_{reference} r
         self._print(kwargs)
         self._print("*"*10, " get_products ", "*"*10)
         filters = kwargs.get('filters')
-
+        offset = filters.get('start', 0)
+        count = filters.get('count', 17)
         try:
             field = filters['sort']['id']
             direction = filters['sort']['dir']
-            offset = filters.get('start', 0)
-            count = filters.get('count', 17)
         except:
             field = 'c_name'
             direction = 'asc'
-            offset = 0
-            count = 17
+
         where = self._set_where_prod_sel(filters.get('filters'))
 
         order = f"""\norder by rp.{field} {direction} \n"""
 
         limits = f"""limit {count} offset {offset}"""
 
-        sql = """select rp.c_id, c_nnt, rp.c_name, rp.c_namefull, rv.c_name
+        sql = """select rp.c_id, c_nnt, rp.c_name, rp.c_namefull, rv.c_name, rp.c_inprice
 from ref_products rp
 join ref_vats rv on (rp.c_vatid=rv.c_id)
 """
@@ -2274,8 +2468,8 @@ join ref_vats rv on (rp.c_vatid=rv.c_id)
                 "c_code": row[1],
                 "c_name": row[2],
                 "c_namefull": row[3],
-                "c_vat": row[4]
-
+                "c_vat": row[4],
+                "c_inprice": row[5]
             }
             ret.append(r)
         t2 = time.time() - t1 - t

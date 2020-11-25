@@ -237,7 +237,7 @@ export default class RefPointCardView extends JetView{
                     {rows: [
                         {},
                         {view: "button",
-                            label: "COPY",
+                            label: "КОП",
                             width: 60,
                             tooltip: "Скопировать в название",
                             localId: "__copy_to_namr",
@@ -276,7 +276,7 @@ export default class RefPointCardView extends JetView{
                     // {rows: [
                     //     {},
                     //     {view: "button",
-                    //         label: "COPY",
+                    //         label: "КОП",
                     //         width: 60,
                     //         tooltip: "Скопировать в адрес",
                     //         localId: "__copy_to_address",

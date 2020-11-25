@@ -7,6 +7,8 @@ import MenuButtonsBar from "../views/menu-bar";
 import {getCookie} from "../views/common";
 import {getDatas} from "../models/data_processing"
 
+import md5 from "../views/md5";
+
 export default class StartView extends JetView{
     config() {
         var ui = {
@@ -77,7 +79,7 @@ export default class StartView extends JetView{
     }
 
     ready() {
-
+        // console.log('40035', md5('40035'))
         this.app.commonWidgets['header'].setUser();
         this.app.commonWidgets['header'].setOrg();
     }

@@ -1,13 +1,7 @@
 # coding: utf-8
 from __future__ import absolute_import, with_statement, print_function, unicode_literals
 
-__version__ = '20.277.1116'
-#__version__ = '20.272.2127'  # gzip_decode
-#__version__ = '20.260.0040'  # binary
-#__version__ = '20.136.1222'
-#__version__ = '20.104.0843'
-#__version__ = '20.053.0012'
-#__version__ = '20.026.2002'
+__version__ = '20.026.2002'
 #__version__ = '20.022.0456'
 #__version__ = '19.347.0205'
 
@@ -46,7 +40,7 @@ else:
     from xmlrpc.client import gzip_decode, gzip_encode
     unicode = str
 
-import os, time, json  #, pickle
+import os, time, json, pickle
 from threading import Thread, RLock, Event
 if PY2:
     from Queue import Queue, Empty
@@ -74,24 +68,6 @@ class ExtJSONEncoder(json.JSONEncoder):
         #print('obj:', obj)
         return json.JSONEncoder.default(self, obj)
 
-try:
-    from types import SimpleNamespace
-except ImportError:
-    class SimpleNamespace (object):
-        def __init__ (self, **kwargs):
-            self.__dict__.update(kwargs)
-        def __repr__ (self):
-            keys = sorted(self.__dict__)
-            items = ("{}={!r}".format(k, self.__dict__[k]) for k in keys)
-            return "{}({})".format(type(self).__name__, ", ".join(items))
-        def __eq__ (self, other):
-            return self.__dict__ == other.__dict__
-if PY2:
-    Binary = lambda data: {'__binary__': base64.b64encode(data)}
-else:
-    Binary = lambda data: {'__binary__': base64.b64encode(data).decode('ascii')}
-_binary = lambda obj: SimpleNamespace(data=base64.b64decode(obj.pop('__binary__'))) if '__binary__' in obj else obj
-
 class ServiceError(RuntimeError):
     pass
 class MethodError(RuntimeError):
@@ -102,7 +78,7 @@ class BOTProxy(object):
     def __init__(self, name, address=None, authkey=None):
         self._botname = name
         if address is None:
-            address = ('127.0.0.1', 4222)
+            address = ('nats2.tgbot.ms', 4222)
         self._address = address
         self._conn = BOTClient(name, address, authkey=authkey)
         #self._conn.start()
@@ -206,14 +182,12 @@ class BOTClient(object):
         self.bot_id = 'bot.%s' % urn5(self._botname)
         self._address = address
         self._authkey = authkey
-        self._online = Event()
         self.start()
 
     def start(self):
         if self._start is None:
             _t = Thread(target=self.serve_forever)
             _t.daemon = True
-            _t.name += '-BOTClient'
             _t.start()
             self._start = _t
         return self._start
@@ -224,6 +198,10 @@ class BOTClient(object):
 
     def serve_forever(self):
         self.close()
+        #try:
+        #    self._serve_forever()
+        #finally:
+        #    self.close()
         _defer = []
         defer = _defer.append
         _err_old = ''
@@ -257,7 +235,6 @@ class BOTClient(object):
                     #log(_err, kind='error2')
                     log(None)
             finally:
-                self._online.clear()
                 while _defer:
                     func = _defer.pop(-1)
                     try:
@@ -268,16 +245,12 @@ class BOTClient(object):
 
     def conduit(self, names):
         if names:
-            if not self._online.wait(5):
-                raise RuntimeError('[ %s ] connect timeout' % str(self._address))
-            """
             c = 0
             while not self._fg_serve_forever:
                 c += 1
                 if c > 10000:
                     raise RuntimeError('[ %s ] connect timeout' % str(self._address))
                 time.sleep(0.001)
-            """
             sub, unsub = [], []
             r = Queue()
             id_r = id(r)
@@ -307,7 +280,7 @@ class BOTClient(object):
                         yield (None, None)
                     new_sock_id = id(self._sock)
                     if old_sock_id != new_sock_id:
-                        log('NEW SOCK!!!')
+                        print('NEW SOCK!!!')
                         old_sock_id = new_sock_id
                         with self._w_lck:
                             self._sock.sendall(unsub)
@@ -350,90 +323,58 @@ class BOTClient(object):
             print(nm, getattr(self, nm))
         return '200 OK', [('Content-type', 'text/plain; charset=utf-8')], 'Привет Мир!'.encode()
     """
-    _send_count = 0
+
     def send(self, name, args, kwargs, sync=True, bot_id=None, botname=None):
         #print('send:', name, args, kwargs, sync, bot_id)
-        if not bot_id:
-            bot_id = self.bot_id
         if '.http' == name:
-            #if len(args[1]) > 1400 and b'\x1f\x8b\x08\x00' != args[1][:4]:
-            #    data = b''.join([b'HTTP', json.dumps(args[0], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', gzip_encode(args[1])])
-            #else:
-            data = b''.join([b'HTTP', json.dumps(args[0], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', args[1]])
+            if len(args[1]) > 1400 and b'\x1f\x8b\x08\x00' != args[1][:4]:
+                data = b''.join([b'HTTP', json.dumps(args[0], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', gzip_encode(args[1])])
+            else:
+                data = b''.join([b'HTTP', json.dumps(args[0], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', args[1]])
         else:
             data = {'method': name, 'args': args, 'kwargs': kwargs}
             data = json.dumps(data, ensure_ascii=False, cls=ExtJSONEncoder).encode('utf8')
             if len(data) > 1400:
                 data = gzip_encode(data)
 
-        if not self._online.wait(5):
-            raise RuntimeError('[ %s ] connect timeout' % str(self._address))
-        """
         c = 0
         while not self._fg_serve_forever:
             c += 1
             if c > 10000:
                 raise RuntimeError('[ %s ] connect timeout' % str(self._address))
             time.sleep(0.001)
-        """
 
         r = Event()
         r.ask = False
         r.result = None
         r.error = None
         i = id(r)
-
-        #cli, sid = 'cli.%s.%x' % (uuid.uuid4().hex, i), '1.%x' % i
-        #cmd = ('SUB %(cli)s %(sid)s\r\nUNSUB %(sid)s 2\r\nPUB %(bot)s %(cli)s %(l)s\r\n%%s\r\n' % {'cli': cli, 'sid': sid, 'l': len(data), 'bot': bot_id}).encode()
-        #print(cmd)
-        #data = cmd % data
-
-        data = ('PUB %s %s.%x %s\r\n' % (bot_id, self.cli_id, i, len(data))).encode('utf8') + data + b'\r\n'
-
+        data = ('PUB %s %s.%x %s\r\n' % (bot_id if bot_id else self.bot_id, self.cli_id, i, len(data))).encode('utf8') + data + b'\r\n'
         self._sync[i] = r
-        err = None
         with self._w_lck:
-            #self._send_count += 1
-            try:
-                #if 0 == self._send_count % 10:
-                #    self._sock.close()
-                #    raise ValueError('self._send_count: %s' % self._send_count)
-                self._sock.sendall(data)
-            except Exception as e:
-                err = e
-                #self.cli_id = 'cli.%s' % uuid.uuid4().hex
-                self._sock.close()
-                self._online.clear()
-                log(None)
-        if err:
-            log('[ %s ] reconnect' % str(self._address))
-            if not self._online.wait(5):
-                raise RuntimeError('[ %s ] connect timeout' % str(self._address))
-            with self._w_lck:
-                self._sock.sendall(data)
-
-        #print('self._send_count:', self._send_count, flush=True)
+            self._sock.sendall(data)
+        #print(dir(r))
         if type(sync) in (list, tuple):
             _wait1, _wait2 = sync[:2]
         else:
             _wait1, _wait2 = 5, 40
         if r.wait(_wait1):
+            #print(111)
             r.clear()
         else:
-            r.error = ServiceError('Service <%s> not found' % (botname if botname else self._botname))
-            #with self._w_lck:
-            #    self._sock.sendall(('UNSUB %s\r\n' % sid).encode())
             if sync:
-                del self._sync[i]
-                raise r.error
-        if sync:
-            if not _wait2:
+                raise ServiceError('Service <%s> not found' % (botname if botname else self._botname))
+            else:
+                r.error = ServiceError('Service <%s> not found' % (botname if botname else self._botname))
                 return r
+        if sync:
             if r.wait(_wait2) != True:
                 r.error = MethodError('Method <%s> timeout' % name)
-                #with self._w_lck:
-                #    self._sock.sendall(('UNSUB %s\r\n' % sid).encode())
             del self._sync[i]
+            #if isinstance(r.result, Exception):
+            #    raise r.result
+            #else:
+            #    return r.result
             if r.error:
                 if isinstance(r.error, (str, unicode)):
                     raise RuntimeError(r.error)
@@ -443,7 +384,7 @@ class BOTClient(object):
             return r
 
     def _run(self, defer):
-        sock = socket.create_connection(self._address, 0.5)
+        sock = socket.create_connection(self._address, 2)
         self._sock = sock
         defer(sock.close)
 
@@ -459,8 +400,8 @@ class BOTClient(object):
 
         #r = sock.makefile('rb', 0)
         #defer(r.close)
-        self._online.set()
-        #print('_run', flush=True)
+
+        #print('start')
         #print(dir(sock))
         self._fg_serve_forever = True
         c = 0
@@ -502,21 +443,16 @@ class BOTClient(object):
                 sock.recv(1)
                 sock.recv(1)
                 #print(cmd, subj, sid, reply_id, repr(payload)[:48], '...', len(payload))
-                if sid[:2] == '1.':
-                    sid = '2'
                 if sid == '2':
                     fg_http = b'HTTP' == payload[:4]
                     if fg_http:
                         pass
                     else:
                         if b'\x1f\x8b\x08\x00' == payload[:4]:
-                            if PY2:
-                                payload = gzip_decode(payload)
-                            else:
-                                payload = gzip_decode(payload, -1)
+                            payload = gzip_decode(payload, -1)
                         if payload:
                             try:
-                                payload = json.loads(payload, object_hook=_binary)
+                                payload = json.loads(payload)
                             except Exception as e:
                                 payload = {'error': str(e)}
                         else:
@@ -540,8 +476,8 @@ class BOTClient(object):
                             if fg_http:
                                 headers, payload = payload.split(b'\r\n', 1)
                                 status, headers = json.loads(headers[4:])
-                                #if b'\x1f\x8b\x08\x00' == payload[:4]:
-                                #    payload = gzip_decode(payload, -1)
+                                if b'\x1f\x8b\x08\x00' == payload[:4]:
+                                    payload = gzip_decode(payload, -1)
                                 _r.result = (status, headers, payload)
                                 _r.error = None
                             else:
@@ -552,12 +488,9 @@ class BOTClient(object):
                     #    print(i, payload)
                 else:
                     if b'\x1f\x8b\x08\x00' == payload[:4]:
-                        if PY2:
-                            payload = gzip_decode(payload)
-                        else:
-                            payload = gzip_decode(payload, -1)
+                        payload = gzip_decode(payload, -1)
                     if payload:
-                        payload = json.loads(payload, object_hook=_binary)
+                        payload = json.loads(payload)
                         #payload = pickle.loads(payload)
                     else:
                         payload = None
@@ -664,9 +597,6 @@ try:
 except:
     pass
 
-
-################################
-
 """
 rpc = NewRpc('https://sklad71.org/apps/fdbsrv@plx-db/uri/RPC2', '3cd85bc33db44a24a891ae0c0b2d5e98', 7)
 def get_addr_codes(address_id):
@@ -681,37 +611,37 @@ def get_addr_codes(address_id):
 """
 
 if __name__ == '__main__':
-    #print('STOP', __name__, __file__)
-    #sys.exit(0)
     from pprint import pprint
     #"""
     name = 'uidsrv2.default'
+    name = 'mybot.conf1'
+
     c = BOTProxy(name, ('127.0.0.1', 4222))
-    try:
-        pprint(c.system.listMethods())
-    except:
-        log(None)
-    input('>> ')
-    while True:
-        t1 = time.time()
-        try:
-            pprint(c.system.listMethods())
-            #pprint(c.ver())
-            #pprint(c.hostname())
-            #pprint(c.system.appinfo())
-            #pprint(c.uid())
-            #pprint(c.uid0())
-            #pprint(c.uid1())
-            #pprint(c.uid10())
-            #pprint(c.uid100())
-            #pprint(c.uid13())
-        except KeyboardInterrupt:
+    c1 = c('mybot.conf11', bot=True, sync=(1, 10))
+    #pprint(c.system.listMethods())
+
+    #pprint(c.system.listMethods('time'))
+
+    for i, (eventname, obj) in enumerate(c('.conduit')(['SUBJ.>',])):
+        if eventname is None and obj is None:
+            continue
+        print('m:', eventname, obj)
+        if i > 1:
+            time.sleep(1)
             break
+
+
+    #pprint(c.kkko())
+    #pprint(c1.time.time())
+    sys.exit(0)
+    """
+    while True:
+        try:
+            pprint(c.uid())
+            pprint(c.uid2())
         except:
             log(None)
-        t2 = time.time()
-        print(t2 - t1)
-        #input('>> ')
+        input('>> ')
     sys.exit(0)
     #"""
 
@@ -970,7 +900,6 @@ AND table_schema IN('public', 'myschema');"""
     #print(m.system.listMethods('time'))
     #print(m('system.listMethods')('time'))
     print(m('.notify')('SUBJ.1'))
-    #bot_id = 'debug.%s' % urn5(name)
     for i, (eventname, obj) in enumerate(m('.conduit')(['SUBJ.>',])):
         if eventname is None and obj is None:
             continue

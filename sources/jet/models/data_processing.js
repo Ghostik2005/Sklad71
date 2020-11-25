@@ -2,6 +2,22 @@
 
 import {request, checkResponse, getUser} from "../views/common";
 
+export const report_processing = {
+
+    new_report: function(doc_type, doc_number) {
+        let params_to = {method:"generate_report.generate",
+                         kwargs: {"user": getUser(), "doc_type": doc_type, "doc_number": doc_number}
+                        }
+        let result = checkResponse(request(params_to, !0).response, 's');
+        console.log('res', result)
+        if (result.data && result.data.binary && result.data.file_name) {
+            var blob = new Blob([_base64ToArrayBuffer(result.data.binary)]);
+            webix.html.download(blob, result.data.file_name);
+        }
+        // return (result && result.data && result.data===true) ? true : false;
+    }
+
+}
 
 export const checks = {
 
@@ -65,12 +81,19 @@ export const filters_process = {
 
     get_data: function(params, widget) {
         let docType;
+
         if (widget.$scope && widget.$scope.parent && widget.$scope.parent.doc_type) {
+            // console.log(widget.$scope.parent.doc_type)
             if (widget.$scope.parent.doc_type == "Отгрузка") {
                 docType = "shipment"
             } else if (widget.$scope.parent.doc_type == "Приходная накладная") {
                 docType = "arrival"
+            } else if (widget.$scope.parent.doc_type == "Перемещение") {
+                docType = "movement"
+            } else if (widget.$scope.parent.doc_type == "Заказ покупателя") {
+                docType = "order"
             }
+
         }
         let params_to = {method:"get_filter_list", kwargs: {"user": getUser(), filterName: widget.config.parentName, docType: docType}}
         let result =  request(params_to).then(function(data) {
@@ -120,6 +143,24 @@ export const refSingle = {
 
 
 export const reference = {
+
+    checkmark: function(params) {
+        let method;
+        if (params.table == "_products_") {
+            method = "products_checkmark";
+        } else {
+        }
+        if (method) {
+            let params_to = {method: method, kwargs: {"user": getUser(),
+                item_id: params.item_id, item_code: params.item_code,
+                field: params.field, value: params.value
+            }}
+            let result = checkResponse(request(params_to, !0).response, 's');
+            return result
+        } else {
+            return {}
+        }
+    },
 
     get: function(p_id, reference) {
         let params_to = {method:"get_ref_element", kwargs: {"user": getUser(), p_id: p_id, reference: reference}}
@@ -230,7 +271,13 @@ export const documentProcessing = {
 
 }
 
-
+export function isEmpty(obj) {
+    for (let key in obj) {
+      // если тело цикла начнет выполняться - значит в объекте есть свойства
+      return false;
+    }
+    return true;
+  }
 
 
 export function createPrice(params) {
@@ -258,5 +305,12 @@ function genKwargs(params, table, data_type, filters) {
     return {"user": getUser(), filters: new_params}
 }
 
-
-
+function _base64ToArrayBuffer(base64) {
+    var binary_string = window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+}

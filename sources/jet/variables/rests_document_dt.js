@@ -31,7 +31,9 @@ export const dtColumns = [
         header: [{text: "Партия"},
             ],
         headermenu:false,
-        editor: "text"
+        editor: "text",
+        hidden: true,
+        template: "остатки"
     },
     {id: "n_unit", width: 160,
         hidden: true,
@@ -88,6 +90,7 @@ export const dtColumns = [
     {id: "n_novats_summ", width: 160,
         header: [{text: "Сумма без НДС"},
         ],
+        hidden: true,
         headermenu:false,
         footer:{ content:"totalColumn" },
         format: webix.Number.formatNumber,
@@ -95,6 +98,7 @@ export const dtColumns = [
     {id: "n_vats_base", width: 160,
         header: [{text: "НДС, ставка"},
         ],
+        hidden: true,
         //прописать редактор для изменения ндс
         headermenu:false,
         editor: "select", options: ["НДС 0%", "НДС 10%", "НДС 20%"]
@@ -103,11 +107,12 @@ export const dtColumns = [
         header: [{text: "НДС, сумма"},
         ],
         headermenu:false,
+        hidden: true,
         footer:{ content:"totalColumn" },
         format: webix.Number.formatNumber,
     },
     {id: "n_total_summ", width: 160,
-        header: [{text: "Сумма с НДС"},
+        header: [{text: "Сумма"},
         ],
         headermenu:false,
         footer:{ content:"totalColumn" },

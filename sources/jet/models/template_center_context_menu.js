@@ -18,7 +18,7 @@ export default class TemplateCenterContextMenu extends JetView{
     config(){
         let g_this = this;
         let c_menu = {
-            view:'contextmenu', 
+            view:'contextmenu',
             autowidth: true,
             localId: `__${g_this.p_name}_cmenu`,
             css: "context_center_dt",
@@ -72,9 +72,9 @@ export default class TemplateCenterContextMenu extends JetView{
             if (item.n_state == 2) {
                 id_hide = id_hide.concat([3, 6, 7])
             } else if (item.n_state == 1) {
-                id_hide = id_hide.concat([4, 5, 7, 100, 200, 1003])
+                id_hide = id_hide.concat([4, 5, 7, 100, 1003])
             } else if (item.n_state == 3) {
-                id_hide = id_hide.concat([3, 4, 5, 6, 100, 200, 1003])
+                id_hide = id_hide.concat([3, 4, 5, 6, 100, 1003])
             }
             context.table.select(context.position, false);
             if (tables_excludeColumns.includes(context.position.column)) {

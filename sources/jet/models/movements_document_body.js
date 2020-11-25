@@ -4,7 +4,8 @@ import {JetView} from "webix-jet";
 import {checks, documentProcessing} from "../models/data_processing";
 import {dtColumns} from "../variables/movements_document_dt";
 import MovementSelectionView from "../models/movement_product_selection";
-import DocumentHeader from "../models/document_header"
+import DocumentHeader from "../models/document_header";
+import {newReport} from "../models/common_functions";
 let states = document.app.states;
 
 
@@ -132,7 +133,7 @@ export default class MovementsBody extends JetView{
                             onItemDblClick: function(item) {
                                 if (th.doc.n_state == 1) {
                                     let prod_select = th.ui( new MovementSelectionView(app, this, item));
-                                    prod_select.show('Приходный документ. Подбор товара');
+                                    prod_select.show('Перемещение. Подбор товара');
                                 }
                             },
                         }
@@ -148,7 +149,24 @@ export default class MovementsBody extends JetView{
                                     onItemClick: function() {
                                         if (th.doc.n_state == 1) {
                                             let prod_select = th.ui( new MovementSelectionView(app, th.$$("__table")));
-                                            prod_select.show('Приходный документ. Подбор товара');
+                                            prod_select.show('Перемещение. Подбор товара');
+                                        }
+                                    }
+                                }
+                            },
+                            {view: "button",
+                                localId: "__report",
+                                label: "Печать",
+                                width: 136,
+                                on: {
+                                    onItemClick: ()=>{
+                                        if (this.doc.n_state != 2) {
+                                            let not_saved = this.$$("__save").callEvent('onItemClick');
+                                            if (!not_saved) {
+                                                newReport.document(this, "movement", this.doc);
+                                            }
+                                        } else {
+                                            newReport.document(this, "movement", this.doc);
                                         }
                                     }
                                 }
@@ -285,14 +303,14 @@ export default class MovementsBody extends JetView{
         let result = false
         let r_data = documentProcessing.save(data, th.doc.id, 'movements');
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
+        this.doc = r_data.data[0];
+        this.getHeader().$$("__n_id").setValue(this.doc.n_id);
+        // this.getRoot().getChildViews()[1].getChildViews()[0].$scope.$$("__n_id").setValue(this.doc.n_id)
         if (this.table) {
             if (!this.flag_new) {
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
-                this.doc = this.table.getItem(this.table.getFirstId())
-                this.getRoot().getChildViews()[1].getChildViews()[1].$scope.$$("__n_id").setValue(this.doc.n_id)
-
             }
         }
         return result
@@ -305,7 +323,7 @@ export default class MovementsBody extends JetView{
     }
 
     setHeader() {
-        return this.getHeader.setHeader();
+        return this.getHeader().setHeader();
     }
 
     hide(){

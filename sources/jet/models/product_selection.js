@@ -24,10 +24,10 @@ export default class ProductSelectionView extends JetView{
             sorting: {id: "c_name", dir: "asc"},
             topParent: th,
             id: this.table_id,
-            dblClick: function(item) {
+            dblClick: function(item, table) {
                 if (item) {
                     // let new_item = this.getItem(item);
-                    let new_item = this.getItem(item);
+                    let new_item = table.getItem(item);
                     new_item = {
                         n_id: undefined,
                         n_product: new_item.c_name,
@@ -46,13 +46,14 @@ export default class ProductSelectionView extends JetView{
                         n_total_summ: '',
                         n_prod_id: new_item.c_id
                     }
-                    let old_item = JSON.parse(JSON.stringify(th.parent.getItem(th.s_sel)))
+                    let o_i = th.parent.getItem(th.s_sel);
+                    let old_item = (o_i) ? JSON.parse(JSON.stringify(o_i)): {}
                     let q = th.searchDuplicates(th.parent, new_item.n_prod_id);
                     if (q) {
-                        let new_item = th.parent.getItem(q);
+                        new_item = th.parent.getItem(q);
                         new_item.n_amount += 1;
                         th.parent.updateItem(q, new_item);
-                        if (q != old_item.id) th.parent.remove(old_item.id)
+                        if (th.s_sel && q != old_item.id) th.parent.remove(old_item.id)
                     } else {
                         if (th.s_sel) {
                             th.parent.updateItem(th.s_sel.row, new_item);
@@ -63,7 +64,6 @@ export default class ProductSelectionView extends JetView{
                         } else {
                             th.parent.$scope.add_new(new_item);
                         }
-
                     };
                     if (th.s_sel) th.hide();
                 }
@@ -115,7 +115,7 @@ export default class ProductSelectionView extends JetView{
                         },
                         {},
                         {view: "button",
-                            label: "edit",
+                            label: "Ред.",
                             width: 50,
                             tooltip: "Редактировать товар",
                             localId: "__edit",

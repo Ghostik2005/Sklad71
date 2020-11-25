@@ -77,7 +77,7 @@ export default class RefView extends JetView{
                         },
                         {},
                         {view: "button",
-                            label: "edit",
+                            label: "РЕД",
                             width: 50,
                             tooltip: "Редактировать запись",
                             localId: "__edit",
@@ -87,8 +87,6 @@ export default class RefView extends JetView{
                                     // let item = this.$$("__table").getSelectedItem();
                                     let item = $$(this.table_id).getSelectedItem();
                                     let ref_ed;
-
-
                                     if (this.cfg.name == "partners") {
                                         ref_ed = this.ui(new RefPartnerCardView(this.app, this, item));
                                     } else if (this.cfg.name == "points") {

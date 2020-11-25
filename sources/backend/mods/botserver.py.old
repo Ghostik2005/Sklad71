@@ -1,15 +1,7 @@
 # coding: utf-8
 from __future__ import absolute_import, with_statement, print_function, unicode_literals
 
-__version__ = '20.281.2058'  # _http, _func
-#__version__ = '20.272.2127'  # gzip_decode
-#__version__ = '20.260.0040'  # binary
-#__version__ = '20.219.1837'
-#__version__ = '20.211.1402'
-#__version__ = '20.196.1406'
-#__version__ = '20.104.0843'
-#__version__ = '20.053.0012'
-#__version__ = '20.022.0414'
+__version__ = '20.022.0414'
 #__version__ = '19.347.1606'
 
 import sys
@@ -46,7 +38,7 @@ else:
     from urllib.parse import quote_plus, unquote_plus, urlencode, urlparse
     from xmlrpc.client import gzip_decode, gzip_encode
 
-import os, time, json  #, pickle
+import os, time, json, pickle
 from threading import Thread, RLock
 
 import pydoc
@@ -69,33 +61,8 @@ class ExtJSONEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
-try:
-    from types import SimpleNamespace
-except ImportError:
-    class SimpleNamespace (object):
-        def __init__ (self, **kwargs):
-            self.__dict__.update(kwargs)
-        def __repr__ (self):
-            keys = sorted(self.__dict__)
-            items = ("{}={!r}".format(k, self.__dict__[k]) for k in keys)
-            return "{}({})".format(type(self).__name__, ", ".join(items))
-        def __eq__ (self, other):
-            return self.__dict__ == other.__dict__
-if PY2:
-    Binary = lambda data: {'__binary__': base64.b64encode(data)}
-else:
-    Binary = lambda data: {'__binary__': base64.b64encode(data).decode('ascii')}
-_binary = lambda obj: SimpleNamespace(data=base64.b64decode(obj.pop('__binary__'))) if '__binary__' in obj else obj
-
-try:
-    _ns
-except:
-    _ns = SimpleNamespace(request_number=0, request_count=0)
-
 class BOTServer(object):
-
-    def __init__(self, name, address=None, authkey=None, max_requests=0):
-        self._max_requests = max_requests
+    def __init__(self, name, address=None, authkey=None):
         self._info = {}
         self._sock = None
         self._w_lck = RLock()
@@ -104,19 +71,12 @@ class BOTServer(object):
         self._botname = name
         self.bot_id = 'bot.%s' % urn5(name)
         if address is None:
-            address = ('127.0.0.1', 4222)
+            address = ('nats1.tgbot.ms', 4222)
         self._address = address
         self._authkey = authkey
         self.register_function(self._system_list_methods, 'system.listMethods')
         self.register_function(self._system_method_help, 'system.methodHelp')
         self.register_function(self._http, '.http')
-
-    @property
-    def request_number(self):
-        return _ns.request_number
-    @property
-    def request_count(self):
-        return _ns.request_count
 
     def __repr__(self):
         return (
@@ -126,7 +86,6 @@ class BOTServer(object):
     __str__ = __repr__
 
     def _system_list_methods(self, func_name=None):
-        #print(1111, func_name)
         if func_name:
             func = None
             if func_name in self._functions:
@@ -134,16 +93,8 @@ class BOTServer(object):
             else:
                 for fn in func_name.split('.'):
                     func = getattr(func, fn) if func else self._functions[fn]
-            #print(2222, func)
             if func:
-                _list_methods = None
-                if hasattr(func, '_system_list_methods'):
-                    _list_methods = getattr(func, '_system_list_methods')
-                #print(3333, [k for k in dir(func) if '_' != k[:1]])
-                if _list_methods:
-                    return _list_methods(self, func_name)
-                else:
-                    return list(sorted('%s.' % k if isinstance(getattr(func, k), sys.__class__) or hasattr(getattr(func, k), '_system_list_methods') else k for k in dir(func) if '_' != k[:1]))
+                return list(sorted('%s.' % k if isinstance(getattr(func, k), sys.__class__) or hasattr(getattr(func, k), '_system_list_methods') else k for k in dir(func) if '_' != k[:1]))
             else:
                 return RuntimeError('%s not found' % func_name)
         else:
@@ -162,88 +113,9 @@ class BOTServer(object):
             return ''
 
     def _http(self, head, body):
-        global __appname__,__profile__, __version__, __index__
         status = '200 OK'
-        r = b''
-        uri, args = head[''][1]
-        method = uri.rsplit('/', 1)[-1]
-        if '/' == uri:
-            try:
-                appname = getattr(sys, '__appname__')
-            except AttributeError:
-                appname = self._botname.split('.', 1)[0]
-                #appname = __appname__
-            try:
-                profile = getattr(sys, '__profile__')
-            except AttributeError:
-                profile = self._botname.split('.', 1)[-1]
-                #profile = __profile__
-            try:
-                version = getattr(sys, '__version__')
-            except AttributeError:
-                version = __version__
-            try:
-                _index = getattr(sys, '__index__')
-            except AttributeError:
-                _index = __index__
-            headers = [("Content-Type", "text/plain; charset=utf-8"), ("Cache-Control", "no-cache"), ("Access-Control-Allow-Origin", "*")]
-            r = ('%s %s %s.%s %s %s:%s/%s' % (time.strftime(_ts), sys.__hostname__, appname,profile, version, _index,self.request_number,self.request_count)).encode('utf-8')
-            headers.append(('Content-Length', str(len(r))))
-            return status, headers, r
-
-        if uri == '/ui':
-            uri = 'ui/' 
-            return '303 OK', [('Location', uri),], b''
-
-        if uri[:4] == '/ui/' and uri[:8] != '/ui/RPC2':
-            return '404 Not Found', [], b'404 Not Found'
-
-        headers = [('Content-Type', 'application/json; charset=utf-8'), ("Cache-Control", "no-cache"), ("Access-Control-Allow-Origin", "*")]
-        try:
-            if 'post' == head[''][0]:
-                body = json.loads(body)
-                method, _a, _kw = body['method'], body.get('params', []), body.get('kwargs', {})
-            else:
-                _a, _kw = [], {}
-                if args:
-                    for a in args.split('&'):
-                        a = a.split('=', 1)
-                        if len(a) > 1:
-                            _kw[a[0]] = a[1]
-                        else:
-                            _a.append(a[0])
-            r = self._func(method, _a, _kw)
-            r = json.dumps({'result': r}, ensure_ascii=False, cls=ExtJSONEncoder).encode('utf8')
-        except Exception as e:
-            log(None)
-            r = json.dumps({'error': str(e)}, ensure_ascii=False, cls=ExtJSONEncoder).encode('utf8')
-            #r = json.dumps({'error': traceback.format_exc()}, ensure_ascii=False, cls=ExtJSONEncoder).encode('utf8')
-        finally:
-            if len(r) > 1400:
-                r = gzip_encode(r)
-                headers.append(('Content-Encoding', 'gzip'))
-            headers.append(('Content-Length', str(len(r))))
-        return status, headers, r
-
-    def _func(self, func_name, args, kwargs):
-        _func_name = func_name  
-        func = None
-        if func_name in self._functions:
-            func = self._functions[func_name]
-        else:
-            for fn in func_name.split('.'):
-                try:
-                    func = getattr(func, fn) if func else self._functions[fn]
-                except:
-                    func = None
-                    break
-        if func:
-            if callable(func):
-                r = func(*args, **kwargs)
-            else:
-                r = func
-            return r
-        raise RuntimeError('%s not found' % _func_name)
+        headers = [('Content-Type', 'text/plain; charset=utf-8'),]
+        return status, headers, ('Это я: %s' % __hostname__).encode()
 
     def register_function(self, func, name=None):
         if name:
@@ -251,39 +123,8 @@ class BOTServer(object):
         else:
             self._functions[func.__name__] = func
 
-    def register_instance(self, instance, allow_dotted_names=False):
-        for name in dir(instance):
-            if '_' == name[:1]:
-                continue
-            func = getattr(instance, name)
-            if allow_dotted_names:
-                self._functions[name] = func
-            else:
-                if callable(func):
-                    self._functions[name] = func
-
     def close(self):
         self._fg_serve_forever = False
-        self._unsub()
-        self._close()
-
-    def _close(self):
-        try:
-            if self._sock:
-                with self._w_lck:
-                    self._sock.close()
-        except:
-            #log(None)
-            pass
-
-    def _unsub(self):
-        try:
-            if self._sock:
-                with self._w_lck:
-                    self._sock.sendall(b'UNSUB 2\r\nUNSUB 3\r\n')
-        except:
-            #log(None)
-            pass
 
     def serve_forever(self):
         self.close()
@@ -299,6 +140,8 @@ class BOTServer(object):
             _fg_loop = False
             try:
                 self._serve_forever(defer)
+                #except (KeyboardInterrupt, SystemExit) as e:
+                #    log('stop', begin='\r')
             except (ConnectionRefusedError, RuntimeError) as e:
                 #traceback.print_exc()
                 _fg_loop = True  # self._fg_serve_forever
@@ -328,7 +171,6 @@ class BOTServer(object):
                     except:
                         #log(None)
                         pass
-                #print(2222)
 
     def notify(self, subject, data=None):
         if not self._fg_serve_forever:
@@ -351,7 +193,10 @@ class BOTServer(object):
 
     def _send(self, inbox_id, obj, fg_http=False):
         if fg_http:
-            data = b''.join([b'HTTP', json.dumps(obj[:2], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', obj[2]])
+            if len(obj[2]) > 1400 and b'\x1f\x8b\x08\x00' != obj[2][:4]:
+                data = b''.join([b'HTTP', json.dumps(obj[:2], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', gzip_encode(obj[2])])
+            else:
+                data = b''.join([b'HTTP', json.dumps(obj[:2], ensure_ascii=False, separators=(',', ':')).encode('utf8'),  b'\r\n', obj[2]])
         else:
             data = json.dumps(obj, ensure_ascii=False, cls=ExtJSONEncoder).encode('utf8')
             if len(data) > 1400:
@@ -359,7 +204,7 @@ class BOTServer(object):
 
         data = b'PUB %s %s\r\n%s\r\n' % (inbox_id.encode(), ('%s' % len(data)).encode(), data)
         with self._w_lck:
-            #log(repr(data), 'send2')
+            log(repr(data), 'send2')
             self._sock.sendall(data)
         return len(data)
 
@@ -369,11 +214,9 @@ class BOTServer(object):
         #    t = Thread(target=self.handle_client, args=(client_c,))
         #    t.daemon = True
         #    t.start()
-        #print('00000', self._sock)
         sock = socket.create_connection(self._address, 2)
         self._sock = sock
         defer(sock.close)
-        defer(lambda: sock.sendall(b'UNSUB 2\r\nUNSUB 3\r\n'))
 
         def w(data):
             with self._w_lck:
@@ -382,18 +225,14 @@ class BOTServer(object):
 
         bot_name = self._botname
         bot_id = self.bot_id  # 'bot.%s' % urn5(bot_name)
-        """
-        w(('CONNECT {"name":"%s","verbose":false,"pedantic":false}\r\n' % bot_name).encode('utf8'))
-        data = 'SUB bot.info 2\r\n'
-        #log(data, 'NATS')
-        w(data.encode('utf8'))
-        #data = 'SUB %s 3\r\n' % (bot_id,)
-        data = 'SUB %s %s 3\r\n' % (bot_id, bot_id)
-        #log(data, 'NATS')
-        w(data.encode('utf8'))
-        """
+
         w(('CONNECT {"name":"%s","verbose":false,"pedantic":false}\r\n' % bot_name).encode('utf8') + ('SUB bot.info 2\r\nSUB %s %s 3\r\n' % (bot_id, bot_id)).encode('utf8'))
 
+        #r = sock.makefile('rb', 0)
+        #defer(r.close)
+
+        #print('start')
+        #print(dir(sock))
         self._fg_serve_forever = True
         c = 0
         while self._fg_serve_forever:
@@ -410,12 +249,6 @@ class BOTServer(object):
                     #log('pong) timeout', 'socket0')
                     w(b'PONG\r\n')
                 continue
-            finally:
-                if self._max_requests < 0 and _ns.request_count < 1:
-                    self.close()
-                    raise ValueError('MAX REQUESTS %s' % _ns.request_number)   # KeyboardInterrupt
-                    #os._exit(0)
-
             if not cmd:
                 raise RuntimeError('[ Socket ] cmd is empty')
             if not data:
@@ -433,28 +266,25 @@ class BOTServer(object):
                 payload = recvall(sock, size) if size > 0 else b''
                 sock.recv(1)
                 sock.recv(1)
-                #log(cmd, 'nats')
                 #print(cmd, subj, sid, reply_id, repr(payload)[:32], '...', len(payload), size)
                 if sid == '2' and reply_id and not payload:
-                    log(subj, 'sid 2 subj:')
-                    #sys.stdout.flush()
+                    print('sid 2 subj:', subj)
+                    sys.stdout.flush()
                     #MSG bot.info 2 cli.a1f9d72027a9455496efc3947fc4ea8c b''
                     #w(('PUB %s %s %s\r\n%s\r\n' % (reply_id, bot_id, len(bot_name), bot_name)).encode('utf8'))
                 elif sid == '3' and reply_id:
+                    #obj = {"result": [__hostname__, time.strftime("%Y-%m-%d %H:%M:%S"), pickle.loads(payload)]}
+                    #_len = self._send(reply_id, obj)
+                    #print('send:', _len)
                     data = ('PUB %s 0\r\n\r\n' % reply_id).encode('utf8')  # ask
                     #print('data:', data)
-                    w(data)
-                    """
                     with self._w_lck:
                         try:
                             self._sock.sendall(data)
                         except:
                             traceback.print_exc()
-                    """
-                    _ns.request_number += 1
                     _t = Thread(target=self.handle_client, args=(reply_id, payload))
                     _t.daemon = True
-                    _t.name += '-msg'
                     _t.start()
                 #sys.stdout.flush()
             elif 'PIN' == cmd:
@@ -470,18 +300,6 @@ class BOTServer(object):
                 pass
 
     def handle_client(self, reply_id, payload):
-        try:
-            _ns.request_count += 1
-            return self._handle_client(reply_id, payload)
-        finally:
-            _ns.request_count -= 1
-            if self._max_requests > 0:
-                with self._w_lck:
-                    if self._max_requests > 0 and _ns.request_number >= self._max_requests:
-                        self._unsub()
-                        self._max_requests = -1
-
-    def _handle_client(self, reply_id, payload):
         #threading.current_thread().conn = client_c
         _fg = True
         while _fg:
@@ -491,8 +309,8 @@ class BOTServer(object):
                 if b'HTTP' == payload[:4]:
                     head, payload = payload.split(b'\r\n', 1)
                     head = json.loads(head[4:])
-                    #if b'\x1f\x8b\x08\x00' == payload[:4]:
-                    #    payload = gzip_decode(payload, -1)
+                    if b'\x1f\x8b\x08\x00' == payload[:4]:
+                        payload = gzip_decode(payload, -1)
                     #print(head)
                     #print(payload)
                     func_name = '.http'
@@ -501,11 +319,8 @@ class BOTServer(object):
                     fg_http = True
                 else:
                     if b'\x1f\x8b\x08\x00' == payload[:4]:
-                        if PY2:
-                            payload = gzip_decode(payload)
-                        else:
-                            payload = gzip_decode(payload, -1)
-                    payload = json.loads(payload, object_hook=_binary)
+                        payload = gzip_decode(payload, -1)
+                    payload = json.loads(payload)
                     func_name = payload.get('method', '')
                     args = payload.pop('args', [])
                     kwargs = payload.pop('kwargs', {})
@@ -632,7 +447,7 @@ class BOTApi(object):
     #    return client_ip, port
 
 _ts = "%Y-%m-%d %H:%M:%S"
-__appname__ = 'botserver'
+__appname__ = 'bot'
 __profile__ = 'test'
 __index__   = os.getpid()
 def log(msg, kind='info', begin='', end='\n'):
@@ -659,9 +474,6 @@ try:
 except:
     pass
 
-
-################################
-
 def run_api(name, object_function=None, func_name=None):
     # Create and run the server
     #serv = BOTServer(name)
@@ -673,10 +485,6 @@ def run_api(name, object_function=None, func_name=None):
     print(serv)
     if object_function:
         serv.register_function(object_function, func_name)
-    #o = dict(k1='v1', k2='v2', k3='v3')
-    #serv.register_instance(o)
-    #from pprint import pprint
-    #pprint(serv._functions)
 
     serv.register_function(sys)
     serv.register_function(time)
@@ -702,5 +510,5 @@ if __name__ == '__main__':
         s = sys.argv[1]
     except:
         s = ''
-    run_api('mybot.conf')
+    run_api('mybot.conf1')
     #run_api('price-bot.test' + s)

@@ -5,6 +5,7 @@ import {checks, documentProcessing} from "../models/data_processing";
 import {dtColumns} from "../variables/rests_document_dt";
 import DocumentHeader from "../models/document_header"
 import ProductSelectionView from "../models/product_selection";
+import {newReport} from "../models/common_functions";
 
 let states = document.app.states;
 
@@ -114,6 +115,23 @@ export default class RestBody extends JetView{
                                         if (th.doc.n_state == 1) {
                                             let prod_select = th.ui( new ProductSelectionView(app, th.$$("__table")));
                                             prod_select.show('Ввод остатков. Подбор товара');
+                                        }
+                                    }
+                                }
+                            },
+                            {view: "button",
+                                localId: "__report",
+                                label: "Печать",
+                                width: 136,
+                                on: {
+                                    onItemClick: ()=>{
+                                        if (this.doc.n_state != 2) {
+                                            let not_saved = this.$$("__save").callEvent('onItemClick');
+                                            if (!not_saved) {
+                                                newReport.document(this, "rest", this.doc);
+                                            }
+                                        } else {
+                                            newReport.document(this, "rest", this.doc);
                                         }
                                     }
                                 }
@@ -244,14 +262,15 @@ export default class RestBody extends JetView{
         let result = false
         let r_data = documentProcessing.save(data, th.doc.id, 'rests');
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
+        this.doc = r_data.data[0];
+        this.getHeader().$$("__n_id").setValue(this.doc.n_id);
+        // this.getRoot().getChildViews()[1].getChildViews()[0].$scope.$$("__n_id").setValue(this.doc.n_id)
         if (this.table) {
             if (!this.flag_new) {
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
                 // document.message("добавляем позицию наверх")
-                this.doc = this.table.getItem(this.table.getFirstId())
-                this.getRoot().getChildViews()[1].getChildViews()[1].$scope.$$("__n_id").setValue(this.doc.n_id)
             }
         }
         return result
@@ -264,7 +283,7 @@ export default class RestBody extends JetView{
     }
 
     setHeader() {
-        return this.getHeader.setHeader();
+        return this.getHeader().setHeader();
     }
 
     hide(){
