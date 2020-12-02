@@ -21,8 +21,8 @@ export default class RestBody extends JetView{
         let ret_view = {
             view:"cWindow",
             localId: "__restbody",
-            width: document.documentElement.clientWidth*0.8,
-            height: document.documentElement.clientHeight*0.8,
+            width: document.documentElement.clientWidth*0.9,
+            height: document.documentElement.clientHeight*0.9,
             padding: 4,
             point: false,
             relative: false,
@@ -242,7 +242,7 @@ export default class RestBody extends JetView{
 
     validateDocument(th, data){
         let result = false;
-        if (!data.header.n_base) result = 'Укажите основание документа';
+        // if (!data.header.n_base) result = 'Укажите основание документа';
         if (!data.header.n_number) result = 'Укажите номер документа';
         if (!data.header.n_recipient) result = 'Укажите получателя';
         if (data.table.length<2) result = 'Добавьте товары';
@@ -253,6 +253,7 @@ export default class RestBody extends JetView{
                 result = `Неверное количество в строке ${(row.row_num) ? row.row_num+1: ''}`;
             }
             if (!row.n_price || row.n_price <= 0) result = `Неверная цена в строке ${(row.row_num) ? row.row_num+1: ''}`;
+            // console.log('row', row);
             if (!row.n_consignment) result = `Укажите партию в строке ${(row.row_num) ? row.row_num+1: ''}`;
         }
         return result
@@ -267,6 +268,7 @@ export default class RestBody extends JetView{
         // this.getRoot().getChildViews()[1].getChildViews()[0].$scope.$$("__n_id").setValue(this.doc.n_id)
         if (this.table) {
             if (!this.flag_new) {
+                r_data.data[0]['id'] = r_data.kwargs.intable;
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);
@@ -295,7 +297,8 @@ export default class RestBody extends JetView{
     }
 
     add_new(item) {
-        let last_row = this.$$("__table").count()
+        let last_row = this.$$("__table").count();
+        // item['n_consignment'] = 'остатки'
         this.$$("__table").add(item, last_row-1);
         this.setChange();
         this.recalcTable();
@@ -309,7 +312,7 @@ export default class RestBody extends JetView{
             let item = table.getItem(row);
             if (item.n_code) {
                 item.n_novats_summ = item.n_price * item.n_amount
-                item.n_vats_summ = item.n_novats_summ * (+item.n_vats_base.replace('%', '').replace('НДС ', '')/100);
+                item.n_vats_summ = 0// item.n_novats_summ * (+item.n_vats_base.replace('%', '').replace('НДС ', '')/100);
                 item.n_total_summ = item.n_novats_summ + item.n_vats_summ;
                 table.updateItem(row, item);
             }

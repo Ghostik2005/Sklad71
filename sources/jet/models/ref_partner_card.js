@@ -11,6 +11,7 @@ export default class RefPartnerCardView extends JetView{
         super(app);
         this.parent = parent;
         this.edited = edited;
+        console.log(parent);
     }
 
     config(){
@@ -29,6 +30,7 @@ export default class RefPartnerCardView extends JetView{
                 onShow: () => {
                 },
                 onHide: function() {
+                    if (this.$scope.parent.reloadSuppl) this.$scope.parent.reloadSuppl();
                     this.destructor();
                 }
             },
@@ -176,17 +178,18 @@ export default class RefPartnerCardView extends JetView{
     ready() {
         let th = this;
         setTimeout(() => {
+            let val = (this.parent && this.parent.cfg && this.parent.cfg.name) ? this.parent.cfg.name : "Контрагенты"
             this.$$("__ref_partners_form").addView({view: "text",
                 hidden: true,
                 localId: "__ref_name",
                 name: "ref_name",
-                value: this.parent.cfg.name,
+                value: val, //this.parent.cfg.name,
             });
             this.$$("__ref_partners_form").addView(
                 {cols: [
                 {view: "text", name: "n_id", width: 1, hidden: true, localId: "__n_id_field"},
                 new TemplateComboRefCard(this.app, {width: 140, labelName: "Тип контрагента",
-                    name: "n_type", reference: this.parent.cfg.name,
+                    name: "n_type", reference: val, //this.parent.cfg.name,
                     cancel: th.$$("__cancel"),
                     fitMaster: true}
                 ),

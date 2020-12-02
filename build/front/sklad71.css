@@ -26,7 +26,8 @@ button.webix_button,
 }
 .footer,
 .center_dt .webix_cell {
-  font-size: 11px;
+  font-size: 14px;
+  color: black;
 }
 .center_view {
   border-top-width: 1px !important;

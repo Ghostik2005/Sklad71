@@ -2,8 +2,9 @@
 
 import {JetView} from "webix-jet";
 import {emptyWidth} from "../variables/variables"
-import {filters_process} from "../models/data_processing";
+import {filters_process, filtering} from "../models/data_processing";
 import {formatText} from "../views/common";
+import RefPartnerCardView from "../models/ref_partner_card";
 
 export default class DocumentHeader extends JetView{
 
@@ -15,7 +16,13 @@ export default class DocumentHeader extends JetView{
     }
 
     config(){
-
+        console.log('parent', this.parent);
+        if (this.parent.doc_type == "Приходная накладная") {
+            this.base_template = 'документ поставщика'
+        } else {
+            this.base_template = 'примечание'
+        }
+        let th = this;
         let header = {
             localId: "__header-form",
             borderless: true,
@@ -135,28 +142,42 @@ export default class DocumentHeader extends JetView{
                 {cols: [
                     {localId: "__supplier_section", rows: [
                         {template: "поставщик", type: "section"},
-                        {view: "combo",
-                            disabled: !true,
-                            name: "n_supplier",
-                            localId: "__supplier",
-                            labelWidth: 0,
-                            on: {
-                                onChange: () => {
-                                    this.parent.setChange();
+                        {cols:[
+                            {view: "combo",
+                                disabled: !true,
+                                name: "n_supplier",
+                                localId: "__supplier",
+                                labelWidth: 0,
+                                on: {
+                                    onChange: () => {
+                                        this.parent.setChange();
+                                    }
+                                },
+                                suggest:{
+                                    filter: filtering,
+                                    body:{
+                                        parentName: "n_supplier",
+                                        url: function(params) {
+                                            return filters_process.get_data(params, this);
+                                        },
+                                        type:{
+                                            height:32
+                                        },
+                                    }
+                                },
+                            },
+                            {view: "button",
+                                width: 36,
+                                localId: "__add_supp",
+                                label: "+",
+                                on: {
+                                    onItemClick: ()=> {
+                                        let ref_ed = this.ui(new RefPartnerCardView(this.app, this, false));
+                                        ref_ed.show('Карточка Контрагенты.');
+                                    }
                                 }
                             },
-                            options:{
-                                body:{
-                                    parentName: "n_supplier",
-                                    url: function(params) {
-                                        return filters_process.get_data(params, this);
-                                    },
-                                    type:{
-                                        height:32
-                                    },
-                                }
-                            },
-                        },
+                        ]}
                     ]},
                     {width: emptyWidth*3},
                     {rows: [
@@ -171,7 +192,8 @@ export default class DocumentHeader extends JetView{
                                     this.parent.setChange();
                                 }
                             },
-                            options:{
+                            suggest:{
+                                filter: filtering,
                                 body:{
                                     parentName: "n_recipient",
                                     url: function(params) {
@@ -186,7 +208,7 @@ export default class DocumentHeader extends JetView{
                     ]},
                     {width: emptyWidth*3},
                     {rows: [
-                        {template: "основание документа", type: "section"},
+                        {template: this.base_template, type: "section"},
                         {view: "text",
                             name: "n_base",
                             labelWidth: 0,
@@ -208,6 +230,21 @@ export default class DocumentHeader extends JetView{
         }
 
         return header
+    }
+
+
+    reloadSuppl() {
+
+        let t = this.$$("__supplier").getList()
+        t.clearAll(true);
+        t.loadNext(0, 0, 0, 0, 1).then((data)=> {
+            if (data) {
+                t.clearAll(true);
+                t.parse(data);
+                t.showItemByIndex(0);
+            }
+        })
+
     }
 
     getData(top_view) {

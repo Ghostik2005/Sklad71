@@ -17,8 +17,8 @@ export default class ShipmentsBody extends JetView{
         let ret_view = {
             view:"cWindow",
             localId: "__shipmentbody",
-            width: document.documentElement.clientWidth*0.8,
-            height: document.documentElement.clientHeight*0.8,
+            width: document.documentElement.clientWidth*0.9,
+            height: document.documentElement.clientHeight*0.9,
             padding: 4,
             point: false,
             relative: false,
@@ -283,7 +283,7 @@ export default class ShipmentsBody extends JetView{
 
     validateDocument(th, data){
         let result = false;
-        if (!data.header.n_base) result = 'Укажите основание документа';
+        // if (!data.header.n_base) result = 'Укажите основание документа';
         if (!data.header.n_number) result = 'Укажите номер документа';
         if (!data.header.n_supplier) result = 'Укажите поставщика';
         if (!data.header.n_recipient) result = 'Укажите получателя';
@@ -309,6 +309,7 @@ export default class ShipmentsBody extends JetView{
         // this.getRoot().getChildViews()[1].getChildViews()[0].$scope.$$("__n_id").setValue(this.doc.n_id)
         if (this.table) {
             if (!this.flag_new) {
+                r_data.data[0]['id'] = r_data.kwargs.intable;
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 this.table.add(r_data.data[0], 0);

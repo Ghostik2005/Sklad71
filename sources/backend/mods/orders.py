@@ -27,17 +27,17 @@ job.n_doc_id as order_doc_id,
 rp.c_name as prod_name,
 replace((job.n_product->'n_code')::text, '"', '') as prod_code,
 job.n_product->'n_amount' as order_amount,
-job.n_product->'n_price' as order_price,
+coalesce((job.n_product->'n_price')::int, 0) as order_price,
 (job.n_product->'n_product') as order_prod,
 job.n_product->'n_man' as order_man,
 job.n_product->'n_comment' as order_comment,
 rp.c_id as prod_id,
 jpb.n_id as balance_id,
-jpb.n_quantity as balance_quan,
+coalesce(jpb.n_quantity, 0) as balance_quan,
 (job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ,
-jpb.n_price as n_price,
-jpb.n_vat as n_vat,
-jpb.n_quantity as n_stock
+coalesce(jpb.n_price,0) as n_price,
+coalesce(jpb.n_vat, 0) as n_vat,
+coalesce(jpb.n_quantity, 0) as n_stock
 from journals_orders_bodies job
 left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
 left join journals_products_balance jpb
@@ -78,7 +78,7 @@ order by job.n_id
                 "n_price": row[13], #цена прихода
                 "n_vat":  row[14],
                 "n_novats_summ": nnvs,
-                "n_charge": round(int(row[5])/int(row[13])*100-100, 2),
+                "n_charge": 0 if not row[13] else round(int(row[5] if row[5] else 0)/int(row[13])*100-100, 2),
                 "n_vats_summ": nvs,
                 "n_stock": row[15], #остаток на складе
                 "warning": row[15]<row[4]
@@ -109,7 +109,7 @@ job.n_product->'n_man' as order_man,
 job.n_product->'n_comment' as order_comment,
 rp.c_id as prod_id,
 jpb.n_id as balance_id,
-jpb.n_quantity as balance_quan,
+coalesce(jpb.n_quantity, 0) as balance_quan,
 (job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ
 from journals_orders_bodies job
 left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))

@@ -37,8 +37,9 @@ export default class BalanceHeaderView extends JetView{
                             // if (code ===32 || (code>=48 && code<=90)) {
                                 clearTimeout(this.delay);
                                 this.delay = setTimeout(() => {
-                                    app.commonWidgets.balance.center_table.getData();
-                                    
+
+                                    app.commonWidgets.balances.center_table.getData();
+
                                 }, 850);
                             // }
                         },
@@ -50,7 +51,7 @@ export default class BalanceHeaderView extends JetView{
                 {width: emptyWidth},
                 {view:"button", type: 'htmlbutton',
                     width: 35,
-                    height: 35, 
+                    height: 35,
                     longPress: false,
                     label: "",
                     localId: "__price_upl",
@@ -69,17 +70,17 @@ export default class BalanceHeaderView extends JetView{
         }
 
         let status = {
-            height: 26, 
+            height: 26,
             borderless: true,
             cols: [
                 {width: emptyWidth},
                 {width: emptyWidth},
                 {width: emptyWidth},
                 new TemplateStatusBar(app, l_this.view_name),
-            ]            
+            ]
         }
 
-        return { 
+        return {
             borderless: true,
             rows: [
                 toolbar,
@@ -94,14 +95,14 @@ export default class BalanceHeaderView extends JetView{
         } catch(e){
             return {}
         }
-        
+
     }
 
     ready() {
-        
+
     }
 
     init() {
-        
+
     }
 }

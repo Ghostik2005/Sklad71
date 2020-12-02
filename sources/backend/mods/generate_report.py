@@ -370,6 +370,12 @@ order by jsb.n_id"""
             with open(fn, 'wb') as _f:
                 _f.write(file_data)
 
+            md5 = self.parent.filesave(fn)
+
+            l_file_name = os.path.basename(fn).replace('.ods', '')
+
+            link_name = f"""https://sklad71.org/filehash/{l_file_name}.pdf?{md5}"""
+            print(link_name)
             bi = base64.b64encode(file_data)
             bi = bi.decode()
             # print(bi)
@@ -377,6 +383,7 @@ order by jsb.n_id"""
             answer = {"params": args,
                 "kwargs": kwargs, "timing": {"sql": 0, "process": 0},
                 "data": {
+                    "link": link_name,
                     "file_name": os.path.basename(fn),
                     "binary": bi
                 }

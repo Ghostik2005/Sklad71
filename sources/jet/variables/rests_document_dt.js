@@ -30,7 +30,7 @@ export const dtColumns = [
     {id: "n_consignment", width: 100,
         header: [{text: "Партия"},
             ],
-        headermenu:false,
+        headermenu:!false,
         editor: "text",
         hidden: true,
         template: "остатки"

@@ -140,7 +140,7 @@ order by {c_name} asc"""
             n_nds = params.get('n_nds')
             n_pos_numbers = params.get('n_pos_numbers')
             n_executor = params.get('n_executor')
-            n_base = params.get('n_base')
+            n_base = params.get('n_base', '')
             n_paid = params.get('n_paid')
             n_dt_change = params.get('n_dt_change')
 
@@ -300,7 +300,7 @@ join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and 
         return answer
 
     def _make_sql_upd_header(self, header):
-        n_base = header.get('n_base')
+        n_base = header.get('n_base', '')
         n_recipient = header.get('n_recipient')
         n_number = header.get('n_number')
         n_dt_invoice = header.get('n_dt_document')
@@ -334,7 +334,7 @@ returning n_id::text
 
     def _make_sql_new_header(self, header):
         n_state = header.get('n_state')
-        n_base = header.get('n_base')
+        n_base = header.get('n_base', '')
         n_recipient = header.get('n_recipient')
         n_number = header.get('n_number')
         n_dt_invoice = header.get('n_dt_document')

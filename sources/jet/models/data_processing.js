@@ -2,6 +2,17 @@
 
 import {request, checkResponse, getUser} from "../views/common";
 
+export function filtering(obj, value){
+
+    return obj['value'].toString().toLowerCase().indexOf(value) != -1
+  }
+
+export function gen_number(doc_type) {
+    let params_to = {method:"gen_doc_number", kwargs: {"user": getUser(), "doc_type": doc_type}}
+    let result = checkResponse(request(params_to, !0).response, 's');
+    return result
+}
+
 export const report_processing = {
 
     new_report: function(doc_type, doc_number) {
@@ -10,9 +21,13 @@ export const report_processing = {
                         }
         let result = checkResponse(request(params_to, !0).response, 's');
         console.log('res', result)
-        if (result.data && result.data.binary && result.data.file_name) {
-            var blob = new Blob([_base64ToArrayBuffer(result.data.binary)]);
-            webix.html.download(blob, result.data.file_name);
+        if (result.data && result.data.link) {
+            window.open(result.data.link, "_blank");
+        } else {
+            if (result.data && result.data.binary && result.data.file_name) {
+                var blob = new Blob([_base64ToArrayBuffer(result.data.binary)]);
+                webix.html.download(blob, result.data.file_name);
+            }
         }
         // return (result && result.data && result.data===true) ? true : false;
     }
@@ -65,7 +80,9 @@ export const balance_processing = {
     },
 
     get_data: function(params, table) {
+        console.log('---------------------')
         let filters = {n_product: table.$scope.getFilter()}; //получаем значение из filter-элементе
+        console.log('ids', table.$scope);
         let kwargs = genKwargs(params, table, "", filters);
         table.config.sorting = kwargs.filters.sort;
         let params_to = {method:"balances.get_data", kwargs: kwargs};
@@ -293,7 +310,12 @@ function genKwargs(params, table, data_type, filters) {
     let new_params = JSON.parse(JSON.stringify(params))
     if (!filters) {
         let widgs = table.$scope.app.commonWidgets;
-        filters = (widgs && widgs[data_type].menu_filters) ? widgs[data_type].menu_filters.getFilters() : {};
+        if (data_type == 'balances') {
+            filters = widgs[data_type].header.getSearch();
+        } else {
+            filters = (widgs && widgs[data_type].menu_filters) ? widgs[data_type].menu_filters.getFilters() : {};
+        }
+
     }
     if (new_params && !new_params.sort) {
         Object.assign(new_params, {sort:table.config.sorting});

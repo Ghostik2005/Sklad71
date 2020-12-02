@@ -8,9 +8,13 @@ import json
 import bz2
 import glob
 import os
+import socket
 import subprocess
 import traceback
 import tempfile
+import threading
+from datetime import timedelta
+from datetime import datetime
 
 if __name__ == "__main__":
     import botclient
@@ -21,6 +25,13 @@ class SKLAD:
 
     def __init__(self, log=None):
 
+        sys.BOT = botclient.BOTProxy('', ('127.0.0.1', 4222))
+
+        self._test = True if os.getenv('HOME').lower().find('ghostik11')>-1 else False
+
+        print(self._test)
+
+        self.database = 'new_sklad_test' if self._test else 'hoznuzhdy'
 
         self.log = log
 
@@ -30,9 +41,20 @@ class SKLAD:
         os.mkdir(self.temp_dir)
         # self.RPC = botclient.BOTProxy('dbbot.plx-db0', ('127.0.0.1', 4222))
         # self.RPC = botclient.BOTProxy('dbbot.test', ('127.0.0.1', 4222))
-        self.RPC = botclient.BOTProxy('dbbot.sklad', ('127.0.0.1', 4222))
-
+        # self.RPC = botclient.BOTProxy('dbbot.sklad', ('127.0.0.1', 4222))
+        self.RPC = sys.BOT('dbbot.sklad', bot=True)
         self._set_gen_id()
+
+        self._lockname = "order_processor"
+
+        try:
+            from . import msobj
+            owner = '%s.%s.%x' % (socket.gethostname().lower(), os.getpid(), id(threading.current_thread()))
+            print(owner)
+            self.ms_lock = msobj.MSLock(api_key='', timeout=5, owner=owner)
+        except ImportError:
+            self.ms_lock = None
+
 
         try:
             from . import generate_report
@@ -91,6 +113,47 @@ class SKLAD:
             self.generate_report = generate_report.REPORT(self)
 
 
+    def connect_api(self, BOT):
+        # api_key = "11ce07710c41434fa66fad6ba2c3cb0d"
+        # rpc = jsonrpclib.ServerProxy("https://sklad71.org/apps/cnvsrv/uri/RPC2", api_key=api_key)
+        name = 'cnvsrv.default'
+        rpc = BOT(name, bot=True)
+        return  rpc
+
+    #сохраняет двоичные данные с заданным расширением (по умолчанию ods)
+    #возвращает хеш md5
+    def filesave(self, payload, ext='ods'):
+
+        rpc = self.connect_api(sys.BOT)
+        result = None
+        try:
+            cnv = rpc.cnv
+            data = open(payload, "rb").read()
+            # print 'data', len(data)
+            binary = botclient.Binary(data)
+            # print 'binary ', len(binary.encode())
+            result = cnv.filesave(binary, ext=ext)
+        except:
+            traceback.print_exc()
+        finally:
+            return result
+
+
+    def exec_every_n_seconds(self, n, f):
+        first_called=datetime.now()
+        f()
+        num_calls=1
+        drift=timedelta()
+        time_period=timedelta(seconds=n)
+        while 1:
+            time.sleep(n-drift.microseconds/1000000.0)
+            current_time = datetime.now()
+            f()
+            num_calls += 1
+            difference = current_time - first_called
+            drift = difference - time_period* num_calls
+
+
     def at_exit(self):
         if self.temp_dir and os.path.exists(self.temp_dir):
             import shutil
@@ -110,7 +173,7 @@ class SKLAD:
         return "test"
 
     def _request(self, sql):
-        return self.RPC('fdb.execute', sync=(1, 7))('ms/hoznuzhdy.ro', sql)
+        return self.RPC('fdb.execute', sync=(1, 7))(f'ms/{self.database}.ro', sql)
         # _c = self.RPC('fdb', sync=(1, 7))
         # self._print('+'*20)
         # self._print(_c)
@@ -119,7 +182,7 @@ class SKLAD:
 
     def _execute(self, sql):
         _c = self.RPC('fdb')
-        return _c.execute('ms/hoznuzhdy', sql)
+        return _c.execute(f'ms/{self.database}', sql)
 
     def _uid_range(self):
         with requests.get('http://mshub.ru/ext/uid%s' % self._range_no, timeout=(3, 5), verify=False) as f:
@@ -143,6 +206,35 @@ class SKLAD:
     RESTART {_min+1}"""
             ret = self._execute(sql)
 
+
+    def gen_doc_number(self, *args, **kwargs):
+        t = time.time()
+        self._print("*"*10, " gen_doc_number ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " gen_doc_number ", "*"*10)
+        doc_type = kwargs.get('doc_type')
+        if doc_type == 'rest':
+            sql = f"""SELECT nextval('rest_num');"""
+            pass
+        elif doc_type == 'movement':
+            sql = f"""SELECT nextval('movement_num');"""
+            pass
+        elif doc_type == 'arrival':
+            sql = f"""SELECT nextval('arrival_num');"""
+            pass
+        elif doc_type == 'shipment':
+            sql = f"""SELECT nextval('shipment_num');"""
+            pass
+        else:
+            sql = f"""select 9999999"""
+
+        rows = self._request(sql)
+        t1 = time.time() - t
+        ret = rows[0][0]
+        t2 = time.time() - t1 - t
+        answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
+        return answer
 
     def products_checkmark(self, *args, **kwargs):
         t = time.time()
@@ -195,7 +287,7 @@ order by n_value asc"""
                 if doc_type == 'arrival':
                     sql = f"""select n_name, n_id
 from ref_partners
-where n_type in (select n_id from ref_partners_types where n_name = 'Точка')
+where n_type in (select n_id from ref_partners_types where n_name = 'Поставщик')
 order by n_name asc"""
                 else:
                     sql = f"""select n_name, n_id
@@ -613,6 +705,7 @@ insert into journals_products_balance
 	(n_product_id,
 	n_quantity,
 	n_price,
+    n_price_price,
 	n_vat,
 	n_consignment
 	)
@@ -620,6 +713,7 @@ select
 	(jab.n_product->'n_product')::bigint as n_product_id,
 	(jab.n_product->'n_amount')::bigint as n_quantity,
 	(jab.n_product->'n_price')::numeric as n_price,
+    (jab.n_product->'n_price')::numeric as n_price,
 	round(( ( (jab.n_product->'n_price')::numeric * (jab.n_product->'n_vats_base')::numeric)/100)::numeric) as n_vat,
 	replace((jab.n_product->'n_consignment')::text, '"', '') as n_consignment
 from journals_arrivals_bodies jab
@@ -701,82 +795,89 @@ and journals_products_balance.n_consignment =
         self._print(args)
         self._print(kwargs)
         self._print("*"*10, " create_orders ", "*"*10)
-        sql = f"select jor.n_document, jor.n_id from journals_orders_raw jor where jor.n_adding = false"
-        ret = self._execute(sql)
-        t1 = time.time() - t
-        if ret:
-            for r in ret:
-                try:
-                    row = r[0]
-                    jor_id = r[1]
-                    print(row)
-                    n_filename = row.get('ФАЙЛ', '')
-                    n_id_field = row.get('ИД')
-                    n_name = row.get('ИМЯ', '')
-                    n_p_id = '?'
-                    n_code = row.get('КОД1') #код точки?
-                    n_inn = row.get('ИНН', '')
-                    n_dt_price = row.get('ПРАЙС', '')
-                    n_dt_create = row.get('СОЗДАН', '')
-                    n_number = row.get('НОМЕР', '')
-                    n_dt_send = row.get('ОТПРАВКА', '')
-                    n_pos_numbers = row.get('ПОЗИЦИЙ', 0)
-                    n_summ = int(float(row.get('СУММА', 0))*100)
-                    n_recipient = 'Вологда, Окружное шоссе, 13в' #row.get('АДРЕС', '')
-                    n_comment = row.get('КОММЕНТАРИЙ', '')
-                    n_recipient_id = 2032185578050000668  #ищем в базе по коду из n_code
-                    # n_recipient_id = row.get('ФАЙЛ', '') #2006547488710000020 #"?"
-                    sql_header = f"""insert into journals_orders_headers
-(n_state, n_supplier, n_filename,
-    n_id_field, n_name,
-    n_p_id, n_code, n_inn,
-    n_dt_price, n_dt_create,
-    n_number, n_dt_send, n_recipient,
-    n_recipient_id, n_summ, n_pos_numbers,
-    n_dt_recieved, n_comment)
-values (
-    1, (select n_partner_id from service_home_organization), '{n_filename}',
-    '{n_id_field}', '{n_name}',
-    '{n_p_id}', '{n_code}', '{n_inn}',
-    '{n_dt_price}'::timestamp, '{n_dt_create}'::timestamp,
-    '{n_number}', '{n_dt_send}'::timestamp, '{n_recipient}',
-    '{n_recipient_id}'::bigint, {n_summ}, {n_pos_numbers},
-    current_timestamp, '{n_comment}'
-    ) returning n_id"""
-                    self._print(sql_header)
-                    doc_id = self._execute(sql_header)[0][0]
-                    self._print(doc_id)
-                    sql_all_body = []
-                    for i in range(int(n_pos_numbers)):
-                        row_pos = [row.get('КОД2')[i],
-                            row.get('КОЛИЧЕСТВО')[i],
-                            row.get('ЦЕНА')[i],
-                            row.get('ТОВАР')[i],
-                            row.get('ПРОИЗВОДИТЕЛЬ')[i],
-                            row.get('ПРИМЕЧАНИЕ')[i],
-                            row.get('МАТРИЦА')[i],
-                            ]
-                        sql_body = f"""insert into journals_orders_bodies (
-    n_doc_id, n_product) values
-    ({doc_id},
-    ('{{"n_code": "{row_pos[0]}", "n_amount": {int(row_pos[1])}, "n_price": {int(float(row_pos[2])*100)},
-        "n_product": "{row_pos[3]}",
-        "n_man": "{row_pos[4] if row_pos[4] else ''}", "n_comment": "{row_pos[5]}", "n_matrix": "{row_pos[6]}"}}')::jsonb
-    );"""
-                        sql_all_body.append(sql_body)
-                    sql_all_body = "\n".join(sql_all_body)
-                    self._print(sql_all_body)
-                    self._execute(sql_all_body)
-                except:
-                    import traceback
-                    traceback.print_exc()
-                    sql = f"""delete from journals_orders_headers where n_id = {doc_id}"""
-                    self._execute(sql)
-                else:
-                    sql = f"""update journals_orders_raw set n_adding = true where n_id = {jor_id}"""
-                    self._execute(sql)
 
-        t2 = time.time() - t1 - t
+        if self.ms_lock.tryAcquire(self._lockname, sync=True):
+            sql = f"select jor.n_document, jor.n_id from journals_orders_raw jor where jor.n_adding = false"
+            ret = self._execute(sql)
+            t1 = time.time() - t
+            if ret:
+                for r in ret:
+                    try:
+                        row = r[0]
+                        jor_id = r[1]
+                        print(row)
+                        n_filename = row.get('ФАЙЛ', '')
+                        n_id_field = row.get('ИД')
+                        n_name = row.get('ИМЯ', '')
+                        n_p_id = '?'
+                        n_code = row.get('КОД1') #код точки?
+                        n_inn = row.get('ИНН', '')
+                        n_dt_price = row.get('ПРАЙС', '')
+                        n_dt_create = row.get('СОЗДАН', '')
+                        n_number = row.get('НОМЕР', '')
+                        n_dt_send = row.get('ОТПРАВКА', '')
+                        n_pos_numbers = row.get('ПОЗИЦИЙ', 0)
+                        n_summ = int(float(row.get('СУММА', 0))*100)
+                        # n_recipient = 'Вологда, Окружное шоссе, 13в' #row.get('АДРЕС', '')
+                        n_comment = row.get('КОММЕНТАРИЙ', '')
+                        # n_recipient_id = 2032185578050000668  #ищем в базе по коду из n_code
+                        # n_recipient_id = row.get('ФАЙЛ', '') #2006547488710000020 #"?"
+                        sql_header = f"""insert into journals_orders_headers
+    (n_state, n_supplier, n_filename,
+        n_id_field, n_name,
+        n_p_id, n_code, n_inn,
+        n_dt_price, n_dt_create,
+        n_number, n_dt_send, n_recipient,
+        n_recipient_id, n_summ, n_pos_numbers,
+        n_dt_recieved, n_comment)
+    values (
+        1, (select n_partner_id from service_home_organization), '{n_filename}',
+        '{n_id_field}', '{n_name}',
+        '{n_p_id}', '{n_code}', '{n_inn}',
+        '{n_dt_price}'::timestamp, '{n_dt_create}'::timestamp,
+        '{n_number}', '{n_dt_send}'::timestamp, (select n_name from ref_partners where n_code = '{n_code}'),
+        (select n_id from ref_partners where n_code = '{n_code}'), {n_summ}, {n_pos_numbers},
+        current_timestamp, '{n_comment}'
+        ) returning n_id"""
+                        self._print(sql_header)
+                        doc_id = self._execute(sql_header)[0][0]
+                        self._print(doc_id)
+                        sql_all_body = []
+                        for i in range(int(n_pos_numbers)):
+                            row_pos = [row.get('КОД2')[i],
+                                row.get('КОЛИЧЕСТВО')[i],
+                                row.get('ЦЕНА')[i],
+                                row.get('ТОВАР')[i],
+                                row.get('ПРОИЗВОДИТЕЛЬ')[i],
+                                row.get('ПРИМЕЧАНИЕ')[i],
+                                row.get('МАТРИЦА')[i],
+                                ]
+                            sql_body = f"""insert into journals_orders_bodies (
+        n_doc_id, n_product) values
+        ({doc_id},
+        ('{{"n_code": "{row_pos[0]}", "n_amount": {int(row_pos[1])}, "n_price": {int(float(row_pos[2])*100)},
+            "n_product": "{row_pos[3].replace('"', '')}",
+            "n_man": "{row_pos[4] if row_pos[4] else ''}", "n_comment": "{row_pos[5]}", "n_matrix": "{row_pos[6]}"}}')::jsonb
+        );"""
+                            sql_all_body.append(sql_body)
+                        sql_all_body = "\n".join(sql_all_body)
+                        self._print(sql_all_body)
+                        self._execute(sql_all_body)
+                    except:
+                        import traceback
+                        traceback.print_exc()
+                        sql = f"""delete from journals_orders_headers where n_id = {doc_id}"""
+                        self._execute(sql)
+                    else:
+                        sql = f"""update journals_orders_raw set n_adding = true where n_id = {jor_id}"""
+                        self._execute(sql)
+            t2 = time.time() - t1 - t
+
+            self.ms_lock.release(self._lockname)
+        else:
+            t1 = time.time() - t
+            t2 = time.time() - t1 - t
+
         answer = {"data": True, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
         return answer
 
@@ -883,7 +984,7 @@ n_doc_id, n_product) values
         self._print(args)
         self._print(kwargs)
         self._print("*"*10, " create_price ", "*"*10)
-        sql = """select date_trunc('second', n_dt),
+        sql = """select date_trunc('second', LOCALTIMESTAMP),
 rp.c_namefull as name,
 rp.c_nnt as code,
 rm.c_name as manuf,
@@ -932,8 +1033,10 @@ where (jpb.n_price_price != 0 or jpb.n_price_price is not null) and jpb.n_consig
                 data = "[%s\n]" % "\n,".join([json.dumps(e, ensure_ascii=False) for e in f])
                 _f.write(data.encode())
         if os.path.exists(bz_name):
+            # r = subprocess.call(f's3cmd -c /root/.s3cmd put {bz_name} s3://ms71.offer/prices/r71/', shell=True)
+            cmd = ["s3cmd", "-c", "/root/s3cfg", "put", bz_name, "s3://ms71.offer/prices/r71/"]
+            # r = subprocess.call(cmd)
             r = subprocess.call(f's3cmd put {bz_name} s3://ms71.offer/prices/r71/', shell=True)
-            # r = subprocess.call('/ms71/saas/sklad71/put_price.sh', shell=True)
         # r = subprocess.call('s3cmd ls', shell=True)
         t1 = time.time() - t
         t2 = time.time() - t1 - t
@@ -1127,21 +1230,26 @@ set
 			from journals_arrivals_bodies
 			where n_doc_id = {int(doc_id)} and not journals_arrivals_bodies.n_deleted
  				and (n_product->'n_product')::bigint=journals_products_balance.n_product_id
+		 		and (n_product->'n_price')::int = journals_products_balance.n_price
 		),
 	n_dt = CURRENT_TIMESTAMP
-where journals_products_balance.n_product_id in (select (n_product->'n_product')::bigint
-from journals_arrivals_bodies
-where n_doc_id = {int(doc_id)} and not n_deleted)
-and journals_products_balance.n_consignment =
-	(select  journals_products_balance.n_consignment
-	from journals_products_balance jpb1
-	where jpb1.n_id = journals_products_balance.n_id);
+where journals_products_balance.n_product_id in (
+	select (n_product->'n_product')::bigint
+	from journals_arrivals_bodies
+	where n_doc_id = {int(doc_id)} and not n_deleted
+		and (n_product->'n_price')::int = journals_products_balance.n_price
+	)
+	and journals_products_balance.n_consignment =(
+		select  journals_products_balance.n_consignment
+		from journals_products_balance jpb1
+		where jpb1.n_id = journals_products_balance.n_id
+	);
 
 update journals_products_movement jpm
 set n_deleted = true
 where jpm.n_document_id = {int(doc_id)};
 
-update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)};
+update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)}
 
     """)
                     # self._execute(f"""update journals_arrivals_headers set n_state = 1::bigint where n_id={int(doc_id)}""")
@@ -2540,6 +2648,7 @@ order by 1, 2"""
         self._print(kwargs)
         self._print("*"*10, " get_product_filters ", "*"*10)
         reference = kwargs.get('reference')
+        if reference == 'Контрагенты': reference = "partners"
         if reference in ["partners", "points"]:
             pref = "n"
         else:

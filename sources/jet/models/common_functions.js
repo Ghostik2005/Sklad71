@@ -5,7 +5,7 @@ import ArrivalBody from "../models/arrivals_document_body";
 import ShipmentsBody from "../models/shipments_document_body";
 import MovementsBody from "../models/movements_document_body";
 import RestBody from "../models/rests_document_body";
-import {report_processing} from "../models/data_processing";
+import {report_processing, gen_number, isEmpty} from "../models/data_processing";
 
 
 export const newReport = {
@@ -26,6 +26,7 @@ export const newDocument = {
         let master = $$("sklad_main_ui").$scope;
         let table = (master.app.commonWidgets.sidebar.screens._arrivals) ? $$("_arrivals_main") : undefined;
         let new_doc = master.ui(new ArrivalBody(master.app));
+        let doc_num = gen_number('arrival')
         let blank_item = {
             flag_new: true,
             n_dt_invoice: new Date(),
@@ -35,6 +36,9 @@ export const newDocument = {
             n_recipient_id: master.app.config.home_org_id,
             _block: "recipient"
         }
+        if (!isEmpty(doc_num)) {
+            blank_item['n_number'] = doc_num.data;
+        }
         new_doc.show(blank_item, webix.UIManager.getFocus(), table);
     },
 
@@ -42,6 +46,7 @@ export const newDocument = {
         let master = $$("sklad_main_ui").$scope;
         let table = (master.app.commonWidgets.sidebar.screens._shipments) ? $$("_shipments_main") : undefined;
         let new_doc = master.ui(ShipmentsBody);
+        let doc_num = gen_number('shipment')
         let blank_item = {
             flag_new: true,
             n_dt_invoice: new Date(),
@@ -51,6 +56,9 @@ export const newDocument = {
             n_supplier_id: master.app.config.home_org_id,
             order_id: (gr) ? gr.n_id : undefined,
             n_recipient_id: (gr) ? gr.n_recipient_id : undefined,
+        }
+        if (!isEmpty(doc_num)) {
+            blank_item['n_number'] = doc_num.data;
         }
         new_doc.show(blank_item, webix.UIManager.getFocus(), table);
     },
@@ -75,6 +83,7 @@ export const newDocument = {
         let master = $$("sklad_main_ui").$scope;
         let table = (master.app.commonWidgets.sidebar.screens._movements) ? $$("_movements_main") : undefined;
         let new_doc = master.ui(MovementsBody);
+        let doc_num = gen_number('movement')
         // console.log('gr', gr);
         let blank_item = {
             flag_new: true,
@@ -86,6 +95,9 @@ export const newDocument = {
             order_id: (gr) ? gr.n_id : undefined,
             n_recipient_id: (gr) ? gr.n_recipient_id : undefined,
         }
+        if (!isEmpty(doc_num)) {
+            blank_item['n_number'] = doc_num.data;
+        }
         new_doc.show(blank_item, webix.UIManager.getFocus(), table);
 
         // document.message(`Перемещение ${direction}`)
@@ -95,6 +107,8 @@ export const newDocument = {
         let master = $$("sklad_main_ui").$scope;
         let table = (master.app.commonWidgets.sidebar.screens._rests) ? $$("_rests_main") : undefined;
         let new_doc = master.ui(new RestBody(master.app));
+        let doc_num = gen_number('rest')
+        console.log('dn', doc_num);
         let blank_item = {
             flag_new: true,
             n_dt_invoice: new Date(),
@@ -104,6 +118,10 @@ export const newDocument = {
             n_recipient_id: master.app.config.home_org_id,
             _block: "recipient"
         }
+        if (!isEmpty(doc_num)) {
+            blank_item['n_number'] = doc_num.data;
+        }
+
         new_doc.show(blank_item, webix.UIManager.getFocus(), table);
     },
 

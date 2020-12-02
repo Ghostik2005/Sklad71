@@ -23,8 +23,8 @@ export default class ArrivalBody extends JetView{
         let ret_view = {
             view:"cWindow",
             localId: "__arrivalbody",
-            width: document.documentElement.clientWidth*0.8,
-            height: document.documentElement.clientHeight*0.8,
+            width: document.documentElement.clientWidth*0.9,
+            height: document.documentElement.clientHeight*0.9,
             padding: 4,
             point: false,
             relative: false,
@@ -88,8 +88,11 @@ export default class ArrivalBody extends JetView{
                             },
                             onLiveEdit: function() {
                             },
-                            onDataUpdate: function() {
-                                th.setChange();
+                            onDataUpdate: function(row_id, new_val, old_val) {
+                                let col_change;
+                                if (new_val.n_total_summ != old_val.n_total_summ) col_change = 'n_total_summ'
+                                else if (new_val.n_proci != old_val.n_price) col_change = 'n_price'
+                                th.setChange(col_change);
                             },
                             onItemClick: function(row, ev) {
                                 let item = this.getItem(row)
@@ -166,8 +169,8 @@ export default class ArrivalBody extends JetView{
                                     onItemClick: ()=>{
                                         let not_saved = this.$$("__save").callEvent('onItemClick');
                                         if (!not_saved) {
-                                            console.log('doc', this.doc);
-                                            console.log('doc.id', this.doc.id);
+                                            // console.log('doc', this.doc);
+                                            // console.log('doc.id', this.doc.id);
                                             let r_data = app.getService("common").holdDocument('arrival', this.doc.n_id, this.doc.id);
                                             //////////////делаем изменения в таблице!!!!!!!!!!!!!
                                             if (r_data.data) {
@@ -249,7 +252,7 @@ export default class ArrivalBody extends JetView{
 
     validateDocument(th, data){
         let result = false;
-        if (!data.header.n_base) result = 'Укажите основание документа';
+        // if (!data.header.n_base) result = 'Укажите основание документа';
         if (!data.header.n_number) result = 'Укажите номер документа';
         if (!data.header.n_supplier) result = 'Укажите поставщика';
         if (!data.header.n_recipient) result = 'Укажите получателя';
@@ -267,11 +270,7 @@ export default class ArrivalBody extends JetView{
     }
 
     saveDocumentServer(th, data){
-        console.log('q2')
         let result = false
-        console.log('th', th);
-        console.log('doc', th.doc);
-        console.log('doc.id', th.doc.id);
         let r_data = documentProcessing.save(data, th.doc.id, 'arrivals');
         if (!r_data.data || !r_data.data[0]) return "Ошибка записи на сервер";
         this.doc = r_data.data[0];
@@ -279,6 +278,7 @@ export default class ArrivalBody extends JetView{
         // this.getRoot().getChildViews()[1].getChildViews()[0].$scope.$$("__n_id").setValue(this.doc.n_id)
         if (this.table) {
             if (!this.flag_new) {
+                r_data.data[0]['id'] = r_data.kwargs.intable;
                 this.table.updateItem(r_data.kwargs.intable, r_data.data[0]);
             } else {
                 // document.message("добавляем позицию наверх")
@@ -314,15 +314,22 @@ export default class ArrivalBody extends JetView{
 
     }
 
-    recalcTable() {
+    recalcTable(col_change) {
         let table = this.$$("__table")
         table.blockEvent();
         table.eachRow ((row)=> {
             let item = table.getItem(row);
             if (item.n_code) {
-                item.n_novats_summ = item.n_price * item.n_amount
-                item.n_vats_summ = item.n_novats_summ * (+item.n_vats_base.replace('%', '').replace('НДС ', '')/100);
-                item.n_total_summ = item.n_novats_summ + item.n_vats_summ;
+                if (col_change !='n_price') {
+                    item.n_vats_summ = 0 // item.n_novats_summ * (+item.n_vats_base.replace('%', '').replace('НДС ', '')/100);
+                    item.n_novats_summ = item.n_total_summ - item.n_vats_summ;
+                    item.n_novats_summ = item.n_price = item.n_novats_summ / item.n_amount;
+                } else {
+                    item.n_novats_summ = item.n_price * item.n_amount;
+                    item.n_vats_summ = 0 // item.n_novats_summ * (+item.n_vats_base.replace('%', '').replace('НДС ', '')/100);
+                    item.n_total_summ = item.n_novats_summ + item.n_vats_summ;
+                }
+
                 table.updateItem(row, item);
             }
         })
@@ -337,14 +344,14 @@ export default class ArrivalBody extends JetView{
         header.setValue(header.getValue().replace ('<span class="changed">  изменен</span>', ''))
     }
 
-    setChange() {
+    setChange(col_change) {
         this.change = true;
         //делать пересчет всех значение в таблице!!!!!!!!!
         let header = this.getRoot().getHead().getChildViews()[0];
         this.$$("__save").show();
         let q = header.$view.querySelectorAll('[class="changed"]');
         if (q.length === 0) header.setValue(header.getValue() + '<span class="changed">  изменен</span>')
-        this.recalcTable()
+        this.recalcTable(col_change)
     }
 
     ready() {

@@ -27,7 +27,7 @@ class RESTS:
             n_nds = params.get('n_nds')
             n_pos_numbers = params.get('n_pos_numbers')
             n_executor = params.get('n_executor')
-            n_base = params.get('n_base')
+            n_base = params.get('n_base', '')
             n_dt_change = params.get('n_dt_change')
             if n_number:
                 if n_number.startswith('='):
@@ -173,7 +173,7 @@ join ref_employees emp on (jrh.n_executor = emp.n_id)
         return answer
 
     def _make_sql_upd_header(self, header):
-        n_base = header.get('n_base')
+        n_base = header.get('n_base', '')
         n_recipient = header.get('n_recipient')
         n_number = header.get('n_number')
         n_dt_invoice = header.get('n_dt_document')
@@ -206,7 +206,7 @@ returning n_id
 
     def _make_sql_new_header(self, header):
         n_state = header.get('n_state')
-        n_base = header.get('n_base')
+        n_base = header.get('n_base', '')
         n_recipient = header.get('n_recipient')
         n_number = header.get('n_number')
         n_dt_invoice = header.get('n_dt_document')
@@ -246,7 +246,7 @@ where n_doc_id = {doc_id}::bigint and not n_deleted"""
                 "n_amount": int(row['n_amount']),
                 "n_price": int(row['n_price']),
                 "n_novats_summ": int(row['n_novats_summ']),
-                "n_vats_base": int(row['n_vats_base'].replace('НДС ', '').replace('%', '')),
+                "n_vats_base": 0 if int(row['n_vats_summ']) == 0 else int(row['n_vats_base'].replace('НДС ', '').replace('%', '')),
                 "n_vats_summ": int(row['n_vats_summ']),
                 "n_total_summ": int(row['n_total_summ']),
                 "n_consignment": row["n_consignment"]

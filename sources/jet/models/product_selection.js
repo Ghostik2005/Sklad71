@@ -25,9 +25,14 @@ export default class ProductSelectionView extends JetView{
             topParent: th,
             id: this.table_id,
             dblClick: function(item, table) {
+                console.log('tab', th.parent);
                 if (item) {
                     // let new_item = this.getItem(item);
                     let new_item = table.getItem(item);
+                    let doc_num = th.parent.$scope.getHeader().$$("__number").getValue();
+                    let doc_dt = th.parent.$scope.getHeader().$$("__date").getValue();
+                    doc_dt = webix.Date.dateToStr("%d%m%y")(doc_dt)
+                    let cons = `${doc_num}:${doc_dt}`
                     new_item = {
                         n_id: undefined,
                         n_product: new_item.c_name,
@@ -44,7 +49,8 @@ export default class ProductSelectionView extends JetView{
                         n_vats_base: new_item.c_vat,
                         n_vats_summ: '',
                         n_total_summ: '',
-                        n_prod_id: new_item.c_id
+                        n_prod_id: new_item.c_id,
+                        n_consignment: (th.parent.$scope.doc_type == "Ввод остатков") ? 'остатки' : cons
                     }
                     let o_i = th.parent.getItem(th.s_sel);
                     let old_item = (o_i) ? JSON.parse(JSON.stringify(o_i)): {}
@@ -171,6 +177,7 @@ export default class ProductSelectionView extends JetView{
 
     searchDuplicates(table, item_id) {
         let d_id;
+        return d_id;
         table.eachRow( (row)=> {
             let item = table.getItem(row);
             if (item.n_prod_id && (item.n_prod_id.toString() === item_id.toString())) d_id = row;
