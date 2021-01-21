@@ -37,7 +37,7 @@ export default class ShipmentsBody extends JetView{
                         data = documentProcessing.get(this.doc.n_id, "shipments");
                     }
                     this.$$("__table").clearAll();
-                    data.data.push({"n_product": "...добавить"});
+                    if (this.doc.n_state == 1) data.data.push({"n_product": "...добавить"});
                     this.$$("__table").parse(data);
                     setTimeout(() => {
                         if (this.getHeader().recalcHeader) this.getHeader().recalcHeader(this.$$("__table"));

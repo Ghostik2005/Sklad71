@@ -32,8 +32,8 @@ export default class TemplateProductsView extends JetView{
             rowHeight:28,
             editable: !false,
             footer: true,
-            url: (params) => {
-                return this.cfg.loadFunction(params, this);
+            url: function(params) {
+                return this.$scope.cfg.loadFunction(params, this);
             },
             headermenu:{
                 autowidth: true,
@@ -91,7 +91,11 @@ export default class TemplateProductsView extends JetView{
                     this.markSorting(this.config.sorting.id, this.config.sorting.dir);
                     // this.unblockEvent();
                 },
+                onDataUpdate: function(row_id, new_val, old_val) {
+                    l_this.cfg.setChange(row_id, new_val, old_val);
+                },
                 onKeyPress: function(code, event) {
+                    return
                     if (code===13) {
                         let item = this.getSelectedId();
                         this.callEvent('onItemDblClick', [item])

@@ -3,12 +3,17 @@
 import {request, checkResponse, getUser} from "../views/common";
 
 export function filtering(obj, value){
-
     return obj['value'].toString().toLowerCase().indexOf(value) != -1
   }
 
 export function gen_number(doc_type) {
     let params_to = {method:"gen_doc_number", kwargs: {"user": getUser(), "doc_type": doc_type}}
+    let result = checkResponse(request(params_to, !0).response, 's');
+    return result
+}
+
+export function set_limit(row_id, new_val) {
+    let params_to = {method:"set_point_limit", kwargs: {"user": getUser(), "n_limit": new_val, "row_id": row_id}}
     let result = checkResponse(request(params_to, !0).response, 's');
     return result
 }
@@ -20,7 +25,6 @@ export const report_processing = {
                          kwargs: {"user": getUser(), "doc_type": doc_type, "doc_number": doc_number}
                         }
         let result = checkResponse(request(params_to, !0).response, 's');
-        console.log('res', result)
         if (result.data && result.data.link) {
             window.open(result.data.link, "_blank");
         } else {
@@ -80,9 +84,9 @@ export const balance_processing = {
     },
 
     get_data: function(params, table) {
-        console.log('---------------------')
+        // console.log('---------------------')
         let filters = {n_product: table.$scope.getFilter()}; //получаем значение из filter-элементе
-        console.log('ids', table.$scope);
+        // console.log('ids', table.$scope);
         let kwargs = genKwargs(params, table, "", filters);
         table.config.sorting = kwargs.filters.sort;
         let params_to = {method:"balances.get_data", kwargs: kwargs};
@@ -98,7 +102,7 @@ export const filters_process = {
 
     get_data: function(params, widget) {
         let docType;
-
+        // console.log(widget)
         if (widget.$scope && widget.$scope.parent && widget.$scope.parent.doc_type) {
             // console.log(widget.$scope.parent.doc_type)
             if (widget.$scope.parent.doc_type == "Отгрузка") {
@@ -110,7 +114,8 @@ export const filters_process = {
             } else if (widget.$scope.parent.doc_type == "Заказ покупателя") {
                 docType = "order"
             }
-
+        } else if (widget.config && widget.config.ordersFg) {
+            docType = "order"
         }
         let params_to = {method:"get_filter_list", kwargs: {"user": getUser(), filterName: widget.config.parentName, docType: docType}}
         let result =  request(params_to).then(function(data) {
@@ -206,12 +211,12 @@ export const reference = {
 export const getDatas = {
 
     ref_data: function(params, table) {
-        let filters = {n_name: table.cfg.topParent.getFilter(), reference: table.cfg.name};
+        let filters = {n_name: table.$scope.cfg.topParent.getFilter(), reference: table.$scope.cfg.name};
         if (!params) {
-            params = {sort:$$(table.cfg.id).config.sorting};
+            params = {sort:$$(table.$scope.cfg.id).config.sorting};
         }
         params = Object.assign(params, {filters: filters});
-        $$(table.cfg.id).config.sorting = params.sort;
+        $$(table.$scope.cfg.id).config.sorting = params.sort;
         let params_to = {method:"get_reference", kwargs: {"user": getUser(), filters: params}}
         return request(params_to).then(function(data) {
             data = checkResponse(data, 'a');
@@ -220,7 +225,7 @@ export const getDatas = {
     },
 
     product_data: function(params, table) {
-        let filters = {c_name: table.cfg.topParent.getFilter()};
+        let filters = {c_name: table.$scope.cfg.topParent.getFilter()};
         let kwargs = genKwargs(params, table, "", filters);
         table.config.sorting = kwargs.filters.sort;
         let params_to = {method:"get_products", kwargs: kwargs};
@@ -307,9 +312,15 @@ export function createPrice(params) {
 
 
 function genKwargs(params, table, data_type, filters) {
+    // console.log('params', params);
+    // console.log('table', table);
+    // console.log('data_type', data_type);
+    let app = table.$scope.app;
+    // let sb = table.$scope.app.commonWidgets[data_type];
+    // console.log('sb', sb);
     let new_params = JSON.parse(JSON.stringify(params))
     if (!filters) {
-        let widgs = table.$scope.app.commonWidgets;
+        let widgs = app.commonWidgets;
         if (data_type == 'balances') {
             filters = widgs[data_type].header.getSearch();
         } else {

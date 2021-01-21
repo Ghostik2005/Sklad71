@@ -37,11 +37,15 @@ export default class MovementsBody extends JetView{
                         data = documentProcessing.get(this.doc.n_id, "movements");
                     }
                     this.$$("__table").clearAll();
-                    data.data.push({"n_product": "...добавить"});
+                    if (this.doc.n_state == 1) data.data.push({"n_product": "...добавить"});
                     this.$$("__table").parse(data);
                     setTimeout(() => {
-                        if (this.getHeader().recalcHeader) this.getHeader().recalcHeader(this.$$("__table"));
-                    }, 100);
+                        if (this.getHeader().recalcHeader)
+                            this.getHeader().recalcHeader(this.$$("__table"));
+                    }, 10);
+                    setTimeout(() => {
+                        this.setRelease();
+                    }, 1500);
                     let table = this.$$("__table");
                     table.eachRow( (row) => {
                         let item = table.getItem(row);
@@ -68,6 +72,36 @@ export default class MovementsBody extends JetView{
                                 onChange: function() {
                                 }
                             }
+                        },
+                        {width: 25},
+                        {view: "text",
+                            width: 250,
+                            disabled: true,
+                            labelWidth: 100,
+                            label: "Лимит точки",
+                            value: "",
+                            localId: "__limit",
+                            name: "n_limit",
+                        },
+                        {width: 25},
+                        {view: "text",
+                            width: 250,
+                            disabled: true,
+                            label: "Отпущено на точку",
+                            value: "",
+                            localId: "__release_total",
+                            name: "n_release_total",
+                            labelWidth: 120,
+                        },
+                        {width: 25},
+                        {view: "text",
+                            width: 320,
+                            disabled: true,
+                            label: "Отпущено на точку по документу",
+                            value: "",
+                            localId: "__release",
+                            name: "n_release",
+                            labelWidth: 220,
                         },
                         {}
                     ]},
@@ -236,6 +270,21 @@ export default class MovementsBody extends JetView{
         return ret_view
     }
 
+    setRelease() {
+        let point = this.getHeader().$$("__recipient");
+        let v = point.getValue();
+        let l = point.getList();
+        let item = l.getItem(v)
+        // console.log('point', item)
+        if (item && Number.isInteger(item.n_limit)) {
+            this.n_limit = item.n_limit
+            this.n_release = item.n_release
+            this.$$("__limit").setValue(webix.Number.formatNumber(this.n_limit));
+            this.$$("__release_total").setValue(webix.Number.formatNumber(this.n_release));
+        }
+
+    }
+
     getConfirm(){
         let result = "1";
         result = webix.modalbox({
@@ -290,7 +339,7 @@ export default class MovementsBody extends JetView{
         for (let i in data.table) {
             let row = data.table[i];
             if (!row.n_code) continue;
-            if (!row.n_amount || isNaN(row.n_amount) || +row.n_amount < 0) {
+            if (isNaN(row.n_amount) || +row.n_amount < 0) {
                 result = `Неверное количство в строке ${(row.row_num) ? row.row_num+1: ''}`;
             }
             if (row.n_stock < row.n_amount) result = `Количество на складе меньше чем в заказе в строке ${row.row_num+1}`;
@@ -340,11 +389,27 @@ export default class MovementsBody extends JetView{
         this.$$("__table").add(item, last_row-1);
         this.setChange();
         this.recalcTable();
+        this.setRelease();
 
     }
 
     recalcTable() {
         let table = this.$$("__table")
+        function getLimits() {
+            let result = 0;
+            table.mapCells(null, "n_total_summ", null, 1, function(value, row_id){
+                // console.log('n_limit', table.getItem(row_id).n_limit);
+                if (table.getItem(row_id) && table.getItem(row_id).n_limit) {
+
+                } else {
+                    let v = +value
+                    if (!isNaN(v)) result+=v;
+                }
+                return value;
+            });
+            return result
+        };
+
         function getSum(columnId) {
             let result = 0;
             table.mapCells(null, columnId, null, 1, function(value){
@@ -375,6 +440,21 @@ export default class MovementsBody extends JetView{
         let pr = getSum("n_price");
         let sh_pr = getSum("n_ship_price");
         let charge = (sh_pr/pr)*100 - 100;
+        let total_limit = getLimits();
+        this.$$("__release").setValue(webix.Number.formatNumber(total_limit));
+        // let limit = +this.$$("__limit").getValue();
+        // let t_release = +this.$$("__release_total").getValue();
+        // console.log(limit, t_release);
+        if (this.n_limit == 0) {
+            this.$$("__save").show();
+            this.$$("__hold").show();
+        } else if (+total_limit+this.n_release > this.n_limit ) {
+            this.$$("__save").hide();
+            this.$$("__hold").hide();
+        } else {
+            this.$$("__save").show();
+            this.$$("__hold").show();
+        }
         this.$$("__charge").setValue(charge.toFixed(2));
         table.unblockEvent();
         if (this.getHeader().recalcHeader) this.getHeader().recalcHeader(table);
@@ -395,7 +475,9 @@ export default class MovementsBody extends JetView{
         this.$$("__save").show();
         let q = header.$view.querySelectorAll('[class="changed"]');
         if (q.length === 0) header.setValue(header.getValue() + '<span class="changed">  изменен</span>')
-        this.recalcTable()
+        this.setRelease();
+        this.recalcTable();
+
     }
 
     ready() {

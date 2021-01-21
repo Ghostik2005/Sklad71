@@ -71,7 +71,8 @@ export const MovedtColumns = [
         hidden: true,
         headermenu:false,
     },
-    {id: "n_recipient", width: 160,
+    {id: "n_recipient",
+        fillspace: 1,
         sort: "server",
         header: [{text: names('n_recipient').value},
         ],
@@ -107,7 +108,8 @@ export const MovedtColumns = [
         ],
         format: webix.Number.formatNumber,
         // template: (common, obj, value) => webix.Number.formatNumber(value),
-        headermenu:false,
+        headermenu:!false,
+        hidden: true,
         // footer:{ content:"totalColumn" },
         filter_type: "text"
     },
@@ -127,8 +129,9 @@ export const MovedtColumns = [
         filter_type: "multi"
     },
     {id: "n_base", //width: 180,
+        width: 260,
         sort: "server",
-        fillspace: 1,
+
         header: [{text: names('n_base').value},
         ],
         headermenu:false,
@@ -147,7 +150,7 @@ export const MovedtColumns = [
         header: [{text: names('n_dt_change').value},
         ],
         format: webix.Date.dateToStr("%d.%m.%Y %H:%i:%s"),
-        headermenu:false,
+        headermenu:!false,
         filter_type: "date"
     },
 

@@ -35,8 +35,8 @@ export default class RestBody extends JetView{
                     (this.change == true) ? this.$$("__save").show() : this.$$("__save").hide();
                     // (this.change == true) ? this.$$("__cancel").show() : this.$$("__cancel").hide();
                     this.$$("__table").clearAll();
-                    let data = documentProcessing.get(this.doc.n_id, "rests")
-                    data.data.push({"n_product": "...добавить"});
+                    let data = documentProcessing.get(this.doc.n_id, "rests");
+                    if (this.doc.n_state == 1) data.data.push({"n_product": "...добавить"});
                     this.$$("__table").parse(data);
                 },
                 onHide: () => {

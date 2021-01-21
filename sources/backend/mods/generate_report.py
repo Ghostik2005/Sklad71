@@ -190,6 +190,46 @@ order by jrb.n_id
     def _generate_short_movement(self, doc_number):
         self.parent._print(doc_number)
         data = {}
+        sql_old = f"""select
+jmh.n_number as doc_number,
+jmh.n_base as doc_base,
+jmh.n_executor as doc_employ,
+rps.n_name as doc_suppl,
+jmh.n_pos_numbers as doc_positions,
+jmh.n_summ as doc_sell_total,
+(jmh.n_summ::numeric / (1 + (jmb.n_product->'n_charge')::numeric))::int  as doc_prih_total,
+jmh.n_dt_invoice as doc_date,
+rpc.n_name as doc_rec_name,
+j1.name as pos_prod_name,
+jmb.n_product->'n_unit' as pos_unit,
+jmb.n_product->'n_amount' as pos_kol,
+case
+	when (jmb.n_product->'n_amount')::int > 0
+	then (jmb.n_product->'n_total_summ')::int /(jmb.n_product->'n_amount')::int
+	else 0
+end as pos_sale_price,
+jmb.n_product->'n_total_summ' as pos_sale_total,
+jpb.n_consignment as seria,
+'' as goden,
+case
+	when (jmb.n_product->'n_amount')::int > 0
+	then ((jmb.n_product->'n_total_summ')::numeric / (1 + (jmb.n_product->'n_charge')::numeric))::int / (jmb.n_product->'n_amount')::int
+	else 0
+end  as pos_prih_price,
+((jmb.n_product->'n_total_summ')::numeric / (1 + (jmb.n_product->'n_charge')::numeric))::int as pos_prih_total,
+rpu.n_name as u_name
+from journals_movements_headers jmh
+join ref_partners rpc on rpc.n_id = jmh.n_recipient
+join ref_partners rps on rps.n_id = jmh.n_supplier
+join journals_movements_bodies jmb ON jmb.n_doc_id = jmh.n_id and jmb.n_deleted = false
+join journals_products_balance jpb on jpb.n_id = (jmb.n_product->'n_balance_id')::bigint
+join (select pb.n_product_id, rp.c_name as name, pb.n_id  as id, pb.n_quantity as stock
+ 		from journals_products_balance pb
+ 		join ref_products rp on (rp.c_id=pb.n_product_id)) as j1
+ 	on (j1.id = (jmb.n_product->'n_balance_id')::bigint)
+join ref_partners rpu on rpu.n_id = rpc.n_parent_id
+where jmh.n_id = '{doc_number}'::bigint
+order by pos_prod_name --jmb.n_id"""
         sql = f"""select
 jmh.n_number as doc_number,
 jmh.n_base as doc_base,
@@ -203,24 +243,39 @@ rpc.n_name as doc_rec_name,
 j1.name as pos_prod_name,
 jmb.n_product->'n_unit' as pos_unit,
 jmb.n_product->'n_amount' as pos_kol,
-(jmb.n_product->'n_total_summ')::int / (jmb.n_product->'n_amount')::int as pos_sale_price,
+case
+	when (jmb.n_product->'n_amount')::int > 0
+	then (jmb.n_product->'n_total_summ')::int /(jmb.n_product->'n_amount')::int
+	else 0
+end as pos_sale_price,
 jmb.n_product->'n_total_summ' as pos_sale_total,
-jpb.n_consignment as seria,
+'' as seria, --jpb.n_consignment as seria,
 '' as goden,
-((jmb.n_product->'n_total_summ')::numeric / (1 + (jmb.n_product->'n_charge')::numeric))::int / (jmb.n_product->'n_amount')::int as pos_prih_price,
-((jmb.n_product->'n_total_summ')::numeric / (1 + (jmb.n_product->'n_charge')::numeric))::int as pos_prih_total
+case
+	when (jmb.n_product->'n_amount')::int > 0
+	then ((jmb.n_product->'n_total_summ')::numeric / (1 + (jmb.n_product->'n_charge')::numeric))::int / (jmb.n_product->'n_amount')::int
+	else 0
+end  as pos_prih_price,
+((jmb.n_product->'n_total_summ')::numeric / (1 + (jmb.n_product->'n_charge')::numeric))::int as pos_prih_total,
+rpu.n_name as u_name
 from journals_movements_headers jmh
 join ref_partners rpc on rpc.n_id = jmh.n_recipient
 join ref_partners rps on rps.n_id = jmh.n_supplier
 join journals_movements_bodies jmb ON jmb.n_doc_id = jmh.n_id and jmb.n_deleted = false
-join journals_products_balance jpb on jpb.n_id = (jmb.n_product->'n_balance_id')::bigint
-join (select pb.n_product_id, rp.c_name as name, pb.n_id  as id, pb.n_quantity as stock
- 		from journals_products_balance pb
- 		join ref_products rp on (rp.c_id=pb.n_product_id)) as j1
- 	on (j1.id = (jmb.n_product->'n_balance_id')::bigint)
+-- join journals_products_balance jpb on jpb.n_id = (jmb.n_product->'n_balance_id')::bigint
+join (select d1.n_product_id as n_product_id, rp.c_name as name, d1.stock as stock
+	from (select pb.n_product_id as n_product_id, max(pb.n_quantity) as stock
+		from journals_products_balance pb
+		group by pb.n_product_id) as d1
+	join ref_products rp on (rp.c_id=d1.n_product_id)) as j1
+ 	on (j1.n_product_id = (jmb.n_product->'n_balance_id')::bigint)
+join ref_partners rpu on rpu.n_id = rpc.n_parent_id
 where jmh.n_id = '{doc_number}'::bigint
-order by jmb.n_id"""
+order by pos_prod_name --jmb.n_id"""
+
         res = self.parent._request(sql)
+        if not res:
+            res = self.parent._request(sql_old)
         if res:
             data = {
                 'number': res[0][0],
@@ -230,7 +285,7 @@ order by jmb.n_id"""
                     'name': res[0][3]
                 },
                 'customer': {
-                    'name': res[0][8],
+                    'name': res[0][18],
                     'storage': res[0][8],
                 },
                 'lines': [],

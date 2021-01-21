@@ -1,0 +1,244 @@
+:root {
+  /* --main-color: #5ccce7; */
+  --main-color: #1ca1c1;
+  --highlited-color: yellow;
+  --tab-bkg-color: #f4f5f9;
+}
+.webix_message_area {
+  width: 400px;
+  right: 120px;
+}
+:active,
+:hover,
+:focus {
+  outline: 0 !important;
+  outline-offset: 0 !important;
+}
+button,
+button.webix_button,
+.webix_popup_button,
+.icon_button_label,
+.exit_button_label,
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item {
+  font-size: small;
+}
+.footer,
+.center_dt .webix_cell {
+  font-size: 14px;
+  color: black;
+}
+.center_view {
+  border-top-width: 1px !important;
+}
+.margin0 {
+  margin: 0 !important;
+}
+.center_dt .webix_hcell,
+.center_dt .webix_cell {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.webix_ss_header td {
+  border-bottom: 0px;
+}
+.webix_list_item.menu,
+.webix_menu,
+.webix_list_item.menu:hover,
+.webix_list_item.menu:active,
+.webix_list_item.menu:focus,
+.side_bar_bar,
+.icon_exit_button,
+.icon_button,
+.icon_button_label,
+.exit_button_label,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item,
+.label_highlited {
+  color: var(--main-color);
+}
+.context_center_dt {
+  margin-left: -15px;
+}
+.webix_point_top {
+  margin-left: -25px;
+}
+.table_icon,
+.menubtn {
+  font-family: "Material Design Icons";
+}
+.menubtn {
+  font-size: 14px;
+}
+.table_icon {
+  font-size: 15px;
+}
+.italic {
+  font-style: italic;
+}
+.webix_modal {
+  /* width: 0;
+    height: 0; */
+}
+.status_bar .webix_el_box,
+.ordinary_label {
+  font-style: normal;
+  font-weight: normal;
+}
+.menu_filters_margin_top input,
+.menu_filters_margin_top label,
+.menu_filters_margin_top button,
+.menu_filters_margin_top .webix_inp_static {
+  height: 28px !important;
+}
+.html_button,
+.side_menu_button,
+.custom_menu_button {
+  background-repeat: no-repeat;
+  background-position: center center;
+  vertical-align: bottom;
+  display: inline-block;
+}
+.html_button {
+  padding-top: 11px;
+  background-size: 24px 24px;
+  width: 24px;
+  height: 24px;
+}
+.html_button:hover,
+.side_menu_button:hover {
+  border: 1px solid transparent;
+}
+.side_menu_button {
+  background-size: 30px 30px;
+}
+.exit_button_label,
+.custom_menu_button {
+  padding-left: 5px;
+}
+.custom_menu_button {
+  background-size: 20px 20px;
+  margin-left: -10px;
+  margin-top: 5px;
+}
+.webix_tab_close:focus {
+  color: #94a1b3 !important;
+}
+.changed,
+.warning {
+  color: red;
+}
+.context_menu,
+.pop-up-menu {
+  opacity: 0.9;
+}
+.webix_view > .webix_disabled {
+  background-color: #ebedf0;
+  opacity: 0.2;
+}
+.webix_all_tabs .webix_item_tab:hover {
+  background-color: transparent;
+}
+button,
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item,
+.webix_popup_button,
+.webix_all_tabs .webix_item_tab,
+.webix_all_tabs .webix_item_tab.webix_selected,
+.webix_all_tabs .webix_item_tab.webix_selected:focus {
+  text-transform: uppercase;
+}
+.webix_all_tabs .webix_item_tab.webix_selected,
+.webix_all_tabs .webix_item_tab.webix_selected:focus {
+  box-shadow: inset 0 -4px var(--main-color);
+  padding-bottom: 0;
+}
+.webix_ssheet_toolbar_spacer {
+  background: #dddddd;
+}
+.side_bar_bar {
+  padding-top: 3px;
+}
+.custom_menu_button,
+.icon_exit_button {
+  width: 20px;
+  height: 20px;
+}
+.icon_button {
+  padding-top: 5px;
+}
+.side_menu_button,
+.icon_button {
+  width: 30px;
+  height: 30px;
+}
+.webix_secondary .webix_button.exit_button,
+.webix_secondary .webix_button.custom_button {
+  padding-top: 2px;
+}
+.pop-up-menu,
+.side_bar_bar,
+.webix_list_item.menu,
+.webix_menu,
+.webix_list_item.menu:hover,
+.webix_list_item.menu:active,
+.webix_list_item.menu:focus,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item,
+.webix_secondary .webix_button.custom_button:hover,
+.webix_secondary .webix_button.custom_button:active,
+.webix_secondary .webix_button.custom_button:focus {
+  background-color: var(--tab-bkg-color);
+}
+.webix_all_tabs .webix_item_tab:hover,
+.webix_secondary .webix_button.custom_button:hover,
+.webix_secondary .webix_button.exit_button:hover {
+  opacity: 0.5;
+}
+.webix_secondary .webix_button.exit_button,
+.webix_secondary .webix_button.exit_button:hover,
+.webix_secondary .webix_button.exit_button:active,
+.webix_secondary .webix_button.exit_button:focus {
+  background-color: inherit !important;
+}
+.icon_button,
+.icon_exit_button,
+.exit_button_label,
+.icon_button_label {
+  float: left;
+}
+.icon_button_label {
+  line-height: 36px;
+}
+.exit_button_label {
+  line-height: 24px;
+}
+.webix_all_tabs .webix_item_tab {
+  line-height: 20px;
+}
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item {
+  outline: none;
+  font-weight: 500;
+}
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu.webix_menu .webix_list_item {
+  opacity: 0.9;
+}
+.multiline_header {
+  line-height: 20px !important;
+}
+.center_text,
+.multiline_header,
+.webix_list_item.menu,
+.context_menu ~ .webix_menu .webix_list_item,
+.context_menu .webix_list_item {
+  text-align: center;
+}
+.webix_list_item.menu {
+  padding: 2px 6px;
+}
+

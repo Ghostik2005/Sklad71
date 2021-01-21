@@ -27,7 +27,7 @@ class SKLAD:
 
         sys.BOT = botclient.BOTProxy('', ('127.0.0.1', 4222))
 
-        self._test = True if os.getenv('HOME').lower().find('ghostik11')>-1 else False
+        self._test = True if os.getenv('HOME').lower().find('ghostik')>-1 else False
 
         print(self._test)
 
@@ -236,6 +236,33 @@ class SKLAD:
         answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
         return answer
 
+    def set_point_limit(self, *args, **kwargs):
+        t = time.time()
+        self._print("*"*10, " set_point_limit ", "*"*10)
+        self._print(args)
+        self._print(kwargs)
+        self._print("*"*10, " set_point_limit ", "*"*10)
+        rows = []
+        row_id = kwargs.get("row_id")
+        n_limit = kwargs.get("n_limit", 0)
+        if row_id:
+            sql = f"""update ref_partners
+set n_limit = {n_limit}::int
+where n_id = {row_id}::bigint
+returning n_id, n_limit
+"""
+            print(sql)
+            rows = self._request(sql)
+        t1 = time.time() - t
+        if rows:
+            ret = rows[0]
+        else:
+            ret = None
+        t2 = time.time() - t1 - t
+        answer = {"data": ret, "params": args, "kwargs": kwargs, "timing": {"sql": t1, "process": t2}}
+        return answer
+
+
     def products_checkmark(self, *args, **kwargs):
         t = time.time()
         self._print("*"*10, " checkmark ", "*"*10)
@@ -300,8 +327,8 @@ from ref_partners
 --where n_type = (select n_id from ref_partners_types where n_name = 'Получатель')
 order by n_name asc"""
             elif c_name == 'n_recipient':
-                if doc_type == 'shipment' or doc_type == 'movement' or doc_type == 'order':
-                    sql = f"""select n_name, n_id
+                if doc_type == 'shipment' or doc_type == 'movement' or doc_type == 'order' or doc_type == 'orders':
+                    sql = f"""select n_name, n_id, n_limit, 0 as n_release
 from ref_partners
 where n_type in (select n_id from ref_partners_types where n_name = 'Точка')
 order by n_name asc"""
@@ -322,7 +349,11 @@ order by {c_name} asc"""
         t1 = time.time() - t
         ret = []
         for c, row in enumerate(rows, 1):
-            r = {"id": str(row[1]) or str(c), "value": row[0]}
+            r = {"id": str(row[1]) or str(c),
+                "value": row[0],
+                "n_limit": row[2] if len(row) > 2 else 0,
+                "n_release": row[3] if len(row) > 2 else 0,
+                }
             ret.append(r)
 
         t2 = time.time() - t1 - t
@@ -509,6 +540,47 @@ where jrh.n_id = {int(doc_id)};
             ret.append(r)
         return ret
 
+    def _get_order_header(self, doc_id):
+        ret = []
+        sql = f"""select joh.n_id, joh.n_state, joh.n_supplier, s.n_name, joh.n_filename,
+	joh.n_id_field, joh.n_name,
+	joh.n_p_id, joh.n_code, joh.n_inn,
+	joh.n_dt_price, joh.n_dt_create,
+    joh.n_number, joh.n_dt_send, joh.n_recipient,
+	joh.n_recipient_id, rec.n_name, joh.n_summ, joh.n_pos_numbers,
+    joh.n_dt_recieved, joh.n_comment
+from journals_orders_headers joh
+join ref_partners s on (joh.n_supplier = s.n_id)
+join ref_partners rec on (joh.n_recipient_id = rec.n_id)
+where joh.n_id = {int(doc_id)};
+        """
+        rows = self._request(sql)
+        for row in rows:
+            r = {
+                "n_id": str(row[0]),
+                "n_state": row[1],
+                "n_supplier_id": str(row[2]),
+                "n_supplier": row[3],
+                'n_filename': row[4],
+                'n_id_field': row[5],
+                'n_name': row[6],
+                'n_p_id': str(row[7]),
+                'n_code': row[8],
+                'n_inn': row[9],
+                'n_dt_price': row[10],
+                'n_dt_invoice': row[11],
+                'n_number': row[12],
+                'n_dt_send': row[13],
+                'n_recipient': row[14],
+                'n_recipient_id': str(row[15]),
+                'n_summ': row[17],
+                'n_pos_numbers': row[18],
+                'n_dt_recieved': row[19],
+                "n_comment": row[20],
+            }
+            ret.append(r)
+        return ret
+
     def _get_arrival_header(self, doc_id):
         ret = []
         sql = f"""select jah.n_id, jah.n_number, jah.n_state, jah.n_dt_invoice::date, s.n_name,
@@ -606,6 +678,9 @@ and journals_products_balance.n_consignment =
         return self._execute(sql)
 
     def _hold_movement_document(self, doc_id):
+
+        #доделать подстчет лимитов
+
         sql = f"""insert into journals_products_movement (n_product_id, n_type, n_sign,
  										n_quantity, n_unit, n_document_id,
  										n_price_w_vats,
@@ -795,13 +870,15 @@ and journals_products_balance.n_consignment =
         self._print(args)
         self._print(kwargs)
         self._print("*"*10, " create_orders ", "*"*10)
-
-        if self.ms_lock.tryAcquire(self._lockname, sync=True):
+        ac = self.ms_lock.tryAcquire(self._lockname, sync=True)
+        print(ac)
+        if ac:
             sql = f"select jor.n_document, jor.n_id from journals_orders_raw jor where jor.n_adding = false"
             ret = self._execute(sql)
             t1 = time.time() - t
             if ret:
                 for r in ret:
+                    doc_id = None
                     try:
                         row = r[0]
                         jor_id = r[1]
@@ -866,8 +943,8 @@ and journals_products_balance.n_consignment =
                     except:
                         import traceback
                         traceback.print_exc()
-                        sql = f"""delete from journals_orders_headers where n_id = {doc_id}"""
-                        self._execute(sql)
+                        # sql = f"""delete from journals_orders_headers where n_id = {doc_id}"""
+                        # self._execute(sql)
                     else:
                         sql = f"""update journals_orders_raw set n_adding = true where n_id = {jor_id}"""
                         self._execute(sql)
@@ -984,12 +1061,12 @@ n_doc_id, n_product) values
         self._print(args)
         self._print(kwargs)
         self._print("*"*10, " create_price ", "*"*10)
-        sql = """select date_trunc('second', LOCALTIMESTAMP),
+        sql = """select date_trunc('second', LOCALTIMESTAMP) as date1,
 rp.c_namefull as name,
 rp.c_nnt as code,
 rm.c_name as manuf,
 rc.c_name as country,
-jpb.n_quantity as quant,
+sum(jpb.n_quantity) as quant,
 case
 	when jpb.n_vat_included then jpb.n_price
 	else jpb.n_price + jpb.n_vat
@@ -1002,7 +1079,9 @@ join ref_products rp on (jpb.n_product_id = rp.c_id) and rp.c_inprice = true
 left join ref_manufacturers rm on (rp.c_manid = rm.c_id)
 left join ref_countries rc on (rp.c_mancid = rc.c_id)
 left join ref_vats rv on (rv.c_id = rp.c_vatid)
-where (jpb.n_price_price != 0 or jpb.n_price_price is not null) and jpb.n_consignment is not null;"""
+where (jpb.n_price_price != 0 or jpb.n_price_price is not null) and jpb.n_consignment is not null
+and jpb.n_quantity > 0
+group by date1, name, code, manuf, country, temp_price, price, pack, vat;"""
 
         rows = self._request(sql) or []
         s_code = "51100"
@@ -1335,7 +1414,17 @@ update journals_shipments_headers set n_state = 1::bigint where n_id={int(doc_id
             # self._print(params)
             n_name = params.get('n_name')
             if n_name:
-                r = f"""lower(r.n_name) like lower('%{n_name}%')"""
+                n_name = n_name.split(' ')
+                if len(n_name) == 1:
+                    r = f"lower(r.n_name) like '%{n_name[0]}%'"
+                elif len(n_name) > 1:
+                    r = []
+                    for n in n_name:
+                        r1 = f"""lower(r.n_name) like lower('%{n}%')"""
+                        r.append(r1)
+                    r = '(' + ' and '.join(r) + ')'
+                else:
+                    r = ''
                 inserts.append(r)
         where = 'where '+' and '.join(inserts) if inserts else ''
         return where
@@ -1346,7 +1435,17 @@ update journals_shipments_headers set n_state = 1::bigint where n_id={int(doc_id
             # self._print(params)
             c_name = params.get('c_name')
             if c_name:
-                r = f"""lower(rp.c_name) like lower('%{c_name}%')"""
+                c_name = c_name.split(' ')
+                if len(c_name) == 1:
+                    r = f"""lower(rp.c_name) like lower('%{c_name[0]}%')"""
+                elif len(c_name) > 1:
+                    r = []
+                    for n in c_name:
+                        r1 = f"""lower(rp.c_name) like lower('%{n}%')"""
+                        r.append(r1)
+                    r = '(' + ' and '.join(r) + ')'
+                else:
+                    r = ''
                 inserts.append(r)
         where = 'where '+' and '.join(inserts) if inserts else ''
         return where
@@ -2270,12 +2369,11 @@ join ref_partners_types rpt on (r.n_type = rpt.n_id and rpt.n_name != 'Точк�
                 ret.append(r)
         elif reference == 'points':
             rows = []
-            sql = f"""select r.n_id, r.n_name, rp1.n_name, rp1.n_id, r.n_address
+            sql = f"""select r.n_id, r.n_name, rp1.n_name, rp1.n_id, r.n_address, r.n_limit, 0 as n_release
 from ref_partners r
 join ref_partners_types rpt on (r.n_type = rpt.n_id and rpt.n_name = 'Точка')
 join ref_partners rp1 on (rp1.n_id=r.n_parent_id)
 """
-
             sql_count = f"""select count(*) from ({sql+where}) as ccc"""
             sql += where + order + limits
             self._print(sql)
@@ -2293,7 +2391,9 @@ join ref_partners rp1 on (rp1.n_id=r.n_parent_id)
                     "n_name": row[1],
                     "n_parent": row[2],
                     "n_parent_id": str(row[3]),
-                    "n_address": row[4]
+                    "n_address": row[4],
+                    "n_limit": row[5],
+                    "n_release": row[6]
                 }
                 ret.append(r)
         elif reference == "vats":

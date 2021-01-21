@@ -16,7 +16,7 @@ export default class DocumentHeader extends JetView{
     }
 
     config(){
-        console.log('parent', this.parent);
+        // console.log('parent', this.parent);
         if (this.parent.doc_type == "Приходная накладная") {
             this.base_template = 'документ поставщика'
         } else {

@@ -145,7 +145,17 @@ order by {c_name} asc"""
             n_dt_change = params.get('n_dt_change')
 
             if n_product:
-                r = f"lower(rp.c_name) like '%{n_product}%'"
+                n_product = n_product.split(' ')
+                if len(n_product) == 1:
+                    r = f"lower(rp.c_name) like '%{n_product[0]}%'"
+                elif len(n_product) > 1:
+                    r = []
+                    for n in n_product:
+                        r1 = f"""lower(rp.c_name) like lower('%{n}%')"""
+                        r.append(r1)
+                    r = '(' + ' and '.join(r) + ')'
+                else:
+                    r = ''
                 inserts.append(r)
 
             if n_number:

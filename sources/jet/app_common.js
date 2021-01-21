@@ -49,19 +49,19 @@ export function app_common(app) {
             let params_to = {method:"hold_document", kwargs: {"user": getUser(), filters: params}}
             return checkResponse(request(params_to, !0).response, 's');
         },
-        
+
         unDeleteDocument(doc_type, doc_id, intable_id) {
             let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
             let params_to = {method:"undelete_document", kwargs: {"user": getUser(), filters: params}}
             return checkResponse(request(params_to, !0).response, 's');
         },
-        
+
         deleteDocument(doc_type, doc_id, intable_id) {
             let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
             let params_to = {method:"delete_document", kwargs: {"user": getUser(), filters: params}}
             return checkResponse(request(params_to, !0).response, 's');
         },
-        
+
         unHoldDocument(doc_type, doc_id, intable_id) {
             let params = {"doc_type": doc_type, "doc_id": doc_id, "intable": intable_id};
             let params_to = {method:"unhold_document", kwargs: {"user": getUser(), filters: params}}
@@ -81,9 +81,9 @@ export function app_common(app) {
             })
             return k
         },
-        
+
     }
-    
+
     app.setService("common", s);
 
     webix.editors.price = webix.extend({
@@ -117,7 +117,7 @@ export function app_common(app) {
         var str = value.toString();
         str = str.split(".");
         var int_value = "";
-    
+
         if (config.groupSize) {
             var step = config.groupSize;
             var i = str[0].length;
@@ -127,10 +127,10 @@ export function app_common(app) {
                 int_value = chunk + (int_value ? config.groupDelimiter + int_value : "");
             } while (i > 0);
         } else int_value = str[0];
-    
+
         if (config.decimalSize) str = sign + int_value + (str[1] ? config.decimalDelimiter + str[1] : "");
         else str = sign + int_value;
-    
+
         if (config.prefix || config.sufix) {
             return config.prefix + str + config.sufix;
         } else return str;

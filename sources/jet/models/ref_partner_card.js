@@ -11,7 +11,7 @@ export default class RefPartnerCardView extends JetView{
         super(app);
         this.parent = parent;
         this.edited = edited;
-        console.log(parent);
+        // console.log(parent);
     }
 
     config(){

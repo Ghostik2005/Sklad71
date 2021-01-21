@@ -3,6 +3,7 @@
 import {JetView} from "webix-jet";
 import {filters_process} from "../models/data_processing";
 import ButtonUnFilter from "../models/button_unfilter";
+import {filtering} from "../models/data_processing";
 
 export default class TemplateMenuFilters extends JetView{
 
@@ -186,6 +187,13 @@ export default class TemplateMenuFilters extends JetView{
                     })
                     break;
                 case "combo":
+
+                    // console.log('this', this);
+                    let orders_fg;
+                    if(this.p_name == "orders") {
+                        orders_fg = true;
+                    }
+
                     this.$$("__body").addView({
                         css: "menu_filters_margin_top",
                         cols: [
@@ -194,9 +202,12 @@ export default class TemplateMenuFilters extends JetView{
                                 name: col.id,
                                 localId: `__${col.id}_field`,
                                 labelWidth: 120,
-                                options:{
+                                suggest:{
+                                    filter: filtering,
                                     body:{
+                                        tooltip: true,
                                         parentName: col.id,
+                                        ordersFg: orders_fg,
                                         url: function(params) {
                                             return filters_process.get_data(params, this);
                                         },

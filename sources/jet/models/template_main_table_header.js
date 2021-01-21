@@ -8,7 +8,7 @@ import TemplateButtonFilters from "../models/template_button_filters"
 import TemplateStatusBar from "../models/template_status_bar";
 
 export default class TemplateMainHeaderView extends JetView{
-    
+
     constructor(app, name, title) {
         super(app);
         this.p_name = name;
@@ -22,22 +22,22 @@ export default class TemplateMainHeaderView extends JetView{
             borderless: true,
             margin: 0,
             cols: [
-                {view: "label", 
-                    label: "<span class='label_highlited'>" + local_this.p_title + "</span>", 
+                {view: "label",
+                    label: "<span class='label_highlited'>" + local_this.p_title + "</span>",
                     autowidth: true,
                     css: "label_highlited", hidden: true
                 },
                 {width: emptyWidth},
-                // {$subview: SearchBar, name: "search_bar"},
+                {$subview: SearchBar, name: "search_bar"},
                 {},
                 new TemplateQuickFilters(app, local_this.p_name),
                 new TemplateButtonFilters(app, local_this.p_name),
             ]
-    
+
         }
 
         let status = {
-            height: 26, 
+            height: 26,
             borderless: true,
             cols: [
                 {view: "label",
@@ -65,10 +65,10 @@ export default class TemplateMainHeaderView extends JetView{
                 {width: emptyWidth},
                 {width: emptyWidth},
                 new TemplateStatusBar(app, local_this.p_name),
-            ]            
+            ]
         }
 
-        return { 
+        return {
             borderless: true,
             rows: [
                 toolbar,

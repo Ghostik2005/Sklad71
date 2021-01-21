@@ -25,7 +25,7 @@ export default class ProductSelectionView extends JetView{
             topParent: th,
             id: this.table_id,
             dblClick: function(item, table) {
-                console.log('tab', th.parent);
+                // console.log('tab', th.parent);
                 if (item) {
                     // let new_item = this.getItem(item);
                     let new_item = table.getItem(item);

@@ -460,7 +460,7 @@ returning n_id
         doc_id = kwargs.get('doc_id')
         ret = []
         if doc_id:
-            sql = f"""select jmb.n_id,
+            sql_old = f"""select jmb.n_id,
 j1.name,
 jmb.n_product->'n_code',
 jmb.n_product->'n_unit',
@@ -483,8 +483,32 @@ join (select pb.n_product_id, rp.c_name as name, pb.n_id  as id, pb.n_quantity a
 where jmb.n_doc_id = {int(doc_id)} and not n_deleted
 order by jmb.n_id
 """
+            sql = f"""select jmb.n_id,
+j1.name,
+jmb.n_product->'n_code' as pr_code,
+jmb.n_product->'n_unit',
+jmb.n_product->'n_amount' as amount,
+jmb.n_product->'n_price', jmb.n_product->'n_ship_price',
+jmb.n_product->'n_vat', jmb.n_product->'n_novats_summ',
+jmb.n_product->'n_charge', jmb.n_product->'n_vats_summ',
+jmb.n_product->'n_total_summ',
+jmb.n_product->'n_product' as n_prod,
+j1.stock,
+jmb.n_product->'n_balance_id'
+from journals_movements_bodies jmb
+join (select d1.n_product_id as n_product_id, rp.c_name as name, d1.stock as stock
+from (select pb.n_product_id as n_product_id, max(pb.n_quantity) as stock
+	from journals_products_balance pb
+	group by pb.n_product_id) as d1
+	join ref_products rp on (rp.c_id=d1.n_product_id)) as j1
+ 	on (j1.n_product_id = (jmb.n_product->'n_balance_id')::bigint)
+where jmb.n_doc_id = {int(doc_id)} and not n_deleted
+order by jmb.n_id
+            """
             self.parent._print(sql)
             ret = self._execute(sql)
+            if not ret:
+                ret = self._execute(sql_old)
         t1 = time.time() - t
         res = []
         for i, row in enumerate(ret):

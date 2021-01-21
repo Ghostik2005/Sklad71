@@ -26,6 +26,20 @@ export default class RefProductsView extends JetView{
             dblClick: function(item) {
                 th.$$("__edit").callEvent("onItemClick")
             },
+            setChange: function(row_id, new_val, old_val) {
+                console.log('th', th)
+                if (th.cfg.name == 'points') {
+                    if (new_val.n_limit !== old_val.n_limit) {
+                        console.log('update point');
+                        console.log('row_id', row_id);
+                        console.log('new_val', new_val);
+                        console.log('old_val', old_val);
+                        let res = set_limit(row_id, new_val.n_limit);
+                        console.log('res', res)
+                    }
+                }
+
+            }
         });
 
         let popup = {

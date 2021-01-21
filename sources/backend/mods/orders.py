@@ -22,42 +22,220 @@ class ORDERS:
         doc_id = kwargs.get('doc_id')
         ret = []
         if doc_id:
-            sql = f""" select job.n_id as order_id,
+#             sql = f""" select job.n_id as order_id,
+# job.n_doc_id as order_doc_id,
+# rp.c_name as prod_name,
+# replace((job.n_product->'n_code')::text, '"', '') as prod_code,
+# job.n_product->'n_amount' as order_amount,
+# coalesce((job.n_product->'n_price')::int, 0) as order_price,
+# (job.n_product->'n_product') as order_prod,
+# job.n_product->'n_man' as order_man,
+# job.n_product->'n_comment' as order_comment,
+# rp.c_id as prod_id,
+# jpb.n_id as balance_id,
+# coalesce(jpb.n_quantity, 0) as balance_quan,
+# (job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ,
+# coalesce(jpb.n_price,0) as n_price,
+# coalesce(jpb.n_vat, 0) as n_vat,
+# coalesce(jpb.n_quantity, 0) as n_stock
+# from journals_orders_bodies job
+# left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
+# left join journals_products_balance jpb
+# 	on (jpb.n_product_id = rp.c_id
+# 		and (job.n_product->'n_price')::int = (select case
+# 											   when jpb1.n_vat_included is true then jpb1.n_price::int
+# 											   else (jpb1.n_price+jpb1.n_vat)::int
+# 											   end
+# 											   from journals_products_balance jpb1
+# 											   where jpb1.n_id = jpb.n_id
+# 											 )
+# 		   )
+# where job.n_doc_id = {int(doc_id)}
+# and not n_deleted
+# order by job.n_id
+# """
+#             sql_old = f"""with get_d as (
+# 	select n_id, coalesce(n_quantity, 0) as n_quantity, n_product_id from journals_products_balance
+# 	order by n_quantity desc
+# )
+# select job.n_id as order_id,
+# job.n_doc_id as order_doc_id,
+# rp.c_name as prod_name,
+# replace((job.n_product->'n_code')::text, '"', '') as prod_code, --код товара
+# job.n_product->'n_amount' as order_amount,
+# coalesce((job.n_product->'n_price')::int, 0) as order_price,
+# (job.n_product->'n_product') as order_prod,
+# job.n_product->'n_man' as order_man,
+# job.n_product->'n_comment' as order_comment,
+# rp.c_id as prod_id, -- id в товарах
+# case
+# 	when (job.n_product->'n_amount')::int > coalesce(jpb.n_quantity, 0)
+# 		then (select n_id from get_d where n_product_id = jpb.n_product_id limit 1)
+# 	else jpb.n_id
+# end
+# as balance_id,
+# case
+# 	when (job.n_product->'n_amount')::int > coalesce(jpb.n_quantity, 0)
+# 		then (select n_quantity from get_d where n_product_id = jpb.n_product_id limit 1)
+# 	else coalesce(jpb.n_quantity, 0)
+# end
+# as balance_quan,
+# (job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ,
+# coalesce(jpb.n_price,0) as n_price,
+# coalesce(jpb.n_vat, 0) as n_vat,
+# case
+# 	when (job.n_product->'n_amount')::int > coalesce(jpb.n_quantity, 0)
+# 		then (select n_quantity from get_d where n_product_id = jpb.n_product_id limit 1)
+# 	else coalesce(jpb.n_quantity, 0)
+# end
+# as n_stock
+# from journals_orders_bodies job
+# left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
+# left join journals_products_balance jpb
+# 	on (jpb.n_product_id = rp.c_id
+# 		and (job.n_product->'n_price')::int = (select case
+# 			   when jpb1.n_vat_included is true then jpb1.n_price::int
+# 			   else (jpb1.n_price+jpb1.n_vat)::int
+# 			   end
+# 			   from journals_products_balance jpb1
+# 			   where jpb1.n_id = jpb.n_id
+# 			 )
+# 	   )
+# where job.n_doc_id = {int(doc_id)}
+# and not n_deleted
+# order by job.n_id """
+            sql_old = f"""
+select job.n_id as order_id,
 job.n_doc_id as order_doc_id,
 rp.c_name as prod_name,
-replace((job.n_product->'n_code')::text, '"', '') as prod_code,
+replace((job.n_product->'n_code')::text, '"', '') as prod_code, --код товара
 job.n_product->'n_amount' as order_amount,
 coalesce((job.n_product->'n_price')::int, 0) as order_price,
 (job.n_product->'n_product') as order_prod,
 job.n_product->'n_man' as order_man,
 job.n_product->'n_comment' as order_comment,
-rp.c_id as prod_id,
-jpb.n_id as balance_id,
-coalesce(jpb.n_quantity, 0) as balance_quan,
+rp.c_id as prod_id, -- id в товарах
+(select d.n_product_id from (
+	select j1.n_product_id as n_product_id, max(coalesce(j1.n_quantity, 0)) as qq
+	from journals_products_balance j1
+	where j1.n_product_id=rp.c_id
+	group by j1.n_product_id) as d
+) as balance_id,
+(select d2.qq from (
+	select j1.n_product_id as n_product_id, max(coalesce(j1.n_quantity, 0)) as qq
+	from journals_products_balance j1
+	where j1.n_product_id=rp.c_id
+	group by j1.n_product_id) as d2
+	) as balance_quan,
 (job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ,
-coalesce(jpb.n_price,0) as n_price,
-coalesce(jpb.n_vat, 0) as n_vat,
-coalesce(jpb.n_quantity, 0) as n_stock
+(select  jj1.n_price
+ 	from journals_products_balance jj1
+ 	where jj1.n_product_id =
+  	(select d2.n_product_id
+  		from (
+ 		select j1.n_product_id as n_product_id, max(coalesce(j1.n_quantity, 0)) as qq
+ 		from journals_products_balance j1
+ 		where j1.n_product_id=rp.c_id
+ 		group by j1.n_product_id) as d2
+ 	)
+ 	limit 1
+) as n_price,
+(select  jj1.n_vat
+ 	from journals_products_balance jj1
+ 	where jj1.n_product_id =
+  	(select d2.n_product_id
+  		from (
+ 		select j1.n_product_id as n_product_id, max(coalesce(j1.n_quantity, 0)) as qq
+ 		from journals_products_balance j1
+ 		where j1.n_product_id=rp.c_id
+ 		group by j1.n_product_id) as d2
+ 	)
+ 	limit 1
+) as n_vat,
+(select d2.qq from (
+			select j1.n_product_id as n_product_id, max(coalesce(j1.n_quantity, 0)) as qq from journals_products_balance j1 where j1.n_product_id=rp.c_id group by j1.n_product_id) as d2
+			) as n_stock
 from journals_orders_bodies job
 left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
-left join journals_products_balance jpb
-	on (jpb.n_product_id = rp.c_id
-		and (job.n_product->'n_price')::int = (select case
-											   when jpb1.n_vat_included is true then jpb1.n_price::int
-											   else (jpb1.n_price+jpb1.n_vat)::int
-											   end
-											   from journals_products_balance jpb1
-											   where jpb1.n_id = jpb.n_id
-											 )
-		   )
 where job.n_doc_id = {int(doc_id)}
-and not n_deleted
+and not job.n_deleted
+order by job.n_id """
+
+            sql = f"""select job.n_id as order_id,
+job.n_doc_id as order_doc_id,
+rp.c_name as prod_name,
+replace((job.n_product->'n_code')::text, '"', '') as prod_code, --код товара
+job.n_product->'n_amount' as order_amount,
+coalesce((job.n_product->'n_price')::int, 0) as order_price,
+(job.n_product->'n_product') as order_prod,
+job.n_product->'n_man' as order_man,
+job.n_product->'n_comment' as order_comment,
+rp.c_id as prod_id, -- id в товарах
+(select d.n_id from (
+	select j1.n_id as n_id, max(coalesce(j1.n_quantity, 0)) as qq
+	from journals_products_balance j1
+	where j1.n_product_id=rp.c_id
+	group by j1.n_id
+	order by 2 desc) as d
+ 	limit 1
+) as balance_id,
+(select d2.qq from (
+	select j2.n_id as n_id, max(coalesce(j2.n_quantity, 0)) as qq
+	from journals_products_balance j2
+	where j2.n_product_id=rp.c_id
+	group by j2.n_id
+	order by 2 desc) as d2
+ 	limit 1
+	) as balance_quan,
+(job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ,
+(select  jj1.n_price
+ 	from journals_products_balance jj1
+ 	where jj1.n_id =
+  	(select d2.n_id
+  		from (
+ 		select j1.n_id as n_id, max(coalesce(j1.n_quantity, 0)) as qq
+ 		from journals_products_balance j1
+ 		where j1.n_product_id=rp.c_id
+ 		group by j1.n_id
+		order by 2 desc) as d2
+	 	limit 1
+ 	)
+) as n_price,
+(select  jj1.n_vat
+ 	from journals_products_balance jj1
+ 	where jj1.n_id =
+  	(select d2.n_id
+  		from (
+ 		select j1.n_id as n_id, max(coalesce(j1.n_quantity, 0)) as qq
+ 		from journals_products_balance j1
+ 		where j1.n_product_id=rp.c_id
+ 		group by j1.n_id
+		order by 2 desc) as d2
+		limit 1
+ 	)
+) as n_vat,
+(select d2.qq from (
+	select j1.n_id as n_id, max(coalesce(j1.n_quantity, 0)) as qq
+	from journals_products_balance j1
+	where j1.n_product_id=rp.c_id
+	group by j1.n_id
+	order by 2 desc) as d2
+ 	limit 1
+	) as n_stock
+from journals_orders_bodies job
+left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
+where job.n_doc_id = {int(doc_id)}
+and not job.n_deleted
 order by job.n_id
-"""
+            """
+
             ret = self._execute(sql)
         t1 = time.time() - t
         res = []
         for i, row in enumerate(ret):
+
+            row[4] = 0 if not row[4] else row[4]
+            row[15] = 0 if not row[15] else row[15]
             nnvs = int(row[4])*int(row[5])
             nvs = int(row[4])*int(row[14])
             r = {
@@ -98,7 +276,7 @@ order by job.n_id
         doc_id = kwargs.get('doc_id')
         ret = []
         if doc_id:
-            sql = f"""select job.n_id as order_id,
+            sql_old = f"""select job.n_id as order_id,
 job.n_doc_id as order_doc_id,
 rp.c_name as prod_name,
 replace((job.n_product->'n_code')::text, '"', '') as prod_code,
@@ -123,6 +301,29 @@ left join journals_products_balance jpb
 											   where jpb1.n_id = jpb.n_id
 											 )
 		   )
+where job.n_doc_id = {int(doc_id)}
+and not n_deleted
+order by job.n_id
+            """
+            sql = f"""select job.n_id as order_id,
+job.n_doc_id as order_doc_id,
+rp.c_name as prod_name,
+replace((job.n_product->'n_code')::text, '"', '') as prod_code,
+job.n_product->'n_amount' as order_amount,
+job.n_product->'n_price' as order_price,
+(job.n_product->'n_product') as order_prod,
+job.n_product->'n_man' as order_man,
+job.n_product->'n_comment' as order_comment,
+rp.c_id as prod_id,
+(select d.n_product_id from (
+			select j1.n_product_id as n_product_id, max(coalesce(j1.n_quantity, 0)) as qq from journals_products_balance j1 where j1.n_product_id=rp.c_id group by j1.n_product_id) as d
+			) as balance_id,
+(select d2.qq from (
+			select j1.n_product_id as n_product_id, max(coalesce(j1.n_quantity, 0)) as qq from journals_products_balance j1 where j1.n_product_id=rp.c_id group by j1.n_product_id) as d2
+			) as balance_quan,
+(job.n_product->'n_amount')::int*(job.n_product->'n_price')::int as summ
+from journals_orders_bodies job
+left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
 where job.n_doc_id = {int(doc_id)}
 and not n_deleted
 order by job.n_id

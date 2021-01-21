@@ -43,11 +43,15 @@ export default class TemplateComboRefCard extends JetView{
             },
             options: {
                 fitMaster: this.cfg.fitMaster,
+                filter:function(obj, value){
+                    var vf = obj.value.toString().toLowerCase().indexOf(value) != -1;
+                    return vf;
+                },
                 body: {
                     tooltip: true,
                     width: +this.cfg.width * 1.2,
                     parentName: this.cfg.name,
-                    yCount: 5,
+                    yCount: 10,
                     scroll: true,
                     url: function(params) {
                         return filters_process.get_ref_filters(params, this);

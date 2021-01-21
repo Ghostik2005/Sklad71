@@ -37,7 +37,7 @@ export const refProdSelColumns = [
             css: "multiline_header"
         },
         headermenu: !false,
-        hidden: true,
+        hidden: !true,
         // editor: "text",
         filter_type: undefined
     },

@@ -61,7 +61,8 @@ export const RestsdtColumns = [
         filter_type: "date",
         footer:{ content:"totalTable" }
     },
-    {id: "n_recipient", width: 160,
+    {id: "n_recipient",
+        fillspace: 1,
         sort: "server",
         header: [{text: names('n_recipient').value},
         ],
@@ -85,7 +86,8 @@ export const RestsdtColumns = [
         header: [{text: names('n_nds').value},
         ],
         format: webix.Number.formatNumber,
-        headermenu:false,
+        headermenu:!false,
+        hidden: true,
         filter_type: "text"
     },
     {id: "n_pos_numbers", width: 90,
@@ -103,8 +105,8 @@ export const RestsdtColumns = [
         filter_type: "multi"
     },
     {id: "n_base", //width: 180,
+        width: 260,
         sort: "server",
-        fillspace: 1,
         header: [{text: names('n_base').value},
         ],
         headermenu:false,
@@ -123,7 +125,7 @@ export const RestsdtColumns = [
         header: [{text: names('n_dt_change').value},
         ],
         format: webix.Date.dateToStr("%d.%m.%Y %H:%i:%s"),
-        headermenu:false,
+        headermenu:!false,
         filter_type: "date"
     },
 

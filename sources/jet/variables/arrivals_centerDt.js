@@ -61,7 +61,8 @@ export const ArrivdtColumns = [
         filter_type: "date",
         footer:{ content:"totalTable" }
     },
-    {id: "n_supplier", width: 160,
+    {id: "n_supplier",
+        fillspace: 1,
         sort: "server",
         header: [{text: names('n_supplier').value},
         ],
@@ -100,7 +101,8 @@ export const ArrivdtColumns = [
         ],
         format: webix.Number.formatNumber,
         // template: (common, obj, value) => webix.Number.formatNumber(value),
-        headermenu:false,
+        headermenu:!false,
+        hidden: true,
         // footer:{ content:"totalColumn" },
         filter_type: "text"
     },
@@ -120,8 +122,8 @@ export const ArrivdtColumns = [
         filter_type: "multi"
     },
     {id: "n_base", //width: 180,
+        width: 260,
         sort: "server",
-        fillspace: 1,
         header: [{text: names('n_base').value},
         ],
         headermenu:false,
@@ -140,7 +142,7 @@ export const ArrivdtColumns = [
         header: [{text: names('n_dt_change').value},
         ],
         format: webix.Date.dateToStr("%d.%m.%Y %H:%i:%s"),
-        headermenu:false,
+        headermenu:!false,
         filter_type: "date"
     },
 

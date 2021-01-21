@@ -38,7 +38,8 @@ export default class ArrivalBody extends JetView{
                     // (this.change == true) ? this.$$("__cancel").show() : this.$$("__cancel").hide();
                     this.$$("__table").clearAll();
                     let data = documentProcessing.get(this.doc.n_id, "arrivals")
-                    data.data.push({"n_product": "...добавить"});
+                    // console.log('dd', this.doc);
+                    if (this.doc.n_state == 1) data.data.push({"n_product": "...добавить"});
                     this.$$("__table").parse(data);
                 },
                 onHide: () => {
