@@ -45,6 +45,10 @@ class Rest(Invoice):
 
     doc_template = 'rest_short.ods'
 
+class Balance(Invoice):
+
+    doc_template = 'balance.ods'
+
 
 class REPORT:
 
@@ -186,6 +190,45 @@ order by jrb.n_id
         price = str(price)
         return price[:-2] + ',' + price[-2:]
 
+    def _generate_balance(self):
+
+        sql = f"""select rp.c_name as name,
+rp.c_nnt as t_code,
+max(jpb.n_price) as price,
+sum(jpb.n_quantity) as kol,
+jpb.n_product_id as pr_id
+
+from journals_products_balance jpb
+join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and jpb.n_quantity is not null)
+group by 1, 2,  5
+order by 1 """
+        res = self.parent._request(sql)
+        if not res:
+            res = self.parent._request(sql_old)
+        if res:
+            data = {
+                'lines': [],
+                'total_amount': '',
+                'total_summ': '',
+                'total_pos': len(res)
+            }
+            for i, row in enumerate(res, 1):
+                p = row[2]*row[3]
+                r = {'item': {
+                    'pos': i,
+                    'name': row[0],
+                    'code': row[1],
+                    'price': f"""{str(row[2])[:-2]},{str(row[2])[-2:]}""",
+                    'amount': row[3],
+                    'summ': f"""{str(p)[:-2]},{str(p)[-2:]}"""
+                    }
+                }
+                data['lines'].append(r)
+            ta = sum([ i['item']['amount'] for i in data['lines']])
+            ts = sum([ i[2]*i[3] for i in res])
+            data['total_amount'] = ta
+            data['total_summ'] = f"""{str(ts)[:-2]},{str(ts)[-2:]}"""
+        return data
 
     def _generate_short_movement(self, doc_number):
         self.parent._print(doc_number)
@@ -409,6 +452,9 @@ order by jsb.n_id"""
             elif doc_type == 'movement':
                 doc_gen = Movement
                 data = self._generate_short_movement(doc_number)
+            elif doc_type == 'balance':
+                doc_gen = Balance
+                data = self._generate_balance()
 
         if data:
             #есть данные

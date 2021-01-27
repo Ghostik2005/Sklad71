@@ -78,6 +78,7 @@ export const menus = {
         },
         {width: 160, label: "Группы номенклатуры", callback: (th) => {
                 document.message("Группы номенклатуры");
+                // не используется файл?????????????
                 // let cw = $$("sklad_main_ui").$scope.app.commonWidgets;
                 // cw.sidebar.add_bar(th, TemplateMainTableView, "arrivals")
             }

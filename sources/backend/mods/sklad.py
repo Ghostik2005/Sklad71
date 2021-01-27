@@ -173,7 +173,8 @@ class SKLAD:
         return "test"
 
     def _request(self, sql):
-        return self.RPC('fdb.execute', sync=(1, 7))(f'ms/{self.database}.ro', sql)
+        # return self.RPC('fdb.execute', sync=(1, 7))(f'ms/{self.database}.ro', sql)
+        return self.RPC('fdb.execute', sync=(1, 7))(f'ms/{self.database}', sql)
         # _c = self.RPC('fdb', sync=(1, 7))
         # self._print('+'*20)
         # self._print(_c)

@@ -240,6 +240,10 @@ export const handle_buttom_context = {
             case "44000":
                 document.message("Группы номенклатуры");
                 break;
+            case "94000":
+                newReport.document(th, "balance", {n_id: -1})
+                document.message("Инв");
+                break;
             case "54000":
                 document.message("Бренды");
                 break;

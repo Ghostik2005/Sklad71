@@ -1,11 +1,7 @@
 # coding: utf-8
 from __future__ import absolute_import, with_statement, print_function, unicode_literals
 
-__version__ = '21.021.1735'  # _fg_time
-#__version__ = '21.020.1950'  # default _system_list_methods (.__class__.__name__[-3:] == 'Api')
-#__version__ = '20.324.1230'  # http post body ungzip
-#__version__ = '20.310.1900'  # location
-#__version__ = '20.281.2058'  # _http, _func
+__version__ = '20.281.2058'  # _http, _func
 #__version__ = '20.272.2127'  # gzip_decode
 #__version__ = '20.260.0040'  # binary
 #__version__ = '20.219.1837'
@@ -89,15 +85,7 @@ if PY2:
     Binary = lambda data: {'__binary__': base64.b64encode(data)}
 else:
     Binary = lambda data: {'__binary__': base64.b64encode(data).decode('ascii')}
-Location = lambda href: {'__location__': href}
-#_binary = lambda obj: SimpleNamespace(data=base64.b64decode(obj.pop('__binary__'))) if '__binary__' in obj else obj
-def _binary(obj):
-    if '__binary__' in obj:
-        return SimpleNamespace(data=base64.b64decode(obj.pop('__binary__')))
-    elif '__location__' in obj:
-        return SimpleNamespace(href=obj.pop('__location__'))
-    else:
-        return obj
+_binary = lambda obj: SimpleNamespace(data=base64.b64decode(obj.pop('__binary__'))) if '__binary__' in obj else obj
 
 try:
     _ns
@@ -155,20 +143,11 @@ class BOTServer(object):
                 if _list_methods:
                     return _list_methods(self, func_name)
                 else:
-                    #return list(sorted('%s.' % k if isinstance(getattr(func, k), sys.__class__) or hasattr(getattr(func, k), '_system_list_methods') or getattr(func, k).__class__.__name__[-3:] == 'Api') else k for k in dir(func) if '_' != k[:1]))
-                    _r = []
-                    for k in dir(func):
-                        if '_' == k[0]:
-                            continue
-                        m = getattr(func, k)
-                        k = '%s.' % k if isinstance(m, sys.__class__) or hasattr(m, '_system_list_methods') or m.__class__.__name__[-3:] == 'Api' else k
-                        _r.append(k)
-                    _r.sort()
-                    return _r
+                    return list(sorted('%s.' % k if isinstance(getattr(func, k), sys.__class__) or hasattr(getattr(func, k), '_system_list_methods') else k for k in dir(func) if '_' != k[:1]))
             else:
                 return RuntimeError('%s not found' % func_name)
         else:
-            return list(sorted('%s.' % k if isinstance(v, sys.__class__) or hasattr(v, '_system_list_methods') or (v.__class__.__name__[-3:] == 'Api') else k for k, v in self._functions.items()))
+            return list(sorted('%s.' % k if isinstance(v, sys.__class__) or hasattr(v, '_system_list_methods') else k for k, v in self._functions.items()))
 
     def _system_method_help(self, func_name):
         func = None
@@ -222,19 +201,13 @@ class BOTServer(object):
         headers = [('Content-Type', 'application/json; charset=utf-8'), ("Cache-Control", "no-cache"), ("Access-Control-Allow-Origin", "*")]
         try:
             if 'post' == head[''][0]:
-                if b'\x1f\x8b\x08\x00' == body[:4]:
-                    if PY2:
-                        body = gzip_decode(body)
-                    else:
-                        body = gzip_decode(body, -1)
                 body = json.loads(body)
                 method, _a, _kw = body['method'], body.get('params', []), body.get('kwargs', {})
             else:
                 _a, _kw = [], {}
                 if args:
-                    #for a in args.split('&'):
-                    #    a = a.split('=', 1)
-                    for a in (a.split('=', 1) for arg in args.split('&') for a in arg.split(',')):
+                    for a in args.split('&'):
+                        a = a.split('=', 1)
                         if len(a) > 1:
                             _kw[a[0]] = a[1]
                         else:
@@ -324,17 +297,21 @@ class BOTServer(object):
         _fg_loop = True
         while _fg_loop:
             _fg_loop = False
-            _fg_time = False
             try:
                 self._serve_forever(defer)
             except (ConnectionRefusedError, RuntimeError) as e:
                 #traceback.print_exc()
                 _fg_loop = True  # self._fg_serve_forever
-                _fg_time = True
                 _err = str(e)
                 if _err_old != _err:
                     _err_old = _err
                     log(_err, kind='error1')
+                try:
+                    time.sleep(1 + random.random())
+                except:
+                    _fg_loop = False
+                    pass
+                    #log('stop', begin='\r')
             except Exception as e:
                 _fg_loop = self._fg_serve_forever
                 #traceback.print_exc()
@@ -352,13 +329,6 @@ class BOTServer(object):
                         #log(None)
                         pass
                 #print(2222)
-            if _fg_loop and _fg_time:
-                try:
-                    time.sleep(1 + random.random())
-                except:
-                    _fg_loop = False
-                    pass
-                    #log('stop', begin='\r')
 
     def notify(self, subject, data=None):
         if not self._fg_serve_forever:

@@ -92,7 +92,7 @@ export default class TemplateProductsView extends JetView{
                     // this.unblockEvent();
                 },
                 onDataUpdate: function(row_id, new_val, old_val) {
-                    l_this.cfg.setChange(row_id, new_val, old_val);
+                    l_this.cfg.setChange(row_id, new_val, old_val, l_this);
                 },
                 onKeyPress: function(code, event) {
                     return

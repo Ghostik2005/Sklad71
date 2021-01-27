@@ -234,11 +234,23 @@ order by {c_name} asc"""
         return where
 
     def _set_order_get_data(self, field):
-        if field == 'n_product':
-            field = 'rp.c_name'
-        else:
-            field = f'jpb.{field}'
-        return field
+        order_dict = {
+            'n_product': 3,
+            'n_code': 10,
+            'n_consignment': 12,
+            'n_dt':  4,
+            'n_warehouse': 5,
+            'n_quantity': 6,
+            'n_price': 7,
+            'n_vat': 8,
+            'n_price_price': 11
+        }
+        return order_dict.get(field, 3)
+        # if field == 'n_product':
+        #     field = 'rp.c_name'
+        # else:
+        #     field = f'jpb.{field}'
+        # return field
 
     def get_data(self, *args, **kwargs):
         t = time.time()
@@ -255,13 +267,36 @@ order by {c_name} asc"""
         else:
             field = 'n_id'
             direction = 'asc'
-
+        if filters.get('filters'):
+            group = filters['filters'].get('group', 0)
+        else:
+            group = 0
         where = self._set_where_get_data(filters.get('filters'))
         order = f"""\norder by {self._set_order_get_data(field)} {direction}, 1 asc\n"""
 
         limits = f"""limit {count} offset {offset}"""
 
-        sql = """select jpb.n_id, jpb.n_product_id,
+        if group == 1:
+            sql = """select max(jpb.n_id),
+jpb.n_product_id,
+rp.c_name,
+current_timestamp,
+coalesce(array_to_string(array_agg(jpb.n_warehouse), ','), ''),
+sum(jpb.n_quantity),
+max(jpb.n_price),
+max(jpb.n_vat),
+coalesce(array_to_string(array_agg( case
+	when jpb.n_vat_included = true then 'Включен'
+	else 'Не включен'
+	end ), ','), ''),
+rp.c_nnt,
+max(jpb.n_price_price),
+coalesce(array_to_string(array_agg(jpb.n_consignment), ','), '')
+from journals_products_balance jpb
+join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and jpb.n_quantity is not null)
+"""
+        else:
+            sql = """select jpb.n_id, jpb.n_product_id,
 	rp.c_name, jpb.n_dt, jpb.n_warehouse,
 	jpb.n_quantity, jpb.n_price, jpb.n_vat,
 	case
@@ -274,8 +309,14 @@ jpb.n_consignment
 from journals_products_balance jpb
 join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and jpb.n_quantity is not null)
 """
-        sql_count = f"""select count(*) from ({sql+where}) as ccc"""
-        sql += where + order + limits
+        if group == 1:
+            sql += where + """\ngroup by 2, 3, 4, 10"""
+        else:
+            sql += where
+
+        sql_count = f"""select count(*) from ({sql}) as ccc"""
+        sql += order + limits
+
         self.parent._print(sql)
         rows = self._execute(sql) or []
         cou = self._execute(sql_count)

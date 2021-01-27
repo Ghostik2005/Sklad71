@@ -24,6 +24,22 @@ export default class BalanceHeaderView extends JetView{
                 {view: "label", label: "<span class='label_highlited'>Остатки</span>", autowidth: true,
                     css: "label_highlited", hidden: true
                 },
+                {view: "checkbox",
+                    localId: "__group",
+                    labelRight: "Группировать по названию",
+                    value: 1,
+                    labelWidth: 0,
+                    labelAlign:"right",
+                    width: 220,
+                    on: {
+                        onChange: function() {
+                            clearTimeout(this.delay);
+                            this.delay = setTimeout(() => {
+                                app.commonWidgets.balances.center_table.getData();
+                            }, 850);
+                        }
+                    },
+                },
                 {width: emptyWidth},
                 {view: "text",
                     localId: "__search",
@@ -91,7 +107,7 @@ export default class BalanceHeaderView extends JetView{
 
     getSearch() {
         try {
-            return {"n_product": this.$$("__search").getValue()}
+            return {"n_product": this.$$("__search").getValue(), "group": this.$$("__group").getValue()}
         } catch(e){
             return {}
         }
