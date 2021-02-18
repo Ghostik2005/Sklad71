@@ -175,7 +175,8 @@ export default class MobementSelectionView extends JetView{
                                         n_novats_summ: "",
                                         n_vats_summ: "",
                                         n_total_summ: "",
-                                        n_prod_id: new_item.n_id,
+                                        n_prod_id: new_item.n_product_id,
+                                        c_limit_excl: new_item.c_limit_excl
                                     }
                                     if (this.$scope.s_sel) {
                                         let old_item = JSON.parse(JSON.stringify(this.$scope.parent.getItem(this.$scope.s_sel)));

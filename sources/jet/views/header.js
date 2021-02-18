@@ -45,6 +45,13 @@ export default class HeaderView extends JetView{
                         },
                     },
                 },
+                {width: 100},
+                {view:"label",
+                    localId: "__database",
+                    css: "label_warning",
+                    autowidth: true,
+                    label: "",
+                },
                 {},
                 {view: "label",
                     hidden: !true,
@@ -100,6 +107,17 @@ export default class HeaderView extends JetView{
     setUser() {
         this.$$("__uname").setValue(getUser());
         this.$$("__uname").resize();
+    }
+
+    setDb() {
+        // console.log(this.$$("__database"));
+        if (this.app.config.database) {
+            this.$$("__database").setValue(this.app.config.database);
+            this.$$("__database").show();
+            this.$$("__database").resize();
+        } else {
+            this.$$("__database").hide();
+        }
     }
 
     setOrg() {

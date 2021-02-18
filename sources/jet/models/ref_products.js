@@ -1,7 +1,7 @@
 "use strict";
 
 import {JetView} from "webix-jet";
-import {getDatas} from "../models/data_processing";
+import {getDatas, set_limit} from "../models/data_processing";
 import ProductCardView from "../models/product_card";
 import TemplateProductsView from "../models/template_products_dt"
 import {refProdSelColumns} from "../variables/ref_product_selection_dt";
@@ -27,18 +27,11 @@ export default class RefProductsView extends JetView{
                 th.$$("__edit").callEvent("onItemClick")
             },
             setChange: function(row_id, new_val, old_val, th_l) {
-                // console.log('th', th_l)
-                // console.log('th.cfg', th_l.cfg)
-                if (th_l.cfg.name == 'points') {
-                    if (new_val.n_limit !== old_val.n_limit) {
-                        // console.log('update point');
-                        // console.log('row_id', row_id);
-                        // console.log('new_val', new_val);
-                        // console.log('old_val', old_val);
-                        let res = set_limit(row_id, new_val.n_limit);
-                        // console.log('res', res)
-                    }
-                }
+                // if (th_l.cfg.name == 'points') {
+                //     if (new_val.n_limit !== old_val.n_limit) {
+                //         let res = set_limit(row_id, new_val.n_limit);
+                //     }
+                // }
 
             }
         });

@@ -62,7 +62,7 @@ order by {c_name} asc"""
     def _set_where_get_data(self, params=None):
         inserts = ["jah.n_recipient = (select n_partner_id from service_home_organization)", ]
         if params:
-            # self.parent._print(params)
+            self.parent._print(params)
             n_number = params.get('n_number')
             n_state = params.get('n_state')
             n_dt_invoice = params.get('n_dt_invoice')
@@ -75,6 +75,7 @@ order by {c_name} asc"""
             n_base = params.get('n_base', '')
             n_paid = params.get('n_paid')
             n_dt_change = params.get('n_dt_change')
+            search_bar = params.get('search_bar')
             if n_number:
                 if n_number.startswith('='):
                     r = f"""jah.n_number = '{n_number.replace('=', '')}'"""
@@ -95,6 +96,9 @@ order by {c_name} asc"""
                     inserts.append(r)
             if n_supplier:
                 r = f"""jah.n_supplier in ({n_supplier})"""
+                inserts.append(r)
+            if search_bar:
+                r = f"""lower(s.n_name) like lower('%{search_bar}%')"""
                 inserts.append(r)
             if n_recipient:
                 r = f"""jah.n_recipient in ({n_recipient})"""
@@ -159,6 +163,8 @@ order by {c_name} asc"""
             field = 'rec.n_name'
         elif field == 'n_executor':
             field = 'emp.n_name'
+        elif field == 'n_number':
+            field = 'jah.n_number::numeric'
         else:
             field = f'jah.{field}'
         return field
@@ -319,7 +325,7 @@ where n_doc_id = {doc_id}::bigint and not n_deleted"""
                 "n_amount": int(row['n_amount']),
                 "n_price": int(row['n_price']),
                 "n_novats_summ": int(row['n_novats_summ']),
-                "n_vats_base": int(row['n_vats_base'].replace('НДС ', '').replace('%', '')),
+                "n_vats_base": int(row.get('n_vats_base', '0').replace('НДС ', '').replace('%', '')),
                 "n_vats_summ": int(row['n_vats_summ']),
                 "n_total_summ": int(row['n_total_summ']),
                 "n_consignment": row["n_consignment"]

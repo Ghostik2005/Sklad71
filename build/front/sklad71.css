@@ -3,6 +3,7 @@
   --main-color: #1ca1c1;
   --highlited-color: yellow;
   --tab-bkg-color: #f4f5f9;
+  --warning-color: red;
 }
 .webix_message_area {
   width: 400px;
@@ -26,7 +27,7 @@ button.webix_button,
 }
 .footer,
 .center_dt .webix_cell {
-  font-size: 14px;
+  font-size: 12px;
   color: black;
 }
 .center_view {
@@ -57,6 +58,11 @@ button.webix_button,
 .context_menu.webix_menu .webix_list_item,
 .label_highlited {
   color: var(--main-color);
+}
+.label_warning .webix_el_box,
+.label_warning input,
+.label_warning {
+  color: var(--warning-color) !important;
 }
 .context_center_dt {
   margin-left: -15px;

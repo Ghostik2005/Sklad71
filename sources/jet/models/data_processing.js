@@ -313,11 +313,11 @@ export function createPrice(params) {
 
 function genKwargs(params, table, data_type, filters) {
     // console.log('params', params);
-    // console.log('table', table);
-    // console.log('data_type', data_type);
     let app = table.$scope.app;
-    // let sb = table.$scope.app.commonWidgets[data_type];
-    // console.log('sb', sb);
+    let sb;
+    sb = (app && app.commonWidgets[data_type] && app.commonWidgets[data_type]['search_bar'] )
+        ? app.commonWidgets[data_type]['search_bar']
+        : undefined;
     let new_params = JSON.parse(JSON.stringify(params))
     if (!filters) {
         let widgs = app.commonWidgets;
@@ -326,7 +326,6 @@ function genKwargs(params, table, data_type, filters) {
         } else {
             filters = (widgs && widgs[data_type].menu_filters) ? widgs[data_type].menu_filters.getFilters() : {};
         }
-
     }
     if (new_params && !new_params.sort) {
         Object.assign(new_params, {sort:table.config.sorting});
@@ -334,7 +333,11 @@ function genKwargs(params, table, data_type, filters) {
     if (!new_params) {
         new_params = {sort:table.config.sorting};
     }
+    if (sb) {
+        filters = Object.assign(filters, {search_bar: sb.getSearch()});
+    }
     new_params = Object.assign(new_params, {filters: filters});
+
     return {"user": getUser(), filters: new_params}
 }
 

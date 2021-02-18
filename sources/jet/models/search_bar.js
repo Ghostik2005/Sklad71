@@ -37,13 +37,16 @@ export default class SearchBar extends JetView{
     }
 
     ready() {
-        console.log('tt', this.p_name)
+        // console.log('tt', this.p_name)
         this.app.commonWidgets[this.p_name]['search_bar'] = this;
+        // console.log('ct', this.app.commonWidgets[this.p_name]);
 
     }
 
     init() {
-        this.p_name = this.getParentView().getParentView().p_name
+        this.p_name = this.getParentView().getParentView().p_name;
+
+
 
     }
 }

@@ -19,12 +19,12 @@ export default class MenuButtonsBar extends JetView{
             height: 44,
             // width: 44,
             cols: [
-                new TemplateSideButtonView(app, {
-                    name: "references",
-                    click: function(lt) {
-                        (l_this.refs.isVisible()) ? l_this.refs.hide() : l_this.refs.show(lt)
-                    }
-                }),
+                // new TemplateSideButtonView(app, {
+                //     name: "references",
+                //     click: function(lt) {
+                //         (l_this.refs.isVisible()) ? l_this.refs.hide() : l_this.refs.show(lt)
+                //     }
+                // }),
                 new TemplateSideButtonView(app, {
                     name: "balances",
                     click: function(lt) {
@@ -74,7 +74,7 @@ export default class MenuButtonsBar extends JetView{
         if (!this.screens[uid]) {
             let header = options.name
             if (!header) return false;
-            var tabConfig = {
+            let tabConfig = {
                 id: uid,
                 value: header, width: options.width,
                 close: true
@@ -98,7 +98,7 @@ export default class MenuButtonsBar extends JetView{
 
     init() {
         this.widget_name = "sidebar";
-        this.refs = this.ui(new PopMenuView(this.app, {buttons: "refs_menu", name: "refs"}));
+        // this.refs = this.ui(new PopMenuView(this.app, {buttons: "refs_menu", name: "refs"}));
         this.app.commonWidgets[this.widget_name] = this;
     }
 }

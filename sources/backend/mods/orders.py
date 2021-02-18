@@ -221,7 +221,8 @@ rp.c_id as prod_id, -- id в товарах
 	group by j1.n_id
 	order by 2 desc) as d2
  	limit 1
-	) as n_stock
+	) as n_stock,
+rp.c_limit_excl
 from journals_orders_bodies job
 left join ref_products rp on (rp.c_nnt::text = replace((job.n_product->'n_code')::text, '"', ''))
 where job.n_doc_id = {int(doc_id)}
@@ -259,7 +260,8 @@ order by job.n_id
                 "n_charge": 0 if not row[13] else round(int(row[5] if row[5] else 0)/int(row[13])*100-100, 2),
                 "n_vats_summ": nvs,
                 "n_stock": row[15], #остаток на складе
-                "warning": row[15]<row[4]
+                "warning": row[15]<row[4],
+                "c_limit_excl": row[16]
             }
             res.append(r)
         t2 = time.time() - t1 - t
@@ -380,6 +382,10 @@ order by job.n_id
             n_dt_price = params.get('n_dt_price')
             n_code = params.get('n_code')
             n_id_field = params.get('n_id_field')
+            search_bar = params.get('search_bar')
+            if search_bar:
+                r = f"""lower(rec.n_name) like lower('%{search_bar}%')"""
+                inserts.append(r)
 
             if n_state:
                 r = f"""joh.n_state = {int(n_state)}"""

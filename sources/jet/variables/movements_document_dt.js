@@ -112,6 +112,7 @@ export const dtColumns = [
     {id: "n_novats_summ", width: 100,
         header: [{text: "Сумма без НДС"},
         ],
+        hidden: true,
         headermenu:false,
         footer:{ content:"totalColumn" },
         format: webix.Number.formatNumber,

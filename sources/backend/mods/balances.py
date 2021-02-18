@@ -341,6 +341,7 @@ join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and 
                 'n_price_price': row[10],
                 'n_consignment': row[11],
                 'n_balance_id': str(row[0]),
+                # 'c_limit_excl': row[12]
             }
             # self.parent._print(r)
             ret.append(r)

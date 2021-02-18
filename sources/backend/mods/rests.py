@@ -103,6 +103,8 @@ class RESTS:
             field = 'rec.n_name'
         elif field == 'n_executor':
             field = 'emp.n_name'
+        elif field == 'n_number':
+            field = 'jrh.n_number::numeric'
         else:
             field = f'jrh.{field}'
         return field

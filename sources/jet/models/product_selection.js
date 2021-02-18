@@ -56,10 +56,21 @@ export default class ProductSelectionView extends JetView{
                     let old_item = (o_i) ? JSON.parse(JSON.stringify(o_i)): {}
                     let q = th.searchDuplicates(th.parent, new_item.n_prod_id);
                     if (q) {
-                        new_item = th.parent.getItem(q);
-                        new_item.n_amount += 1;
-                        th.parent.updateItem(q, new_item);
-                        if (th.s_sel && q != old_item.id) th.parent.remove(old_item.id)
+                        th.parent.$scope.con_count += 1;
+                        new_item.n_consignment = new_item.n_consignment + `_${th.parent.$scope.con_count}`
+                        if (th.s_sel) {
+                            th.parent.updateItem(th.s_sel.row, new_item);
+                            if (! old_item.n_prod_id) {
+                                delete old_item.id;
+                                th.parent.add(old_item)
+                            }
+                        } else {
+                            th.parent.$scope.add_new(new_item);
+                        }
+                        // new_item = th.parent.getItem(q);
+                        // new_item.n_amount += 1;
+                        // th.parent.updateItem(q, new_item);
+                        // if (th.s_sel && q != old_item.id) th.parent.remove(old_item.id)
                     } else {
                         if (th.s_sel) {
                             th.parent.updateItem(th.s_sel.row, new_item);
@@ -177,7 +188,7 @@ export default class ProductSelectionView extends JetView{
 
     searchDuplicates(table, item_id) {
         let d_id;
-        return d_id;
+        // return d_id;
         table.eachRow( (row)=> {
             let item = table.getItem(row);
             if (item.n_prod_id && (item.n_prod_id.toString() === item_id.toString())) d_id = row;

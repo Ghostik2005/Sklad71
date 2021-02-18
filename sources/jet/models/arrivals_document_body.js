@@ -363,6 +363,7 @@ export default class ArrivalBody extends JetView{
     }
 
     init() {
+        this.con_count = 0;
         this.doc_type = "Приходная накладная"
         this._block = 'recipient'
 

@@ -31,6 +31,7 @@ export default class app extends JetApp{
             roles:          [],
             sklad_cook:     "sk_new-app",
             user_id:        "",
+            database:       undefined,
             permitted: [
                 "__documents_menu", "__journals_menu", "__products_menu", "__classifiers_menu",
                 "__contragents_menu"

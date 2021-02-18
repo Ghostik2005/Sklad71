@@ -318,7 +318,10 @@ order by pos_prod_name --jmb.n_id"""
 
         res = self.parent._request(sql)
         if not res:
+            print(sql_old)
             res = self.parent._request(sql_old)
+        else:
+            print(sql)
         if res:
             data = {
                 'number': res[0][0],

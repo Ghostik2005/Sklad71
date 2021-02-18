@@ -15,7 +15,7 @@ export default class StartView extends JetView{
             type:"line",
             id: "sklad_main_ui",
             rows: [
-                { $subview: HeaderView },
+                {$subview: HeaderView},
                 {$subview: MenuButtonsBar},
                 {height: 2},
                 // {cols: [
@@ -70,6 +70,7 @@ export default class StartView extends JetView{
                 this.app.config.user_id = d.data[0].n_id;
                 this.app.config.home_org_id = d.data[0].n_home_id;
                 this.app.config.home_org = d.data[0].n_home_name;
+                this.app.config.database = d.data[0].database || undefined;
             } else {
                 this.getError(1);
             }
@@ -82,6 +83,7 @@ export default class StartView extends JetView{
         // console.log('40035', md5('40035'))
         this.app.commonWidgets['header'].setUser();
         this.app.commonWidgets['header'].setOrg();
+        this.app.commonWidgets['header'].setDb();
     }
 
 }

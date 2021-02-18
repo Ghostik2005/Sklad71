@@ -283,7 +283,8 @@ where c_id = {item_id}
 and c_nnt = '{item_code}'::text
 returning c_id, c_nnt, {field}
 """
-            rows = self._request(sql)
+            print(sql)
+            rows = self._execute(sql)
         t1 = time.time() - t
         if rows:
             ret = rows[0]
@@ -328,8 +329,14 @@ from ref_partners
 --where n_type = (select n_id from ref_partners_types where n_name = 'Получатель')
 order by n_name asc"""
             elif c_name == 'n_recipient':
-                if doc_type == 'shipment' or doc_type == 'movement' or doc_type == 'order' or doc_type == 'orders':
-                    sql = f"""select n_name, n_id, n_limit, 0 as n_release
+                if doc_type == 'shipment' or doc_type == 'movement':
+                    sql = f"""select rp.n_name, rp.n_id, rp.n_limit, coalesce(jps.n_release, 0) as n_release
+from ref_partners rp
+left join journals_points_releases as jps on jps.n_point_id = rp.n_id
+where rp.n_type in (select n_id from ref_partners_types where n_name = 'Точка')
+order by rp.n_name asc"""
+                elif doc_type == 'order' or doc_type == 'orders':
+                    sql = f"""select n_name, n_id, n_limit
 from ref_partners
 where n_type in (select n_id from ref_partners_types where n_name = 'Точка')
 order by n_name asc"""
@@ -353,7 +360,7 @@ order by {c_name} asc"""
             r = {"id": str(row[1]) or str(c),
                 "value": row[0],
                 "n_limit": row[2] if len(row) > 2 else 0,
-                "n_release": row[3] if len(row) > 2 else 0,
+                "n_release": row[3] if len(row) > 3 else 0,
                 }
             ret.append(r)
 
@@ -696,6 +703,7 @@ round(( ( (jmb.n_product->'n_price')::numeric * (jmb.n_product->'n_vats_base')::
 from journals_movements_bodies jmb
 where jmb.n_doc_id = {int(doc_id)} and not jmb.n_deleted;
 
+--списание с баланса
 update journals_products_balance jpb set
 n_quantity = jpb.n_quantity -
 		(select (jmb.n_product->'n_amount')::bigint
@@ -710,6 +718,38 @@ where jpb.n_id in
 	where n_doc_id = {int(doc_id)} and not n_deleted
 	);
 
+--подсчет лимитов
+insert into journals_points_releases (n_point_id, n_release)
+select jmh.n_recipient, (select coalesce(sum(bal.amount*bal.price), 0)
+	from
+		(select (jmb.n_product->'n_product')::bigint as prod_id,
+			(jmb.n_product->'n_amount')::bigint as amount,
+			jmb.n_doc_id::bigint as doc_id,
+			(jmb.n_product->'n_price')::numeric as price,
+			jmb.n_product as n_prod
+		from journals_movements_bodies jmb
+		join ref_products rp on rp.c_id = (jmb.n_product->'n_product')::bigint and rp.c_limit_excl = false
+		where jmb.n_doc_id = {int(doc_id)} and not jmb.n_deleted
+		) as bal
+ 	) as summ
+	from journals_movements_headers jmh
+	where jmh.n_id = {int(doc_id)}
+on conflict (n_point_id)
+do update
+	set n_release = journals_points_releases.n_release + (select coalesce(sum(bal.amount*bal.price), 0)
+	from
+		(select (jmb.n_product->'n_product')::bigint as prod_id,
+			(jmb.n_product->'n_amount')::bigint as amount,
+			jmb.n_doc_id::bigint as doc_id,
+			(jmb.n_product->'n_price')::numeric as price,
+			jmb.n_product as n_prod
+		from journals_movements_bodies jmb
+		join ref_products rp on rp.c_id = (jmb.n_product->'n_product')::bigint and rp.c_limit_excl = false
+		where jmb.n_doc_id = {int(doc_id)} and not jmb.n_deleted
+		) as bal
+ 	);
+
+--статус - проведен
 update journals_orders_headers
 set n_state = 2
 where n_id::text =
@@ -814,6 +854,7 @@ and journals_products_balance.n_consignment =
 
     returning journals_products_balance.n_id::text
         """
+        print(sql)
         return self._execute(sql)
 
 
@@ -1179,7 +1220,8 @@ where re.n_sklad_name = '{user}'"""
                 "n_name": row[1],
                 "n_params": row[2],
                 "n_home_id": str(row[4]),
-                "n_home_name": row[5]
+                "n_home_name": row[5],
+                "database": self.database if self.database != 'hoznuzhdy' else None
             }
             ret.append(r)
         t1 = time.time() - t
@@ -1372,6 +1414,21 @@ where jpb.n_id in
 	from journals_movements_bodies
 	where n_doc_id = {int(doc_id)} and not n_deleted
 	);
+--списание с лимитов
+update journals_points_releases jpr
+set n_release = n_release - (select coalesce(sum(bal.amount*bal.price), 0)
+	from
+		(select (jmb.n_product->'n_product')::bigint as prod_id,
+			(jmb.n_product->'n_amount')::bigint as amount,
+			jmb.n_doc_id::bigint as doc_id,
+			(jmb.n_product->'n_price')::numeric as price,
+			jmb.n_product as n_prod
+		from journals_movements_bodies jmb
+		join ref_products rp on rp.c_id = (jmb.n_product->'n_product')::bigint and rp.c_limit_excl = false
+		where jmb.n_doc_id = {int(doc_id)} and not jmb.n_deleted
+		) as bal
+ 	)
+where jpr.n_point_id = (select jmh1.n_recipient from journals_movements_headers jmh1 where jmh1.n_id = {int(doc_id)});
 
 update journals_products_movement jpm
 set n_deleted = true
@@ -1417,7 +1474,7 @@ update journals_shipments_headers set n_state = 1::bigint where n_id={int(doc_id
             if n_name:
                 n_name = n_name.split(' ')
                 if len(n_name) == 1:
-                    r = f"lower(r.n_name) like '%{n_name[0]}%'"
+                    r = f"lower(r.n_name) like lower('%{n_name[0]}%')"
                 elif len(n_name) > 1:
                     r = []
                     for n in n_name:
@@ -2597,6 +2654,7 @@ from ref_{reference} r
             sql = f"""select r.c_id, r.c_name
 from ref_{reference} r
 """
+            where = where.replace('n_name', 'c_name')
             sql_count = f"""select count(*) from ({sql+where}) as ccc"""
             sql += where + order + limits
             self._print(sql)
@@ -2655,7 +2713,7 @@ from ref_{reference} r
 
         limits = f"""limit {count} offset {offset}"""
 
-        sql = """select rp.c_id, c_nnt, rp.c_name, rp.c_namefull, rv.c_name, rp.c_inprice
+        sql = """select rp.c_id, c_nnt, rp.c_name, rp.c_namefull, rv.c_name, rp.c_inprice, rp.c_limit_excl
 from ref_products rp
 join ref_vats rv on (rp.c_vatid=rv.c_id)
 """
@@ -2678,7 +2736,8 @@ join ref_vats rv on (rp.c_vatid=rv.c_id)
                 "c_name": row[2],
                 "c_namefull": row[3],
                 "c_vat": row[4],
-                "c_inprice": row[5]
+                "c_inprice": row[5],
+                "c_limit_excl": row[6],
             }
             ret.append(r)
         t2 = time.time() - t1 - t

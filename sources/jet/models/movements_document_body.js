@@ -44,7 +44,8 @@ export default class MovementsBody extends JetView{
                             this.getHeader().recalcHeader(this.$$("__table"));
                     }, 10);
                     setTimeout(() => {
-                        this.setRelease();
+                        this.setChange();
+                        // this.setRelease();
                     }, 1500);
                     let table = this.$$("__table");
                     table.eachRow( (row) => {
@@ -138,6 +139,7 @@ export default class MovementsBody extends JetView{
                                 if (event.key === "Delete") {
                                     let pos = this.getSelectedId();
                                     this.remove(pos)
+                                    th.setChange();
                                 }
                             },
                             onAfterDelete: function() {
@@ -275,7 +277,6 @@ export default class MovementsBody extends JetView{
         let v = point.getValue();
         let l = point.getList();
         let item = l.getItem(v)
-        // console.log('point', item)
         if (item && Number.isInteger(item.n_limit)) {
             this.n_limit = item.n_limit
             this.n_release = item.n_release
@@ -398,12 +399,12 @@ export default class MovementsBody extends JetView{
         function getLimits() {
             let result = 0;
             table.mapCells(null, "n_total_summ", null, 1, function(value, row_id){
-                // console.log('n_limit', table.getItem(row_id).n_limit);
-                if (table.getItem(row_id) && table.getItem(row_id).n_limit) {
-
-                } else {
+                console.log('c_limit_excl', table.getItem(row_id).c_limit_excl);
+                if (table.getItem(row_id) && !table.getItem(row_id).c_limit_excl) {
                     let v = +value
                     if (!isNaN(v)) result+=v;
+                } else {
+
                 }
                 return value;
             });
@@ -433,7 +434,7 @@ export default class MovementsBody extends JetView{
                 item.n_ship_price = item.n_price*(+item.n_charge+100)/100;
                 item.n_novats_summ = item.n_ship_price * item.n_amount
                 item.n_vats_summ = item.n_amount * (item.n_vat *(+item.n_charge+100)/100);
-                item.n_total_summ = item.n_novats_summ + item.n_vats_summ;
+                item.n_total_summ = item.n_novats_summ// + item.n_vats_summ;
                 table.updateItem(row, item);
             }
         })
@@ -444,14 +445,21 @@ export default class MovementsBody extends JetView{
         this.$$("__release").setValue(webix.Number.formatNumber(total_limit));
         // let limit = +this.$$("__limit").getValue();
         // let t_release = +this.$$("__release_total").getValue();
-        // console.log(limit, t_release);
-        if (this.n_limit == 0) {
+
+        let r_total = this.$$("__release_total");
+        let r_order = this.$$("__release");
+        if (this.n_limit == 0 || +total_limit == 0) {
             this.$$("__save").show();
             this.$$("__hold").show();
         } else if (+total_limit+this.n_release > this.n_limit ) {
+            document.message('Превышен лимит на точку', 'error', 3);
+            r_total.$view.classList.add('label_warning')
+            r_order.$view.classList.add('label_warning')
             this.$$("__save").hide();
             this.$$("__hold").hide();
         } else {
+            r_total.$view.classList.remove('label_warning');
+            r_order.$view.classList.remove('label_warning');
             this.$$("__save").show();
             this.$$("__hold").show();
         }

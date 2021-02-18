@@ -77,6 +77,10 @@ order by {c_name} asc"""
             n_base = params.get('n_base', '')
             n_paid = params.get('n_paid')
             n_dt_change = params.get('n_dt_change')
+            search_bar = params.get('search_bar')
+            if search_bar:
+                r = f"""lower(rec.n_name) like lower('%{search_bar}%')"""
+                inserts.append(r)
             if n_number:
                 if n_number.startswith('='):
                     r = f"""jmh.n_number = '{n_number.replace('=', '')}'"""
@@ -171,6 +175,8 @@ order by {c_name} asc"""
             field = 'rec.n_name'
         elif field == 'n_executor':
             field = 'emp.n_name'
+        elif field == 'n_number':
+            field = 'jmh.n_number::numeric'
         else:
             field = f'jmh.{field}'
         return field
@@ -474,9 +480,10 @@ jmb.n_product->'n_vats_summ',
 jmb.n_product->'n_total_summ',
 jmb.n_product->'n_product',
 j1.stock,
-jmb.n_product->'n_balance_id'
+jmb.n_product->'n_balance_id',
+j1.c_limit_excl
 from journals_movements_bodies jmb
-join (select pb.n_product_id, rp.c_name as name, pb.n_id  as id, pb.n_quantity as stock
+join (select pb.n_product_id, rp.c_name as name, pb.n_id  as id, pb.n_quantity as stock, rp.c_limit_excl as c_limit_excl
  		from journals_products_balance pb
  		join ref_products rp on (rp.c_id=pb.n_product_id)) as j1
  	on (j1.id = (jmb.n_product->'n_balance_id')::bigint)
@@ -533,7 +540,8 @@ order by jmb.n_id
                 "n_total_summ": row[11],
                 "n_prod_id": str(row[12]),
                 "n_stock": row[13],
-                "n_balance_id": str(row[14])
+                "n_balance_id": str(row[14]),
+                "c_limit_excl": row[15]
             }
             res.append(r)
         t2 = time.time() - t1 - t

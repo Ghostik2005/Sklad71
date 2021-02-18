@@ -13,6 +13,7 @@ export default class TemplateMainHeaderView extends JetView{
         super(app);
         this.p_name = name;
         this.p_title = title;
+
     }
 
     config(){
