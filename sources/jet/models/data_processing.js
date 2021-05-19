@@ -34,6 +34,26 @@ export const report_processing = {
             }
         }
         // return (result && result.data && result.data===true) ? true : false;
+    },
+
+    new_product_movement(date1, date2, arr_fg, dep_fg, item_id) {
+        let params_to = {method:"generate_report.product_movement",
+                            kwargs: {"user": getUser(), "date1": date1, "date2": date2,
+                            "arr_fg": arr_fg, "dep_fg": dep_fg, "item_id": item_id}
+                        }
+        console.log(params_to);
+        let result = checkResponse(request(params_to, !0).response, 's');
+        if (!result.data) {
+            document.message('Нет данных для печати', "error", 3)
+        }
+        if (result.data && result.data.link) {
+            window.open(result.data.link, "_blank");
+        } else {
+            if (result.data && result.data.binary && result.data.file_name) {
+                var blob = new Blob([_base64ToArrayBuffer(result.data.binary)]);
+                webix.html.download(blob, result.data.file_name);
+            }
+        }
     }
 
 }

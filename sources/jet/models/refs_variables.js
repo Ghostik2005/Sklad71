@@ -43,7 +43,7 @@ export const menus = {
         },
         {width: 160, label: "Виды контрагентов",
             callback: (th) => {
-                document.message("Виды контрагентов");
+                // document.message("Виды контрагентов");
             }
         },
         {width: 160, label: "Сегменты контрагентов",
@@ -110,7 +110,16 @@ export const menus = {
 
     ],
 
-     journals: [ //кнопки журналов
+    reports: [
+        {width: 160, label: "Движение товаров", callback: (th) => {
+                let cw = $$("sklad_main_ui").$scope.app.commonWidgets;
+                document.message("Движ1");
+                // cw.sidebar.add_bar(th, TemplateMainTableView, "arrivals")
+            }
+        },
+    ],
+
+    journals: [ //кнопки журналов
         {width: 160, label: "Приходы", callback: (th) => {
                 let cw = $$("sklad_main_ui").$scope.app.commonWidgets;
                 cw.sidebar.add_bar(th, TemplateMainTableView, "arrivals")

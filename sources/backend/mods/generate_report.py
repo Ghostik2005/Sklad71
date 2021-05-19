@@ -49,6 +49,10 @@ class Balance(Invoice):
 
     doc_template = 'balance.ods'
 
+class Prod_movements(Invoice):
+
+    doc_template = 'products_movements.ods'
+
 
 class REPORT:
 
@@ -413,7 +417,7 @@ order by jsb.n_id"""
                 r = {'item': {
                     'pos': i,
                     'consignment': row[14],
-                    'name': row[9],
+                    'name':  row[9],
                     'unit': row[10],
                     'expired': row[15],
                     'arrival_price': self._gen_price(row[16]),
@@ -425,6 +429,144 @@ order by jsb.n_id"""
                 }
                 data['lines'].append(r)
         return data
+
+    def product_movement(self, *args, **kwargs):
+
+        self.parent._print("*"*10, " product_movement ", "*"*10)
+        self.parent._print(args)
+        self.parent._print(kwargs)
+        self.parent._print("*"*10, " product_movement ", "*"*10)
+
+        doc_type = 'products_movements'
+
+        date1 = kwargs.get('date1')
+        date2 = kwargs.get('date2')
+        arr_fg = kwargs.get('arr_fg')
+        dep_fg = kwargs.get('dep_fg')
+        item_id = kwargs.get('item_id')
+
+        answer = {"params": args,
+            "kwargs": kwargs,
+        }
+
+        d_data = []
+        a_data = []
+
+        sql_move = f"""select
+jmh.n_number as doc_number,
+jmh.n_dt_invoice as doc_date,
+'' as suppl,
+rp.n_name as point,
+0,
+(jmb.n_product->'n_amount')::text::numeric as amount,
+(select c_name from ref_products where c_id = {item_id})
+from journals_movements_bodies jmb
+join journals_movements_headers jmh on jmb.n_doc_id = jmh.n_id
+join ref_partners rp ON rp.n_id = jmh.n_recipient
+where (jmb.n_product->'n_balance_id')::text in (select jpb.n_id::text
+	from journals_products_balance jpb
+	where jpb.n_product_id = {item_id})
+and jmb.n_deleted=false
+and jmh.n_dt_invoice >= '{date1}'::date
+and jmh.n_dt_invoice <= '{date2}'::date
+"""
+
+        sql_arr = f"""select
+jah.n_number as doc_number,
+jah.n_dt_invoice as doc_date,
+rp.n_name as suppl,
+'' as point,
+(jab.n_product->'n_amount')::text::numeric as amount,
+0,
+(select c_name from ref_products where c_id = {item_id})
+from journals_arrivals_bodies jab
+join journals_arrivals_headers jah on jab.n_doc_id = jah.n_id
+join ref_partners rp ON rp.n_id = jah.n_supplier
+where (jab.n_product->'n_product')::text = '{item_id}'
+and jab.n_deleted=false
+and jah.n_dt_invoice >= '{date1}'::date
+and jah.n_dt_invoice <= '{date2}'::date
+"""
+
+        sqls = []
+
+        if not arr_fg and not dep_fg:
+            return answer
+
+        if arr_fg:
+            sqls.append(sql_arr)
+        if dep_fg:
+            sqls.append(sql_move)
+        sqls = '\nunion all\n'.join(sqls)
+        sql = f"""select * from (
+{sqls}
+) as aa
+order by doc_date asc, doc_number
+        """
+        # print(sql)
+        a_data = self.parent._request(sql)
+        if a_data:
+            data = {
+                'lines': [],
+                'tovar': a_data[0][6],
+                'date1': datetime.datetime.strptime(date1, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y'),
+                'date2': datetime.datetime.strptime(date2, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y'),
+                'arr_total': 0,
+                'dep_total': 0,
+            }
+            for i, row in enumerate(a_data, 1):
+
+                d = datetime.datetime.strptime(row[1], '%Y-%m-%d')
+                r = {'item': {
+                    'doc': row[0],
+                    'date': d.strftime('%d-%m-%y'),
+                    'suppl': row[2],
+                    'recip': row[3],
+                    'arriv': row[4] or '',
+                    'depart': row[5] or ''
+                    }
+                }
+                data['lines'].append(r)
+            ta = sum([ int(i['item']['arriv']) if i['item']['arriv']!= '' else 0 for i in data['lines']])
+            td = sum([ int(i['item']['depart']) if i['item']['depart']!= '' else 0  for i in data['lines']])
+            data['arr_total'] = ta
+            data['dep_total'] = td
+
+            inv = Prod_movements(**data)
+            zip_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            with zipfile.ZipFile(zip_path, mode='r') as _zf:
+                _zf.extract(f'doc_tmpl/{inv.doc_template}', path=self.temp_dir)
+            t_path = os.path.join(self.temp_dir, 'doc_tmpl', inv.doc_template)
+
+            basic = Template(source='', filepath=t_path)
+            basic_generated = basic.generate(o=inv).render()
+            fn = os.path.join(self.temp_dir, self.gen_file_name(doc_type) )
+            file_data = basic_generated.getvalue()
+            with open(fn, 'wb') as _f:
+                _f.write(file_data)
+
+            md5 = self.parent.filesave(fn)
+
+            l_file_name = os.path.basename(fn).replace('.ods', '')
+
+            link_name = f"""https://sklad71.org/filehash/{l_file_name}.pdf?{md5}"""
+            print(link_name)
+            bi = base64.b64encode(file_data)
+            bi = bi.decode()
+            # print(bi)
+            # print(len(bi))
+            answer = {"params": args,
+                "kwargs": kwargs, "timing": {"sql": 0, "process": 0},
+                "data": {
+                    "link": link_name,
+                    "file_name": os.path.basename(fn),
+                    "binary": bi
+                }
+            }
+
+        return answer
+
+
 
 
     def generate(self, *args, **kwargs):

@@ -57,7 +57,7 @@ export default class MenuButtonsBar extends JetView{
                 {view: "side-menu-separator"},
                 new TemplateMenuButtonMenu(app, {name: "contragents"}),
                 {view: "side-menu-separator"},
-                new TemplateIconButtonView(app, {name: "reports"}),
+                new TemplateMenuButtonMenu( app, {name: "reports"}),
                 new TemplateIconButtonView(app, {name: "analitics"}),
                 {},
                 {view: "side-menu-separator", hidden: PRODUCTION},

@@ -4,7 +4,7 @@ import {JetView} from "webix-jet";
 import {reference, isEmpty} from "../models/data_processing";
 
 
-export default class TemplateProductsView extends JetView{
+export default class TemplateProductsRepView extends JetView{
 
     constructor(app, cfg) {
         super(app);
@@ -78,11 +78,9 @@ export default class TemplateProductsView extends JetView{
                 onAfterSelect: function() {
                     let i = this.getSelectedId()
                     if (i) {
-                        this.$scope.cfg.topParent.$$("__edit").show()
-                        // this.$scope.cfg.buttons.edit.show()
+                        this.$scope.cfg.topParent.$$("__create").show()
                     } else {
-                        this.$scope.cfg.topParent.$$("__edit").hide()
-                        // this.$scope.cfg.buttons.edit.hide()
+                        this.$scope.cfg.topParent.$$("__create").hide()
                     }
                 },
                 onAfterLoad: function() {

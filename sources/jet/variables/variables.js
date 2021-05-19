@@ -31,6 +31,11 @@ export const button_menu_options = {
         {id: 56000, value: "Подразделения контрагентов"},
     ],
 
+    reports: [
+        {id: -1, value: ''},
+        {id: 17000, value: 'Движение товаров'},
+    ],
+
     classifiers: [
         // {id: 15000, value: "Валюты"},
         // {id: 25000, value: "Банки"},
@@ -53,7 +58,7 @@ export const button_menu_options = {
 
     products: [
         {id: 14000, value: "Остатки"},
-        {id: 24000, value: "Движение товаров"},
+        // {id: 24000, value: "Движение товаров"},
         {id: 34000, value: "Номенклатура"},
         {id: 44000, value: "Группы номенклатуры"},
         {id: 94000, value: "Инвентаризация"},

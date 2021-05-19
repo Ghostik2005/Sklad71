@@ -3,6 +3,7 @@
 import {newDocument, newReport} from "../models/common_functions";
 import TemplateMainTableView from  "../models/template_main_table";
 import RefProductsView from "../models/ref_products";
+import RepProductsMovView from "../models/rep_prod_mov";
 import * as refColumns from "../variables/refs_columns_dt";
 import RefView from "../models/template_ref_view";
 
@@ -30,7 +31,7 @@ export const handle_buttom_context = {
                 document.message("Группы контрагентов");
                 break;
             case "36000":
-                document.message("Виды контрагентов");
+                // document.message("Виды контрагентов");
                 cfg = {
                     name: "ptypes",
                     sorting: {id: "n_name", dir: "asc"},
@@ -255,6 +256,20 @@ export const handle_buttom_context = {
                 break;
             case "84000":
                 document.message("Штрихкоды");
+                break;
+        }
+    },
+
+    reports(cfg) {
+        let id = cfg.id;
+        let local_this = cfg.local_this;
+        let th = local_this.$scope;
+        let app = th.app;
+        switch(id) {
+            case "17000":
+                let v = new RepProductsMovView(app)
+                let s = th.ui(v)
+                s.show('Отчет движение товаров')
                 break;
         }
     },

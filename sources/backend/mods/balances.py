@@ -305,7 +305,8 @@ join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and 
 	end as vats_incl,
 rp.c_nnt,
 jpb.n_price_price,
-jpb.n_consignment
+jpb.n_consignment,
+rp.c_limit_excl
 from journals_products_balance jpb
 join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and jpb.n_quantity is not null)
 """
@@ -341,7 +342,7 @@ join ref_products rp ON rp.c_id = jpb.n_product_id and (jpb.n_quantity != 0 and 
                 'n_price_price': row[10],
                 'n_consignment': row[11],
                 'n_balance_id': str(row[0]),
-                # 'c_limit_excl': row[12]
+                'c_limit_excl': None if group == 1 else row[12]
             }
             # self.parent._print(r)
             ret.append(r)

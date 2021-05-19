@@ -36,7 +36,7 @@ export default class TemplateIconButtonView extends JetView{
                         this.$scope.setContext(e);
                     } else {
                         if (this.$scope.cfg.click) {
-                        this.$scope.cfg.click(this);
+                            this.$scope.cfg.click(this);
                         } else {
                             document.message(this.$scope.cfg.name);
                         }

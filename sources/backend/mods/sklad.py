@@ -27,7 +27,7 @@ class SKLAD:
 
         sys.BOT = botclient.BOTProxy('', ('127.0.0.1', 4222))
 
-        self._test = True if os.getenv('HOME').lower().find('ghostik')>-1 else False
+        self._test = True if os.getenv('HOME').lower().find('ghostik_1')>-1 else False
 
         print(self._test)
 
@@ -186,6 +186,7 @@ class SKLAD:
         return _c.execute(f'ms/{self.database}', sql)
 
     def _uid_range(self):
+
         with requests.get('http://mshub.ru/ext/uid%s' % self._range_no, timeout=(3, 5), verify=False) as f:
             _min, _max = f.text.split()[:2]
             self._print(_min, _max)

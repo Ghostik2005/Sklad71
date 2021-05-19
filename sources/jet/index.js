@@ -34,10 +34,10 @@ export default class app extends JetApp{
             database:       undefined,
             permitted: [
                 "__documents_menu", "__journals_menu", "__products_menu", "__classifiers_menu",
-                "__contragents_menu"
+                "__contragents_menu", "__reports_menu"
             ],
             restricted: [
-                "__managements_menu", "__options_menu", "__button__reports", "__button__analitics",
+                "__managements_menu", "__options_menu",  "__button__analitics",
                 "__button__balances", "__button__arrivals", "__button__orders",
                 "__button__shipments", "__button__references"
             ],

@@ -15,8 +15,9 @@ export default class TemplateButtonContextMenu extends JetView{
 
     config(){
         let g_this = this;
+        console.log('dd', g_this.p_name);
         let c_menu = {
-            view:'contextmenu', 
+            view:'contextmenu',
             autowidth: true,
             localId: `__${g_this.p_name}_cmenu`,
             css: "context_menu",
